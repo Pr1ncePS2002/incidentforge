@@ -132,6 +132,9 @@ def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
         if not base.get("GEMINI_API_KEY2"):
             raise RuntimeError("paid gemini key (GEMINI_API_KEY2) is not set")
         env["GEMINI_API_KEY"] = base["GEMINI_API_KEY2"]
+    elif base.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        # harbor's claude-code agent only uses the subscription token when forced (p1 spike)
+        env["CLAUDE_FORCE_OAUTH"] = "1"
     return env
 
 

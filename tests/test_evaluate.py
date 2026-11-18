@@ -119,6 +119,9 @@ def test_key_env_exposes_exactly_one_gemini_key() -> None:
     assert paid["GEMINI_API_KEY"] == "paid-k" and "GEMINI_API_KEY2" not in paid
     sub = key_env("subscription", ENV)
     assert not any(k.startswith("GEMINI") for k in sub) and sub["PATH"] == "/bin"
+    assert "CLAUDE_FORCE_OAUTH" not in sub
+    oauth = key_env("subscription", {**ENV, "CLAUDE_CODE_OAUTH_TOKEN": "t"})
+    assert oauth["CLAUDE_FORCE_OAUTH"] == "1" and oauth["CLAUDE_CODE_OAUTH_TOKEN"] == "t"
     with pytest.raises(RuntimeError):
         key_env("paid", {"GEMINI_API_KEY": "x"})
     with pytest.raises(RuntimeError):
