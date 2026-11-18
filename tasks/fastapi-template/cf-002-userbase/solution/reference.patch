@@ -1,0 +1,36 @@
+diff --git a/backend/app/models.py b/backend/app/models.py
+index 181acf2..e257822 100644
+--- a/backend/app/models.py
++++ b/backend/app/models.py
+@@ -10,12 +10,31 @@ def get_datetime_utc() -> datetime:
+ 
+ 
+ # Shared properties
++from pydantic import model_validator  # noqa: E402
++
++
+ class UserBase(SQLModel):
+     email: EmailStr = Field(unique=True, index=True, max_length=255)
+     is_active: bool = True
+     is_superuser: bool = False
+     full_name: str | None = Field(default=None, max_length=255)
+ 
++    @model_validator(mode="after")
++    def _reject_impossible_account_state(self) -> "UserBase":
++        # each field is fine alone; these combinations only break much later
++        problems: list[str] = []
++        if self.is_superuser and not self.is_active:
++            problems.append(
++                "is_superuser=True requires is_active=True (a disabled superuser is not allowed)"
++            )
++        if self.full_name is not None and not self.full_name.strip():
++            problems.append(
++                "full_name must be omitted (null) or contain at least one non-whitespace character"
++            )
++        if problems:
++            raise ValueError("invalid user: " + "; ".join(problems))
++        return self
++
+ 
+ # Properties to receive via API on creation
+ class UserCreate(UserBase):

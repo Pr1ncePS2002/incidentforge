@@ -1,0 +1,62 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..20978f9 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,57 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    # extra allowed browser origins (FRONTEND_HOST is always allowed); operators
++    # write these as a json array or as "a, b,c", both must load the same list
++    BACKEND_CORS_ORIGINS: list[str] | str = []
++
++    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
++    @classmethod
++    def _parse_cors_origins(cls, value: object) -> list[str]:
++        import json
++
++        raw = value
++        if isinstance(value, str):
++            text = value.strip()
++            if text.startswith("["):
++                try:
++                    value = json.loads(text)
++                except ValueError:
++                    raise ValueError(
++                        f"BACKEND_CORS_ORIGINS is not a valid json array: {raw!r}"
++                    ) from None
++            else:
++                value = text.split(",") if text else []
++        if not isinstance(value, list | tuple):
++            raise ValueError(
++                "BACKEND_CORS_ORIGINS must be a json array or comma-separated string, "
++                f"got {raw!r}"
++            )
++        origins: list[str] = []
++        for item in value:
++            if not isinstance(item, str):
++                raise ValueError(
++                    f"BACKEND_CORS_ORIGINS entries must be strings, got {item!r} in {raw!r}"
++                )
++            origin = item.strip().rstrip("/")
++            if not origin:
++                continue
++            if not origin.startswith(("http://", "https://")):
++                raise ValueError(
++                    f"BACKEND_CORS_ORIGINS has invalid origin {item.strip()!r} in {raw!r}"
++                )
++            origins.append(origin)
++        return origins
++
++    @computed_field  # type: ignore[prop-decorator]
++    @property
++    def all_cors_origins(self) -> list[str]:
++        origins = [self.FRONTEND_HOST.rstrip("/")]
++        for origin in self.BACKEND_CORS_ORIGINS:
++            if origin not in origins:
++                origins.append(origin)
++        return origins
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]
