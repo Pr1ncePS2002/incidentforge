@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "make item creation idempotent on redelivery and retry"
+family = "idempotent-consumer"
+difficulty = "hard"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["duplicate-delivery: create_item is called twice with the same owner and idempotency key, in the same session and in a new session (the second time with a changed payload); exactly one item exists and the original is returned", "retry-after-partial: the first attempt commits the item and then raises (lost ack), or raises before anything is persisted; the retry with the same key leaves exactly one item", "back-to-back-duplicate: a second delivery with the same key commits in another session after the first delivery has checked for an existing item but before it commits; both calls return the same item and exactly one row exists", "distinct-events: different keys for one owner, and the same key for two different owners, each create their own item"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0
