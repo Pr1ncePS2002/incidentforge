@@ -46,17 +46,20 @@ def _load_json(path: Path) -> Any:
 def load_data() -> dict[str, Any]:
     """collect real numbers from reports/ and tasks/; anything missing stays None and renders as TBD."""
     summary = _load_json(ROOT / "reports" / "summary.json") or {}
-    validations = [_load_json(p) for p in sorted((ROOT / "reports" / "validation").glob("*.json"))]
+    # task ids contain the target dir, so reports nest one level down
+    validations = [_load_json(p) for p in sorted((ROOT / "reports" / "validation").rglob("*.json"))]
     validations = [v for v in validations if isinstance(v, dict)]
     accepted = [v for v in validations if v.get("accepted")]
     gold = sorted((ROOT / "tasks" / "fastapi-template").glob("ff-001-*/instruction.md"))
     task_dirs = [p.parent for p in (ROOT / "tasks").glob("*/*/instruction.md")]
+    # report.summarize is the source of truth once it exists; raw logs are the fallback
+    sv = summary.get("validation") or {}
     return {
         "summary": summary,
-        "validated": len(validations) or None,
-        "accepted": len(accepted) or None,
-        "mutants_total": sum(int(v.get("mutants_total", 0)) for v in accepted) or None,
-        "mutants_killed": sum(int(v.get("mutants_killed", 0)) for v in accepted) or None,
+        "validated": sv.get("candidates") or len(validations) or None,
+        "accepted": sv.get("accepted") or len(accepted) or None,
+        "mutants_total": sv.get("mutants_total") or sum(int(v.get("mutants_total", 0)) for v in accepted) or None,
+        "mutants_killed": sv.get("mutants_killed") or sum(int(v.get("mutants_killed", 0)) for v in accepted) or None,
         "tasks_on_disk": len(task_dirs) or None,
         "targets": sorted({p.parent.name for p in task_dirs}) or None,
         "gold_instruction": gold[0].read_text() if gold else None,
@@ -221,10 +224,24 @@ def build_html(d: dict[str, Any]) -> str:
         res = f"<p class='label'>pass rate per model (k={escape(str(models[0].get('k', 1)))})</p>{_bars(rows)}"
     else:
         res = f"<p>{TBD}: per-model pass rates from <code>reports/summary.json</code></p>"
+    failures = s.get("failures") or {}
+    if failures:
+        frows = "".join(
+            f"<tr><td>{escape(m)}</td><td>{c.get('fault', 0)}</td><td>{c.get('happy', 0)}</td>"
+            f"<td>{c.get('regression', 0)}</td></tr>"
+            for m, c in sorted(failures.items())
+        )
+        res += (
+            "<p class='label'>where failed runs break</p><table class='grid small'><tr><th>model</th>"
+            f"<th>fault-injection tests</th><th>happy-path tests</th><th>repo suite</th></tr>{frows}</table>"
+        )
+    findings = s.get("findings") or []
+    if findings:
+        res += "<ul class='tight'>" + "".join(f"<li>{escape(str(f))}</li>" for f in findings[:4]) + "</ul>"
+    slides.append(slide("Results", res))
     if by_family:
         fam_rows = [(f"{f.get('family')} · {f.get('model')}", float(f.get("pass_rate", 0))) for f in by_family]
-        res += f"<p class='label'>pass rate per family</p>{_bars(fam_rows[:8], bar_h=22)}"
-    slides.append(slide("Results", res))
+        slides.append(slide("Results by family", _bars(fam_rows[:12], width=1100, bar_h=26)))
     slides.append(
         slide(
             "Tech stack",

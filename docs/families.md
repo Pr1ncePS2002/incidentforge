@@ -1,75 +1,97 @@
 # Task families
 
 Each family is a recurring production failure class seen across a large e-commerce microservice fleet,
-rewritten as a feature request: "add the protection that would have prevented this outage". Family
-definitions (surface kinds, prompt, fault cases) live in `src/incidentforge/families/<slug>/`.
+rewritten as a feature request: "add the protection that would have prevented this outage". Definitions live
+in `src/incidentforge/families/<slug>/` (`family.yaml` + `prompt.md`); this page is generated from them by
+`uv run python scripts/gen_families_doc.py`.
 
-Sample task links are filled once the dataset is generated.
+`forge run` without `--family` samples families by the share of incidents each class accounts for
+(`families/taxonomy.json`), so the dataset mix follows production reality rather than being uniform.
 
 ## 1. fail-fast-config
 
-**Failure class:** a service starts with a required setting missing or blank, runs in a broken state, and
-fails later on the first request that needs it.
-**Task:** validate required settings at startup and refuse to start with an error naming the setting.
-**Injected faults:** setting unset; set to an empty or whitespace-only string.
-**Sample:** _TBD_ (gold task `tasks/fastapi-template/ff-001-*`)
+**fail fast on missing or placeholder settings.** the service refuses to start when a required setting is missing, empty, whitespace or still a placeholder, and reports every bad key in one aggregated error instead of crashing later on first use.
+
+Attaches to: `settings-class`, `env-read`, `pool-config` · languages: python, go · sampling weight: 16%
+
+Injected faults:
+
+- `missing`: a required setting is absent from the environment
+- `empty`: a required setting is set to an empty or whitespace-only string
+- `placeholder`: a required setting still holds a template placeholder such as "changethis", "todo" or "<fill-me>"
+- `conditional-missing`: a setting that becomes required only when a feature flag is on is missing while the flag is on
+- `several-bad`: two or more settings are bad at once and the error must name all of them
+
+Example: when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
+
+Accepted tasks (1): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md)
 
 ## 2. tolerant-typed-config
 
-**Failure class:** a config value written in a perfectly reasonable format (`"a, b"`, `"1_000"`, `"Yes"`)
-fails typed binding and the service crashes, or garbage is silently coerced to a default.
-**Task:** accept the formats operators actually write and reject invalid values with a clear message.
-**Injected faults:** comma lists with spaces, JSON lists, case variants of booleans, non-numeric numbers.
-**Sample:** _TBD_
+**accept the formats operators actually write.** typed settings accept the spellings operators really use for lists, booleans, numbers and durations, and reject garbage with a clear message naming the key and the bad value instead of a raw parser trace.
+
+Attaches to: `settings-class`, `env-read`, `pool-config`, `validator` · languages: python, go · sampling weight: 12%
+
+Injected faults:
+
+- `csv-list`: a list setting is written as a comma-separated string, e.g. "a, b,c"
+- `json-list`: a list setting is written as a json array string, e.g. '["a","b"]'
+- `empty-list`: a list setting is set to an empty string and must become an empty list
+- `bool-words`: a boolean setting is written as yes/no, on/off, 1/0 in any case
+- `duration-suffix`: a duration setting is written with a unit suffix such as "30s", "5m", "2h" or "1d"
+- `garbage`: a value that cannot be parsed must fail with an error naming the key and the bad value
+
+Example: an allowed-origins list accepts "a.com,b.com", '["a.com","b.com"]' and "" alike
+
+Accepted tasks: none yet.
 
 ## 3. cross-field-validation
 
-**Failure class:** each setting is valid on its own but the combination is impossible (a window whose
-start is after its end, a minimum above the maximum), and the service behaves wrongly instead of failing.
-**Task:** reject impossible combinations at load time.
-**Injected faults:** start after end, min above max, equal bounds where the range must be non-empty.
-**Sample:** _TBD_
+**reject impossible combinations of settings or inputs.** configuration or request models reject combinations of fields that cannot both be true, such as a window that ends before it starts, a minimum above a maximum, or two mutually exclusive flags both on.
+
+Attaches to: `settings-class`, `validator`, `pool-config` · languages: python, go · sampling weight: 10%
+
+Injected faults:
+
+- `inverted-range`: a lower bound is greater than its upper bound (min > max, start after end)
+- `mutually-exclusive`: two flags that cannot both be enabled are both enabled
+- `dependent-bound`: one value must stay below or within another, e.g. a timeout shorter than a total deadline
+- `boundary-equal`: the equal-values boundary must follow the documented rule (allowed or rejected)
+- `negative-or-zero`: a count, size or duration that must be positive is zero or negative
+
+Example: a maintenance window with an end time before its start time is rejected
+
+Accepted tasks: none yet.
 
 ## 4. idempotent-consumer
 
-**Failure class:** a message is redelivered or retried after a partial failure and its effect is applied
-twice.
-**Task:** make the handler apply each message once, keyed on a stable message identity.
-**Injected faults:** exact duplicate, retry after the handler failed midway, concurrent duplicates.
-**Sample:** _TBD_
+**make handlers safe to apply twice.** a handler that applies an external event, request or retried job produces the same end state when it runs twice or is retried after a partial failure, instead of duplicating rows, emails or counters.
+
+Attaches to: `consumer`, `cache-key` · languages: python, go · sampling weight: 10%
+
+Injected faults:
+
+- `duplicate-delivery`: the same event or request is delivered twice with the same idempotency key
+- `retry-after-partial`: the first attempt fails after a partial write and the retry must not double-apply
+- `back-to-back-duplicate`: two deliveries of the same event are applied back to back before either reports a result
+- `distinct-events`: two different events with different keys must both still apply
+
+Example: a "create item" request retried by a client with the same request id creates one item, not two
+
+Accepted tasks: none yet.
 
 ## 5. hot-reload-config
 
-**Failure class:** a dynamic setting is changed at runtime but the code read it once at startup, so the
-change silently has no effect.
-**Task:** make the value take effect without a restart.
-**Injected faults:** value changed after startup; invalid new value (old value must be kept).
-**Sample:** _TBD_
+_definition not landed yet._
 
 ## 6. env-aware-naming
 
-**Failure class:** cache or queue names built without the environment, so two environments share or
-overwrite each other's data.
-**Task:** derive keys from the environment and keep them stable within one.
-**Injected faults:** same logical key in two environments; missing environment name.
-**Sample:** _TBD_
+_definition not landed yet._
 
 ## 7. resource-aware-defaults
 
-**Failure class:** pool, worker or heap sizes hardcoded for a large machine, so the service is killed or
-starves inside a small container.
-**Task:** derive defaults from the resource limits available, with an explicit override.
-**Injected faults:** small CPU/memory limit, override present, limits unavailable.
-**Sample:** _TBD_
+_definition not landed yet._
 
 ## 8. config-round-trip
 
-**Failure class:** a tool regenerates a config file and drops or silently defaults a field it does not know.
-**Task:** make load → save → load lossless, including unknown fields.
-**Injected faults:** unknown field, field equal to its default, nested optional field.
-**Sample:** _TBD_
-
-## Sampling
-
-`forge run` without `--family` picks families with weights proportional to how often each failure class
-occurs (`families/taxonomy.json`), so the dataset mix follows production reality rather than being uniform.
+_definition not landed yet._
