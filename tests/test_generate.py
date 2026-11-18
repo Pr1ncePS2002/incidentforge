@@ -241,3 +241,41 @@ def test_cli_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     assert seen["backend"] == "claude-code" and len(seen["slugs"]) == len(set(seen["slugs"]))
     res = CliRunner().invoke(cli.app, ["run", "--n", "2", "--family", "fail-fast-config", "--out", str(tmp_path)])
     assert res.exit_code == 1 and "only 1/2" in res.output
+
+
+@pytest.mark.parametrize(
+    ("gate", "agent", "log"),
+    [
+        ("fail_on_base", "nop", "feature_tests.log"),
+        ("regression", "oracle", "repo_suite.log"),
+        ("pass_on_reference", "oracle", "feature_tests.log"),
+    ],
+)
+def test_verifier_excerpt(tmp_path: Path, gate: str, agent: str, log: str) -> None:
+    from incidentforge.generate import verifier_excerpt
+
+    d = tmp_path / f"t--ff-001-x-{agent}-20261118/trial1/verifier"
+    d.mkdir(parents=True)
+    (d / log).write_text("\n".join(f"line {i}" for i in range(100)))
+    report = ValidationReport(task_id="t/ff-001-x", accepted=False, gates=[GateResult(gate=gate, passed=False)])
+    text = verifier_excerpt(tmp_path, "t/ff-001-x", report)
+    assert "line 99" in text and "line 39" not in text and agent in text
+
+
+def test_verifier_excerpt_none(tmp_path: Path) -> None:
+    from incidentforge.generate import verifier_excerpt
+
+    leak = ValidationReport(task_id="t/x", accepted=False, gates=[GateResult(gate="leak", passed=False)])
+    assert verifier_excerpt(tmp_path, "t/x", leak) == ""
+    nop = ValidationReport(task_id="t/x", accepted=False, gates=[GateResult(gate="fail_on_base", passed=False)])
+    assert verifier_excerpt(tmp_path, "t/x", nop) == ""
+
+
+def test_stray_untracked_files_stay_out_of_patch(target: Target, tmp_path: Path) -> None:
+    patch = good_patch(target)
+    repo = gen_mod.checkout(target, tmp_path / "work")
+    (repo / ".pre-commit-config.yaml").write_text("repos: []\n")
+    run(target, tmp_path, FakeBackend(answer(patch)), FakeValidator(True))
+    (task,) = (tmp_path / "tasks" / "fixture").iterdir()
+    text = (task / "solution" / "reference.patch").read_text()
+    assert "pre-commit" not in text and "STRICT" in text

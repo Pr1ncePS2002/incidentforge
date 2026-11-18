@@ -132,6 +132,7 @@ class Generator:
     validator: Validator
     gold: str = "none"
     log: Callable[[str], None] = print
+    jobs_dir: Path = Path("jobs/validation")
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     @property
@@ -156,8 +157,11 @@ class Generator:
                 res = _git(self.repo, "apply", "--recount", "--whitespace=nowarn", "-", stdin=patch)
                 if res.returncode != 0:
                     raise PatchError(res.stderr.strip()[:600] or "git apply failed")
-                _git(self.repo, "add", "-A")
-                diff = _git(self.repo, "diff", "--cached", "--no-color").stdout
+                # stage only what the patch touches; hook installers drop stray files into fresh clones
+                stat = _git(self.repo, "apply", "--recount", "--numstat", "-", stdin=patch).stdout
+                paths = [line.split("\t", 2)[2] for line in stat.splitlines() if line.count("\t") >= 2]
+                _git(self.repo, "add", "--", *paths)
+                diff = _git(self.repo, "diff", "--cached", "--no-color", "--", *paths).stdout
             finally:
                 _git(self.repo, "reset", "--hard", "--quiet")
                 _git(self.repo, "clean", "-fdq")
@@ -238,7 +242,7 @@ class Generator:
             )
             if report.accepted:
                 break
-            failure = describe_failure(report)
+            failure = describe_failure(report) + verifier_excerpt(self.jobs_dir, pair.task_id, report)
         self.settle(pair, report)
         return Outcome(pair, report, attempts, title, time.monotonic() - start)
 
@@ -273,6 +277,28 @@ def difficulty(patch: str, faults: int) -> str:
     if files <= 1 and faults <= 2:
         return "easy"
     return "medium"
+
+
+EXCERPT_LINES = 60
+
+
+def verifier_excerpt(jobs_dir: Path, task_id: str, report: ValidationReport) -> str:
+    """tail of the verifier log behind the failing gate; gate details alone are only reward numbers."""
+    bad = {g.gate for g in report.gates if not g.passed}
+    if "fail_on_base" in bad:
+        agent, log = "nop", "feature_tests.log"
+    elif "regression" in bad:
+        agent, log = "oracle", "repo_suite.log"
+    elif bad & {"pass_on_reference", "flakiness"}:
+        agent, log = "oracle", "feature_tests.log"
+    else:
+        return ""
+    slug = task_id.replace("/", "--")
+    logs = sorted(jobs_dir.glob(f"{slug}-{agent}-*/**/verifier/{log}"), key=lambda p: p.stat().st_mtime)
+    if not logs:
+        return ""
+    tail = "\n".join(logs[-1].read_text(errors="replace").splitlines()[-EXCERPT_LINES:])
+    return f"\n\nlast lines of {log} from the {agent} run:\n```\n{tail}\n```"
 
 
 def describe_failure(report: ValidationReport) -> str:
