@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject contradictory token lifetime and smtp transport settings"
+family = "cross-field-validation"
+difficulty = "hard"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["negative-or-zero: ACCESS_TOKEN_EXPIRE_MINUTES or EMAIL_RESET_TOKEN_EXPIRE_HOURS set to 0 or a negative value", "dependent-bound: EMAIL_RESET_TOKEN_EXPIRE_HOURS * 60 exceeds ACCESS_TOKEN_EXPIRE_MINUTES (48h reset token with a 60 min session)", "boundary-equal: reset lifetime equal to session lifetime (2h vs 120 min) is accepted, one minute short (119 min) is rejected", "mutually-exclusive: SMTP_TLS and SMTP_SSL both enabled"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

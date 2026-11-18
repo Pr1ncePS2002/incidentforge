@@ -1,0 +1,30 @@
+slug: cross-field-validation
+title: reject impossible combinations of settings or inputs
+intent: >-
+  configuration or request models reject combinations of fields that cannot both be true, such as a
+  window that ends before it starts, a minimum above a maximum, or two mutually exclusive flags both on.
+surface_kinds: [settings-class, validator, pool-config]
+fault_catalogue:
+  - id: inverted-range
+    description: a lower bound is greater than its upper bound (min > max, start after end)
+  - id: mutually-exclusive
+    description: two flags that cannot both be enabled are both enabled
+  - id: dependent-bound
+    description: one value must stay below or within another, e.g. a timeout shorter than a total deadline
+  - id: boundary-equal
+    description: the equal-values boundary must follow the documented rule (allowed or rejected)
+  - id: negative-or-zero
+    description: a count, size or duration that must be positive is zero or negative
+acceptance:
+  - invalid combinations raise a validation error naming both fields involved
+  - valid combinations, including the shipped defaults, still validate
+  - the boundary case behaviour is stated in the instruction and tested
+  - the repository's existing test suite still passes
+difficulty_levers:
+  - three or more fields in one rule
+  - rules that only apply when an optional field is set
+  - different rules per environment
+examples:
+  - a maintenance window with an end time before its start time is rejected
+  - enabling both implicit tls and starttls for the same connection is rejected
+languages: [python, go]

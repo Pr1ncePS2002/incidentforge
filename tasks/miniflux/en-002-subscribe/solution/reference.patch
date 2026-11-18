@@ -1,0 +1,92 @@
+diff --git a/internal/googlereader/handler.go b/internal/googlereader/handler.go
+index 39572aa8..cf53591d 100644
+--- a/internal/googlereader/handler.go
++++ b/internal/googlereader/handler.go
+@@ -417,6 +417,9 @@ func getOrCreateCategory(streamCategory Stream, store *storage.Storage, userID i
+ }
+ 
+ func subscribe(newFeed Stream, category Stream, title string, store *storage.Storage, userID int64) (*model.Feed, error) {
++	if _, err := SubscriptionName(NameSettingsFromEnv(), userID, newFeed.ID); err != nil {
++		return nil, err
++	}
+ 	destCategory, err := getOrCreateCategory(category, store, userID)
+ 	if err != nil {
+ 		if errors.Is(err, storage.ErrNoCategory) {
+diff --git a/internal/googlereader/scoped_name.go b/internal/googlereader/scoped_name.go
+new file mode 100644
+index 00000000..7ab896c3
+--- /dev/null
++++ b/internal/googlereader/scoped_name.go
+@@ -0,0 +1,72 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package googlereader // import "miniflux.app/v2/internal/googlereader"
++
++import (
++	"errors"
++	"fmt"
++	"net/url"
++	"os"
++	"strconv"
++	"strings"
++)
++
++// environmentSetting is the setting that scopes every name built by this package.
++const environmentSetting = "MINIFLUX_ENVIRONMENT"
++
++// defaultEnvironment is used when the setting is not present at all.
++const defaultEnvironment = "production"
++
++// nameSeparator joins the environment and the escaped parts of a name.
++const nameSeparator = ":"
++
++// NameSettings carries the deployment environment used to scope names.
++type NameSettings struct {
++	Environment string
++}
++
++// NameSettingsFromEnv reads the deployment environment from the process environment.
++// An absent variable selects the default environment; a present but empty value is kept
++// so that building a name fails instead of silently falling back.
++func NameSettingsFromEnv() NameSettings {
++	value, found := os.LookupEnv(environmentSetting)
++	if !found {
++		return NameSettings{Environment: defaultEnvironment}
++	}
++	return NameSettings{Environment: value}
++}
++
++// validateEnvironment rejects empty and unknown environments with an error naming the setting.
++func validateEnvironment(environment string) error {
++	if strings.TrimSpace(environment) == "" {
++		return fmt.Errorf("googlereader: %s must not be empty", environmentSetting)
++	}
++	switch environment {
++	case "production", "staging", "development", "test":
++		return nil
++	}
++	return fmt.Errorf("googlereader: %s=%q is not one of production, staging, development, test", environmentSetting, environment)
++}
++
++// ScopedName builds a name scoped to the configured environment. Each part is
++// query-escaped so that a part containing the separator cannot collide with another name.
++func ScopedName(settings NameSettings, parts ...string) (string, error) {
++	if err := validateEnvironment(settings.Environment); err != nil {
++		return "", err
++	}
++	if len(parts) == 0 {
++		return "", errors.New("googlereader: a scoped name needs at least one part")
++	}
++	escaped := make([]string, 0, len(parts)+1)
++	escaped = append(escaped, settings.Environment)
++	for _, part := range parts {
++		escaped = append(escaped, url.QueryEscape(part))
++	}
++	return strings.Join(escaped, nameSeparator), nil
++}
++
++// SubscriptionName builds the name identifying a Google Reader subscription of a feed by a user.
++func SubscriptionName(settings NameSettings, userID int64, feedURL string) (string, error) {
++	return ScopedName(settings, "googlereader", "subscription", strconv.FormatInt(userID, 10), feedURL)
++}

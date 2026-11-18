@@ -1,0 +1,37 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..e63f7a8 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,32 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    # Optional hard ceiling for access token lifetime (minutes). When set, the
++    # effective ACCESS_TOKEN_EXPIRE_MINUTES is the explicit value (which must not
++    # exceed the ceiling) or, if left unset, min(built-in default, ceiling).
++    ACCESS_TOKEN_MAX_EXPIRE_MINUTES: int | None = None
++
++    @model_validator(mode="after")
++    def _derive_access_token_lifetime(self) -> Self:
++        lifetime = "ACCESS_TOKEN_EXPIRE_MINUTES"
++        ceiling = "ACCESS_TOKEN_MAX_EXPIRE_MINUTES"
++        minutes = self.ACCESS_TOKEN_EXPIRE_MINUTES
++        maximum = self.ACCESS_TOKEN_MAX_EXPIRE_MINUTES
++        if maximum is not None and maximum < 1:
++            raise ValueError(f"{ceiling} must be at least 1, got {maximum}")
++        if minutes < 1:
++            raise ValueError(f"{lifetime} must be at least 1, got {minutes}")
++        if maximum is None:
++            return self
++        if lifetime in self.model_fields_set:
++            if minutes > maximum:
++                raise ValueError(
++                    f"{lifetime} ({minutes}) exceeds {ceiling} ({maximum})"
++                )
++        else:
++            self.ACCESS_TOKEN_EXPIRE_MINUTES = min(minutes, maximum)
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

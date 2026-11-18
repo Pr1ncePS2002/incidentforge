@@ -1,0 +1,71 @@
+diff --git a/internal/config/live.go b/internal/config/live.go
+new file mode 100644
+index 00000000..d2630d20
+--- /dev/null
++++ b/internal/config/live.go
+@@ -0,0 +1,65 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import (
++	"fmt"
++	"strings"
++	"sync/atomic"
++)
++
++// LiveOptions holds the active configuration options and lets operators
++// replace them at runtime without restarting the process.
++//
++// Readers must call Current for every read instead of keeping a copy of the
++// options. Each snapshot returned by Current is immutable: a reload builds a
++// complete new set of options and swaps it in atomically, so related values
++// always change together.
++type LiveOptions struct {
++	current atomic.Pointer[configOptions]
++}
++
++// NewLiveOptions returns a LiveOptions serving initial. When initial is nil,
++// the documented default options are served.
++func NewLiveOptions(initial *configOptions) *LiveOptions {
++	if initial == nil {
++		initial = NewConfigParser().options
++	}
++	live := &LiveOptions{}
++	live.current.Store(initial)
++	return live
++}
++
++// Current returns the options that are active right now.
++func (l *LiveOptions) Current() *configOptions {
++	return l.current.Load()
++}
++
++// Reload parses lines (KEY=VALUE, the same format as the environment) on top
++// of the defaults, validates the result and makes it active. Keys missing from
++// lines fall back to their defaults. On error nothing changes and the
++// previously active options keep serving.
++func (l *LiveOptions) Reload(lines []string) error {
++	cleaned := make([]string, 0, len(lines))
++	for _, line := range lines {
++		if strings.TrimSpace(line) == "" {
++			continue
++		}
++		key, _, found := strings.Cut(line, "=")
++		if !found || strings.TrimSpace(key) == "" {
++			return fmt.Errorf("config: reload rejected, malformed line %q (expected KEY=VALUE)", line)
++		}
++		cleaned = append(cleaned, line)
++	}
++
++	parser := NewConfigParser()
++	if err := parser.parseLines(cleaned); err != nil {
++		return fmt.Errorf("config: reload rejected: %w", err)
++	}
++	if err := parser.options.Validate(); err != nil {
++		return fmt.Errorf("config: reload rejected: %w", err)
++	}
++	l.current.Store(parser.options)
++	return nil
++}

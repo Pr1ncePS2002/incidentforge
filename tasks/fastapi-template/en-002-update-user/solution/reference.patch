@@ -1,0 +1,74 @@
+diff --git a/backend/app/core/broker.py b/backend/app/core/broker.py
+new file mode 100644
+index 0000000..90199b9
+--- /dev/null
++++ b/backend/app/core/broker.py
+@@ -0,0 +1,8 @@
++"""In-process stand-in for the shared message broker used for user change events."""
++
++published: list[tuple[str, str]] = []
++
++
++def publish(topic: str, key: str) -> None:
++    """Record one message for `topic` keyed by `key`."""
++    published.append((topic, key))
+diff --git a/backend/app/core/naming.py b/backend/app/core/naming.py
+new file mode 100644
+index 0000000..6ed8821
+--- /dev/null
++++ b/backend/app/core/naming.py
+@@ -0,0 +1,30 @@
++"""Environment-scoped names for shared cache keys, broker topics and queues."""
++
++from app.core import config
++
++ENV_SETTING = "FASTAPI_ENV"
++ALLOWED_ENVIRONMENTS: frozenset[str] = frozenset({"development", "staging", "production"})
++SEPARATOR = ":"
++
++
++def current_environment() -> str:
++    """Return the configured environment, failing fast if it is empty or unknown."""
++    env = getattr(config.settings, ENV_SETTING, None)
++    if not isinstance(env, str) or env not in ALLOWED_ENVIRONMENTS:
++        allowed = ", ".join(sorted(ALLOWED_ENVIRONMENTS))
++        raise ValueError(f"{ENV_SETTING} must be one of: {allowed} (got {env!r})")
++    return env
++
++
++def scoped_name(*parts: str) -> str:
++    """Build '<env>:<part>:...' for a shared resource; parts may not contain ':'."""
++    if not parts:
++        raise ValueError("scoped_name requires at least one name part")
++    for part in parts:
++        if not isinstance(part, str) or not part:
++            raise ValueError(f"name parts must be non-empty strings, got {part!r}")
++        if SEPARATOR in part:
++            raise ValueError(
++                f"name part {part!r} contains the separator {SEPARATOR!r}"
++            )
++    return SEPARATOR.join((current_environment(), *parts))
+diff --git a/backend/app/crud.py b/backend/app/crud.py
+index a8ceba6..4a4d59d 100644
+--- a/backend/app/crud.py
++++ b/backend/app/crud.py
+@@ -18,6 +18,11 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
+ 
+ 
+ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
++    from app.core import broker, naming
++
++    # resolve env-scoped names before touching the row so a bad FASTAPI_ENV fails fast
++    topic = naming.scoped_name("users", "updated")
++    message_key = naming.scoped_name("user", str(db_user.id))
+     user_data = user_in.model_dump(exclude_unset=True)
+     extra_data = {}
+     if "password" in user_data:
+@@ -28,6 +33,7 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
+     session.add(db_user)
+     session.commit()
+     session.refresh(db_user)
++    broker.publish(topic, message_key)
+     return db_user
+ 
+ 

@@ -1,0 +1,36 @@
+# equivalent mutmut mutants: <mutant> <platform|any> <reason>; scripts/mutation_gate.py fails on any other survivor
+# platform darwin = only equivalent on the case-insensitive macos filesystem, so linux ci still kills it
+
+incidentforge.budget.xǁLedgerǁ_append__mutmut_6 any every caller appends one entry, so the join separator never appears
+incidentforge.budget.xǁLedgerǁ_split__mutmut_47 any pid 0 and pid 1 both probe as alive (own group / EPERM), so a pid-less hold counts either way
+incidentforge.budget.x_render__mutmut_6 any bar() clamps to 1.0, so 1 and 2 draw the same full bar
+incidentforge.validate.x_gate_mutation__mutmut_90 any the killed list is only counted, never printed
+incidentforge.validate.x_find_task_dirs__mutmut_3 any a missed task.toml falls through to rglob, which finds the same dir
+incidentforge.validate.x_find_task_dirs__mutmut_4 any same fall-through to rglob as mutmut_3
+incidentforge.validate.mutation.x_post_image__mutmut_21 any git apply only warns on whitespace by default; output and result are identical
+incidentforge.validate.mutation.x__replace__mutmut_20 any parsed stmt/expr nodes always carry a non-zero end_col_offset
+incidentforge.validate.mutation.x_python_mutants__mutmut_67 any text comes from source segments, so sharing the ops list with the walked tree is never visible
+incidentforge.validate.mutation.x_line_mutants__mutmut_12 any an out-of-range line yields no mutant whether it reads as "" or "XXXX"
+incidentforge.validate.mutation.x_line_mutants__mutmut_14 any the if regex already allows trailing whitespace
+incidentforge.validate.mutation.x_line_mutants__mutmut_15 any keepends lines never start with a newline unless blank, and blank lines never match
+incidentforge.validate.mutation.x_make_mutants__mutmut_38 any candidates are only skipped on an unparsable .py, where every candidate is skipped
+incidentforge.validate.go_mutants.x_drop_error_return__mutmut_13 any "nil" never matches the error regex, so the second test already returns None
+incidentforge.validate.go_mutants.x_drop_error_return__mutmut_14 any same redundant nil check as mutmut_13
+incidentforge.validate.go_mutants.x_go_mutants__mutmut_14 any no operator matches a blank or comment line, so skipping them is only a shortcut
+incidentforge.validate.go_mutants.x_go_mutants__mutmut_17 any same comment-line shortcut as mutmut_14
+incidentforge.validate.go_mutants.x_go_mutants__mutmut_18 any same comment-line shortcut as mutmut_14
+
+incidentforge.validate.mutation.x__git__mutmut_12 darwin "GIT" resolves to git on a case-insensitive filesystem
+incidentforge.validate.mutation.x_repo_checkout__mutmut_17 darwin .GIT and .git are the same path on macos
+incidentforge.validate.mutation.x_post_image__mutmut_15 darwin REF.PATCH and ref.patch are the same file on macos
+incidentforge.validate.mutation.x_post_image__mutmut_29 darwin REF.PATCH and ref.patch are the same file on macos
+incidentforge.validate.x_gate_leak__mutmut_4 darwin case-only path change
+incidentforge.validate.x_gate_leak__mutmut_12 darwin case-only path change
+incidentforge.validate.x_gate_leak__mutmut_14 darwin case-only path change
+incidentforge.validate.x__suite_from_ctrf__mutmut_5 darwin case-only path change
+incidentforge.validate.x__suite_from_ctrf__mutmut_7 darwin case-only path change
+incidentforge.validate.x_gate_mutation__mutmut_9 darwin case-only path change
+incidentforge.validate.x_gate_mutation__mutmut_16 darwin case-only path change
+incidentforge.validate.x_gate_mutation__mutmut_18 darwin case-only path change
+incidentforge.validate.x_gate_mutation__mutmut_59 darwin case-only path change
+incidentforge.validate.x_gate_mutation__mutmut_61 darwin case-only path change

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" font-family="Helvetica, Arial, sans-serif">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#52606d"/></marker></defs>
+<rect width="1200" height="300" fill="#ffffff"/>
+<rect x="20.0" y="70" width="140" height="78" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="90.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">target repo</text>
+<text x="90.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">url + pinned</text>
+<text x="90.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">commit</text>
+<rect x="190.0" y="70" width="140" height="78" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="260.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">surface finder</text>
+<text x="260.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">config loaders,</text>
+<text x="260.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">consumers, keys</text>
+<line x1="162.0" y1="109.0" x2="188.0" y2="109.0" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="360.0" y="70" width="140" height="78" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
+<text x="430.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">task generator</text>
+<text x="430.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">family prompt +</text>
+<text x="430.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">claude / gemini</text>
+<line x1="332.0" y1="109.0" x2="358.0" y2="109.0" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="530.0" y="70" width="140" height="78" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
+<text x="600.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">validation gates</text>
+<text x="600.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">6 automatic</text>
+<text x="600.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">checks</text>
+<line x1="502.0" y1="109.0" x2="528.0" y2="109.0" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="700.0" y="70" width="140" height="78" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="770.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">harbor package</text>
+<text x="770.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">instruction, tests,</text>
+<text x="770.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">solution, env</text>
+<line x1="672.0" y1="109.0" x2="698.0" y2="109.0" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="870.0" y="70" width="140" height="78" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="940.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">evaluate</text>
+<text x="940.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">models x tasks</text>
+<text x="940.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">in docker</text>
+<line x1="842.0" y1="109.0" x2="868.0" y2="109.0" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="1040.0" y="70" width="140" height="78" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="1110.0" y="103.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">report</text>
+<text x="1110.0" y="123.0" text-anchor="middle" font-size="12" fill="#52606d">static html</text>
+<text x="1110.0" y="138.0" text-anchor="middle" font-size="12" fill="#52606d">+ summary.json</text>
+<line x1="1012.0" y1="109.0" x2="1038.0" y2="109.0" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<path d="M600.0,148 C600.0,218 430.0,218 430.0,152" fill="none" stroke="#e07b24" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a)"/>
+<text x="515.0" y="224" text-anchor="middle" font-size="12" fill="#e07b24">rejected: 1 retry with the failure reason</text>
+<text x="600.0" y="274" text-anchor="middle" font-size="13" fill="#1f2933">gates: fails on base · passes with reference · repo suite green · kills mutants · no leak · not flaky</text>
+<text x="600.0" y="34" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2933">IncidentForge pipeline</text>
+</svg>

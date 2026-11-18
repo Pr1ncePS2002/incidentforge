@@ -1,0 +1,82 @@
+diff --git a/internal/config/parser.go b/internal/config/parser.go
+index cb78f8b0..1f8b460b 100644
+--- a/internal/config/parser.go
++++ b/internal/config/parser.go
+@@ -52,6 +52,10 @@ func (cp *configParser) ParseFile(filename string) (*configOptions, error) {
+ 
+ // Validate checks for invalid or incomplete option combinations.
+ func (c *configOptions) Validate() error {
++	if err := c.validateTLSCertificateFiles(); err != nil {
++		return err
++	}
++
+ 	if c.OAuth2Provider() == "oidc" && c.OAuth2OIDCDiscoveryEndpoint() == "" {
+ 		return errors.New("OAUTH2_OIDC_DISCOVERY_ENDPOINT must be configured when using the OIDC provider")
+ 	}
+diff --git a/internal/config/tls_validation.go b/internal/config/tls_validation.go
+new file mode 100644
+index 00000000..091e0839
+--- /dev/null
++++ b/internal/config/tls_validation.go
+@@ -0,0 +1,61 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import (
++	"fmt"
++	"strings"
++)
++
++var placeholderSettingValues = map[string]struct{}{
++	"changethis":  {},
++	"changeme":    {},
++	"change-me":   {},
++	"todo":        {},
++	"tbd":         {},
++	"fixme":       {},
++	"placeholder": {},
++	"xxx":         {},
++}
++
++func isPlaceholderSettingValue(value string) bool {
++	v := strings.ToLower(strings.TrimSpace(value))
++	if v == "" {
++		return false
++	}
++	if _, found := placeholderSettingValues[v]; found {
++		return true
++	}
++	return strings.HasPrefix(v, "<") && strings.HasSuffix(v, ">")
++}
++
++// validateTLSCertificateFiles ensures CERT_FILE and KEY_FILE are configured together with real values.
++func (c *configOptions) validateTLSCertificateFiles() error {
++	settings := []struct {
++		key   string
++		value string
++	}{
++		{"CERT_FILE", strings.TrimSpace(c.CertFile())},
++		{"KEY_FILE", strings.TrimSpace(c.CertKeyFile())},
++	}
++
++	if settings[0].value == "" && settings[1].value == "" {
++		return nil
++	}
++
++	var problems []string
++	for _, setting := range settings {
++		switch {
++		case setting.value == "":
++			problems = append(problems, setting.key+" is missing or empty")
++		case isPlaceholderSettingValue(setting.value):
++			problems = append(problems, fmt.Sprintf("%s still holds the placeholder value %q", setting.key, setting.value))
++		}
++	}
++
++	if len(problems) == 0 {
++		return nil
++	}
++	return fmt.Errorf("invalid TLS certificate settings: %s", strings.Join(problems, "; "))
++}

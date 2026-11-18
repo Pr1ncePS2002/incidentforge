@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "make user creation idempotent on redelivery and retry"
+family = "idempotent-consumer"
+difficulty = "hard"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["duplicate-delivery: create_user is called twice with the same payload, in one session and in two separate sessions; the second call must return the original row and no second row may exist", "retry-after-partial: the first attempt commits the user, then session.refresh raises; the retry must return the committed user and leave exactly one row", "back-to-back-duplicate: another delivery commits the same user between get_user_by_email and the insert; the unique-constraint violation must be rolled back and the call must return the winning row", "distinct-events: two payloads with different emails but otherwise identical fields must both create their own users, and replays must map back to the right row"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

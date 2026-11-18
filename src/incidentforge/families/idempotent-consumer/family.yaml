@@ -1,0 +1,28 @@
+slug: idempotent-consumer
+title: make handlers safe to apply twice
+intent: >-
+  a handler that applies an external event, request or retried job produces the same end state when it
+  runs twice or is retried after a partial failure, instead of duplicating rows, emails or counters.
+surface_kinds: [consumer, cache-key]
+fault_catalogue:
+  - id: duplicate-delivery
+    description: the same event or request is delivered twice with the same idempotency key
+  - id: retry-after-partial
+    description: the first attempt fails after a partial write and the retry must not double-apply
+  - id: back-to-back-duplicate
+    description: two deliveries of the same event are applied back to back before either reports a result
+  - id: distinct-events
+    description: two different events with different keys must both still apply
+acceptance:
+  - applying the same event twice leaves exactly the state of applying it once
+  - the second application returns or reports the original result rather than an error, unless the instruction says otherwise
+  - distinct events are not deduplicated by mistake
+  - the repository's existing test suite still passes
+difficulty_levers:
+  - deriving a stable idempotency key from the event payload
+  - side effects outside the database (email, counters) that must also run once
+  - partial failure in the middle of a multi-step write
+examples:
+  - a "create item" request retried by a client with the same request id creates one item, not two
+  - a user sign-up event replayed by a queue sends exactly one welcome email
+languages: [python, go]

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from incidentforge.budget import BudgetExhausted, Ledger
 
@@ -45,14 +46,14 @@ class GeminiBackend:
     free_key: str | None
     paid_key: str | None
     ledger: Ledger = field(default_factory=Ledger.default)
-    _clients: dict = field(default_factory=dict, repr=False)
+    _clients: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
     def from_env(cls, env_path: str | Path = ".env") -> GeminiBackend:
         env = {**load_env(env_path), **os.environ}
         return cls(env.get("GEMINI_API_KEY"), env.get("GEMINI_API_KEY2"))
 
-    def _client(self, which: str):
+    def _client(self, which: str) -> Any:
         if which not in self._clients:
             from google import genai
 
@@ -60,7 +61,7 @@ class GeminiBackend:
             self._clients[which] = genai.Client(api_key=key)
         return self._clients[which]
 
-    def _call(self, which: str, model: str, prompt: str, max_output_tokens: int):
+    def _call(self, which: str, model: str, prompt: str, max_output_tokens: int) -> Any:
         from google.genai import types
 
         return self._client(which).models.generate_content(
@@ -70,14 +71,17 @@ class GeminiBackend:
         )
 
     @staticmethod
-    def _usage(resp) -> tuple[int, int]:
-        u = resp.usage_metadata
+    def _usage(resp: Any) -> tuple[int, int, int] | None:
+        """(prompt, output incl. thinking, cached prompt) tokens, or None when the reply carries no usage."""
+        u = getattr(resp, "usage_metadata", None)
+        if u is None:
+            return None
         out = (u.candidates_token_count or 0) + (getattr(u, "thoughts_token_count", 0) or 0)
-        return u.prompt_token_count or 0, out
+        return u.prompt_token_count or 0, out, getattr(u, "cached_content_token_count", 0) or 0
 
     def _count_prompt(self, model: str, prompt: str) -> int:
         try:
-            return self._client("paid").models.count_tokens(model=model, contents=prompt).total_tokens
+            return int(self._client("paid").models.count_tokens(model=model, contents=prompt).total_tokens)
         except Exception:  # noqa: BLE001
             # any counting failure falls back to a rough upper bound
             return len(prompt) // 2 + 1
@@ -86,18 +90,26 @@ class GeminiBackend:
         if self.free_key:
             try:
                 resp = self._call("free", model, prompt, max_output_tokens)
-                i, o = self._usage(resp)
+                i, o, _ = self._usage(resp) or (0, 0, 0)
                 return Result(resp.text or "", model, "free", i, o)
             except Exception as exc:
                 if _code(exc) not in FALLBACK_CODES or not self.paid_key:
                     raise
         if not self.paid_key:
             raise RuntimeError("no gemini key configured")
-        # the cap check reserves the worst case before any paid token is spent
-        self.ledger.check(model, self._count_prompt(model, prompt), max_output_tokens)
-        resp = self._call("paid", model, prompt, max_output_tokens)
-        i, o = self._usage(resp)
-        cost = self.ledger.record(model, i, o, tag=tag)
+        # the worst case is held in the shared ledger before any paid token is spent
+        prompt_tokens = self._count_prompt(model, prompt)
+        rid = self.ledger.reserve(model, prompt_tokens, max_output_tokens, tag=tag)
+        try:
+            resp = self._call("paid", model, prompt, max_output_tokens)
+        except BaseException:
+            # a failed call bills nothing on gemini, so its hold goes back to the pool
+            self.ledger.release(rid)
+            raise
+        usage = self._usage(resp)
+        # a reply without usage is billed at the reserved worst case rather than for free
+        i, o, cached = usage or (prompt_tokens, max_output_tokens, 0)
+        cost = self.ledger.record(model, i, o, tag=tag, cached_tokens=cached, reservation=rid)
         return Result(resp.text or "", model, "paid", i, o, cost)
 
 

@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "accept json array spelling for list settings and reject malformed lists with a clear error"
+family = "tolerant-typed-config"
+difficulty = "medium"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["json-list: a list setting written as a JSON array string such as [\"10.0.0.0/8\", \"192.168.0.0/16\"] (also compact, padded, and the empty array []) must give the same list as the comma-separated form", "garbage: a list value that starts with [ but is not a valid JSON array of strings (an unterminated array, or [1, 2]) must fail Validate() with an error that names the key and the offending value"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0
