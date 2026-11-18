@@ -347,14 +347,17 @@ class ResultsStore:
             f.write(json.dumps(side) + "\n")
 
 
-def _fit_batch(batch: list[TaskInfo], price_model: str, limits: Limits, ledger: Ledger) -> list[TaskInfo]:
+def _fit_batch(
+    batch: list[TaskInfo], price_model: str, limits: Limits, ledger: Ledger, tag: str = ""
+) -> tuple[list[TaskInfo], str | None]:
+    """largest prefix whose worst case fits, held in the ledger so parallel evals can't overshoot the cap."""
     for n in range(len(batch), 0, -1):
         try:
-            ledger.check(price_model, *limits.worst_tokens(n))
+            rid = ledger.reserve(price_model, *limits.worst_tokens(n), tag=tag)
         except BudgetExhausted:
             continue
-        return batch[:n]
-    return []
+        return batch[:n], rid
+    return [], None
 
 
 def pass_rates(results: Iterable[EvalResult]) -> dict[str, tuple[int, int]]:
@@ -438,9 +441,10 @@ def run_eval(
             queue = list(items)
             while queue and model not in blocked:
                 batch = queue[:batch_size]
+                rid: str | None = None
                 if key == "paid":
                     # shrink the batch until its worst case fits; stop the model when even one run doesn't
-                    batch = _fit_batch(batch, price_model, limits, ledger)
+                    batch, rid = _fit_batch(batch, price_model, limits, ledger, tag=f"eval:{price_model}")
                     if not batch:
                         echo(f"stopped    {model}: worst case of one more run no longer fits the paid cap")
                         blocked.add(model)
@@ -474,7 +478,12 @@ def run_eval(
                 if key == "paid":
                     # errored trials burned tokens too, so the whole batch is metered
                     prog.paid_usd += ledger.record(
-                        price_model, batch_in, batch_out, tag=f"eval:{job_name}", cached_tokens=batch_cached
+                        price_model,
+                        batch_in,
+                        batch_out,
+                        tag=f"eval:{job_name}",
+                        cached_tokens=batch_cached,
+                        reservation=rid,
                     )
                     prog.paid_runs += len(batch)
                     paid_left -= len(batch)

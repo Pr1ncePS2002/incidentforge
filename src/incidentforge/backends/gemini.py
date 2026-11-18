@@ -71,10 +71,13 @@ class GeminiBackend:
         )
 
     @staticmethod
-    def _usage(resp: Any) -> tuple[int, int]:
-        u = resp.usage_metadata
+    def _usage(resp: Any) -> tuple[int, int, int] | None:
+        """(prompt, output incl. thinking, cached prompt) tokens, or None when the reply carries no usage."""
+        u = getattr(resp, "usage_metadata", None)
+        if u is None:
+            return None
         out = (u.candidates_token_count or 0) + (getattr(u, "thoughts_token_count", 0) or 0)
-        return u.prompt_token_count or 0, out
+        return u.prompt_token_count or 0, out, getattr(u, "cached_content_token_count", 0) or 0
 
     def _count_prompt(self, model: str, prompt: str) -> int:
         try:
@@ -87,18 +90,26 @@ class GeminiBackend:
         if self.free_key:
             try:
                 resp = self._call("free", model, prompt, max_output_tokens)
-                i, o = self._usage(resp)
+                i, o, _ = self._usage(resp) or (0, 0, 0)
                 return Result(resp.text or "", model, "free", i, o)
             except Exception as exc:
                 if _code(exc) not in FALLBACK_CODES or not self.paid_key:
                     raise
         if not self.paid_key:
             raise RuntimeError("no gemini key configured")
-        # the cap check reserves the worst case before any paid token is spent
-        self.ledger.check(model, self._count_prompt(model, prompt), max_output_tokens)
-        resp = self._call("paid", model, prompt, max_output_tokens)
-        i, o = self._usage(resp)
-        cost = self.ledger.record(model, i, o, tag=tag)
+        # the worst case is held in the shared ledger before any paid token is spent
+        prompt_tokens = self._count_prompt(model, prompt)
+        rid = self.ledger.reserve(model, prompt_tokens, max_output_tokens, tag=tag)
+        try:
+            resp = self._call("paid", model, prompt, max_output_tokens)
+        except BaseException:
+            # a failed call bills nothing on gemini, so its hold goes back to the pool
+            self.ledger.release(rid)
+            raise
+        usage = self._usage(resp)
+        # a reply without usage is billed at the reserved worst case rather than for free
+        i, o, cached = usage or (prompt_tokens, max_output_tokens, 0)
+        cost = self.ledger.record(model, i, o, tag=tag, cached_tokens=cached, reservation=rid)
         return Result(resp.text or "", model, "paid", i, o, cost)
 
 

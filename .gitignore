@@ -13,3 +13,4 @@ work/
 coverage.xml
 reports/junit.xml
 htmlcov/
+.hypothesis/
