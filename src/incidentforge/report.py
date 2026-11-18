@@ -60,7 +60,9 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
         known = {t.task_id for t in tasks}
         results = [r for r in results if r.task_id in known]
         trials = [t for t in trials if t.get("task_id") in known]
-    led = ledger or Ledger.default()
+    # a ledger snapshot committed next to the results keeps clean-clone reports identical
+    snapshot = eval_dir / "spend-ledger.jsonl"
+    led = ledger or (Ledger(snapshot) if snapshot.exists() else Ledger.default())
     # a clean clone has no ledger, so fall back to what the committed results say was billed
     spend = led.spent() if led.entries() else sum(r.cost_usd for r in results)
     excluded_path = eval_dir / "excluded.json"
@@ -250,7 +252,7 @@ def findings(data: Data) -> list[str]:
         acc = sum(v.accepted for v in data.validation)
         mt = sum(v.mutants_total for v in data.validation)
         mk = sum(v.mutants_killed for v in data.validation)
-        line = f"{acc} of {len(data.validation)} task candidates passed every validation gate"
+        line = f"{acc} of {len(data.validation)} tasks with a validation report passed every gate"
         if mt:
             line += f"; accepted tasks' tests killed {mk} of {mt} injected mutants ({mk / mt:.0%})"
         out.append(line + ".")
@@ -260,7 +262,9 @@ def findings(data: Data) -> list[str]:
     if by_model:
         ranked = sorted(by_model.items(), key=lambda kv: _rate(kv[1]), reverse=True)
         parts = [f"{m} {_rate(rs):.0%} ({len(rs)} runs)" for m, rs in ranked]
-        out.append("pass rate by model: " + ", ".join(parts) + ".")
+        agents = sorted({r.agent for r in data.results})
+        note = f" (agents differ: {', '.join(agents)}; compare models within one agent)" if len(agents) > 1 else ""
+        out.append("pass rate by model: " + ", ".join(parts) + note + ".")
         by_fam: dict[str, list[EvalResult]] = defaultdict(list)
         for r in data.results:
             by_fam[r.family].append(r)
@@ -276,11 +280,8 @@ def findings(data: Data) -> list[str]:
     happy = sum(v.get("happy", 0) for v in fb.values())
     if fault + happy:
         out.append(
-            f"of failed runs with test detail, {fault} broke on an injected fault case versus {happy} on the "
-            "happy path: models implement the feature but miss the failure modes."
-            if fault > happy
-            else f"of failed runs with test detail, {fault} broke on an injected fault case "
-            f"and {happy} on the happy path."
+            f"of failed runs with per-test detail, {fault} failed at least one injected fault-case test and "
+            f"{happy} at least one happy-path test."
         )
     for x in data.excluded:
         out.append(f"{x.get('model', '?')} was left out of scoring: {x.get('reason', 'no reason given')}.")

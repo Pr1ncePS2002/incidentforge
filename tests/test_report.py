@@ -73,8 +73,15 @@ def test_build_writes_html_and_summary(tmp_path: Path) -> None:
     assert var["attempt_pass_rates"] == [1.0, 0.5] and var["unstable_tasks"] == 1
     assert summary["failures"]["gemini/gemini-3.8-flash"]["fault"] == 4
     text = " ".join(summary["findings"])
-    assert "2 of 3 task candidates" in text and "hardest family is cross-field-validation" in text
-    assert "injected fault case" in text
+    assert "2 of 3 tasks with a validation report" in text and "hardest family is cross-field-validation" in text
+    assert "injected fault-case test" in text
+
+
+def test_committed_ledger_snapshot_is_used_for_spend(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    Ledger(reports / "eval/spend-ledger.jsonl").record("gemini-2.5-pro", 0, 1_000_000)
+    build(reports / "index.html", tasks, reports)
+    assert json.loads((reports / "summary.json").read_text())["spend_usd"] == 15.0
 
 
 def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
