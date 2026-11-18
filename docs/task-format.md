@@ -5,22 +5,24 @@ Every task is a [Harbor](https://github.com/harbor-framework/harbor) task direct
 
 ```
 tasks/<target>/<task-id>/
-├── task.toml            # metadata: family, difficulty, timeouts, environment_mode = "shared"
+├── task.toml            # metadata (family, difficulty, base commit, fault cases), timeouts,
+│                        # verifier environment_mode = "shared"
 ├── instruction.md       # what the agent is asked to build; never contains the solution
 ├── environment/
-│   ├── Dockerfile       # the target repo at its pinned commit, deps installed, services inside
-│   └── run_tests.sh     # runs the repo's own test suite
+│   ├── Dockerfile       # the target repo at /app, pinned via ARG REPO_URL / ARG REPO_COMMIT
+│   └── run_tests.sh     # installed as `run_tests`; runs the repo's own test suite
 ├── solution/
-│   ├── solve.sh         # applies the reference patch with git apply (used by the oracle agent)
-│   └── solution.patch
+│   ├── solve.sh         # git apply of the reference patch (used by the oracle agent)
+│   └── reference.patch
 └── tests/
-    ├── test.sh          # runs feature tests + repo suite, writes the reward (1 or 0)
-    └── test_*.py | *_test.go   # feature and fault-injection tests
+    ├── test.sh          # copies feature tests in, runs them, removes them, runs the repo suite
+    └── feature/         # feature + fault-injection tests (fault tests are named test_fault_<id>)
 ```
 
 The agent sees only the environment and `instruction.md`. Tests are copied in after the agent finishes, so
 they cannot be read or edited during the attempt. Reward is 1 only when every feature test **and** the
-repo's existing suite pass.
+repo's existing suite pass. `test.sh` writes `/logs/verifier/reward.json` (`reward`, `feature_tests`,
+`repo_suite`), a CTRF summary, and the log of each run.
 
 ## Validation gates
 
