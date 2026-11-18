@@ -133,6 +133,19 @@ def harbor_model(model: str) -> str:
     return model.removesuffix(PAID_SUFFIX)
 
 
+DEFAULT_SUBSET = Path("reports/eval/subset.json")
+
+
+def frozen_subset(tasks_root: Path, n: int, path: Path = DEFAULT_SUBSET) -> list[str]:
+    """seeded subset picked once and kept in a file, so later dataset growth doesn't move it."""
+    if path.exists():
+        return [str(t) for t in json.loads(path.read_text())]
+    picked = pick_subset(discover_tasks(tasks_root), n)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(picked, indent=2) + "\n")
+    return picked
+
+
 def bare_model(model: str) -> str:
     return harbor_model(model).split("/")[-1]
 

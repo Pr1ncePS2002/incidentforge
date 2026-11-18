@@ -313,3 +313,10 @@ def test_failed_tests_come_from_verifier_logs(tmp_path: Path) -> None:
         "feature::tests/test_x.py::test_b",
         "repo::TestUsers",
     )
+
+
+def test_frozen_subset_is_picked_once(tasks_root: Path, tmp_path: Path) -> None:
+    path = tmp_path / "subset.json"
+    first = evaluate.frozen_subset(tasks_root, 2, path)
+    make_task(tasks_root, "go-svc", "zz-001", "brand-new-family")
+    assert evaluate.frozen_subset(tasks_root, 2, path) == first
