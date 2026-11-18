@@ -14,7 +14,11 @@ Reply with exactly one json object and nothing else (no prose, no code fences). 
   edit `_test.go` files in the patch. Use only the standard library and modules already in `go.mod`.
   The package's existing tests run together with yours and must keep passing: do not change shipped
   defaults or reject combinations that existing tests build (check the package's `*_test.go` files for
-  the values they set), and do not duplicate a check the code already performs.
+  the values they set), and do not duplicate a check the code already performs. A fault test must fail on
+  the pinned commit because the behaviour is missing (a bad config is accepted, a value is lost or stale),
+  not only because an existing error message names different keys. Never write urls or dsns
+  with `user:password@` or other credential-shaped literals; use a host-only url such as
+  `postgres://db.example/app`.
 - `feature_tests` (object): repository-relative path → file content. One or two Go test files named
   `*_test.go`, placed in the directory of the package under test (for example
   `internal/config/forge_feature_test.go`) and declaring that same package, so unexported identifiers are
