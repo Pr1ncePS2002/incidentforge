@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "accept operator spellings for a bcc email list setting"
+family = "tolerant-typed-config"
+difficulty = "hard"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["csv-list: EMAILS_BCC written as a comma-separated string, e.g. \"audit@example.com, ops@example.com\" or with a trailing comma", "json-list: EMAILS_BCC written as a JSON array string, e.g. '[\"audit@example.com\", \"ops@example.com\"]'", "empty-list: EMAILS_BCC set to an empty or whitespace-only string must become []", "garbage: EMAILS_BCC containing an invalid address, malformed JSON, or a non-string JSON item must fail naming EMAILS_BCC and the bad value"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

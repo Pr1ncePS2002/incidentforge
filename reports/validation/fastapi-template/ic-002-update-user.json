@@ -1,0 +1,45 @@
+{
+  "task_id": "fastapi-template/ic-002-update-user",
+  "accepted": true,
+  "gates": [
+    {
+      "gate": "leak",
+      "passed": true,
+      "detail": "0% 8-gram overlap",
+      "seconds": 0.0
+    },
+    {
+      "gate": "fail_on_base",
+      "passed": true,
+      "detail": "reward=0.0 feature_tests=0.0 repo_suite=1.0",
+      "seconds": 20.9
+    },
+    {
+      "gate": "pass_on_reference",
+      "passed": true,
+      "detail": "reward=1.0",
+      "seconds": 18.7
+    },
+    {
+      "gate": "regression",
+      "passed": true,
+      "detail": "repo suite passed with the reference patch",
+      "seconds": 0.0
+    },
+    {
+      "gate": "mutation",
+      "passed": true,
+      "detail": "killed 3/6; survived: drop_call@backend/app/core/idempotency.py:29, flip_compare@backend/app/core/idempotency.py:30, drop_call@backend/app/core/idempotency.py:31",
+      "seconds": 40.7
+    },
+    {
+      "gate": "flakiness",
+      "passed": true,
+      "detail": "oracle rewards over 3 runs: [1.0, 1.0, 1.0]",
+      "seconds": 21.4
+    }
+  ],
+  "mutants_total": 6,
+  "mutants_killed": 3,
+  "log_path": "jobs/validation"
+}

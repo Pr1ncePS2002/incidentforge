@@ -1,0 +1,57 @@
+diff --git a/backend/app/crud.py b/backend/app/crud.py
+index a8ceba6..c96a3b6 100644
+--- a/backend/app/crud.py
++++ b/backend/app/crud.py
+@@ -60,9 +60,49 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
+     return db_user
+ 
+ 
+-def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
+-    db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
++_ITEM_IDEMPOTENCY_NAMESPACE = uuid.UUID("6f1c2a0e-3b4d-5e6f-8a9b-0c1d2e3f4a5b")
++
++
++def _item_id_for_key(owner_id: uuid.UUID, idempotency_key: str) -> uuid.UUID:
++    # the key is scoped per owner, so two users can reuse the same key safely
++    return uuid.uuid5(_ITEM_IDEMPOTENCY_NAMESPACE, f"{owner_id}:{idempotency_key}")
++
++
++def create_item(
++    *,
++    session: Session,
++    item_in: ItemCreate,
++    owner_id: uuid.UUID,
++    idempotency_key: str | None = None,
++) -> Item:
++    from sqlalchemy.exc import IntegrityError
++
++    if idempotency_key is None:
++        db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
++        session.add(db_item)
++        session.commit()
++        session.refresh(db_item)
++        return db_item
++
++    if not idempotency_key.strip():
++        raise ValueError("idempotency_key must not be blank")
++    # the item id is derived from the key, so the primary key itself rejects a
++    # second insert even when two deliveries race past the lookup below
++    item_id = _item_id_for_key(owner_id, idempotency_key)
++    existing = session.get(Item, item_id)
++    if existing is not None:
++        return existing
++    db_item = Item.model_validate(
++        item_in, update={"owner_id": owner_id, "id": item_id}
++    )
+     session.add(db_item)
+-    session.commit()
++    try:
++        session.commit()
++    except IntegrityError:
++        session.rollback()
++        existing = session.get(Item, item_id)
++        if existing is None:
++            raise
++        return existing
+     session.refresh(db_item)
+     return db_item
