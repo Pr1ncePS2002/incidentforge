@@ -28,6 +28,8 @@ PRICES: dict[str, tuple[float, float]] = {
 }
 # unknown models get the most expensive known price
 FALLBACK_PRICE = max(PRICES.values(), key=lambda p: p[1])
+# cached input is billed at a fraction of the input price; 0.25 sits at or above the published cached rates
+CACHED_INPUT_FRACTION = 0.25
 
 
 class BudgetExhausted(RuntimeError):
@@ -38,9 +40,12 @@ def price_for(model: str) -> tuple[float, float]:
     return PRICES.get(model.removeprefix("models/"), FALLBACK_PRICE)
 
 
-def cost_usd(model: str, input_tokens: int, output_tokens: int) -> float:
+def cost_usd(model: str, input_tokens: int, output_tokens: int, cached_tokens: int = 0) -> float:
+    """input_tokens includes cached_tokens, as harbor and gemini report them."""
     pin, pout = price_for(model)
-    return (input_tokens * pin + output_tokens * pout) / 1_000_000
+    cached = min(max(cached_tokens, 0), input_tokens)
+    fresh = input_tokens - cached
+    return (fresh * pin + cached * pin * CACHED_INPUT_FRACTION + output_tokens * pout) / 1_000_000
 
 
 def default_ledger_path() -> Path:
@@ -88,14 +93,15 @@ class Ledger:
             )
         return worst
 
-    def record(self, model: str, input_tokens: int, output_tokens: int, tag: str = "") -> float:
-        c = cost_usd(model, input_tokens, output_tokens)
+    def record(self, model: str, input_tokens: int, output_tokens: int, tag: str = "", cached_tokens: int = 0) -> float:
+        c = cost_usd(model, input_tokens, output_tokens, cached_tokens)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         entry = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "model": model,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "cached_tokens": cached_tokens,
             "cost_usd": round(c, 6),
             "tag": tag,
         }
