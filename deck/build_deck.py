@@ -43,24 +43,31 @@ def _load_json(path: Path) -> Any:
         return None
 
 
-def load_data() -> dict[str, Any]:
+def _pick(summary: dict[str, Any], key: str, fallback: int) -> int | None:
+    """summary value when the key exists (zero included); otherwise the raw-log count, None when there are none."""
+    if key in summary and summary[key] is not None:
+        return int(summary[key])
+    return fallback or None
+
+
+def load_data(root: Path = ROOT) -> dict[str, Any]:
     """collect real numbers from reports/ and tasks/; anything missing stays None and renders as TBD."""
-    summary = _load_json(ROOT / "reports" / "summary.json") or {}
+    summary = _load_json(root / "reports" / "summary.json") or {}
     # task ids contain the target dir, so reports nest one level down
-    validations = [_load_json(p) for p in sorted((ROOT / "reports" / "validation").rglob("*.json"))]
+    validations = [_load_json(p) for p in sorted((root / "reports" / "validation").rglob("*.json"))]
     validations = [v for v in validations if isinstance(v, dict)]
     accepted = [v for v in validations if v.get("accepted")]
-    gold = sorted((ROOT / "tasks" / "fastapi-template").glob("ff-001-*/instruction.md"))
-    task_dirs = [p.parent for p in (ROOT / "tasks").glob("*/*/instruction.md")]
+    gold = sorted((root / "tasks" / "fastapi-template").glob("ff-001-*/instruction.md"))
+    task_dirs = [p.parent for p in (root / "tasks").glob("*/*/instruction.md")]
     # report.summarize is the source of truth once it exists; raw logs are the fallback
     sv = summary.get("validation") or {}
     return {
         "summary": summary,
-        "validated": sv.get("candidates") or len(validations) or None,
-        "accepted": sv.get("accepted") or len(accepted) or None,
-        "mutants_total": sv.get("mutants_total") or sum(int(v.get("mutants_total", 0)) for v in accepted) or None,
-        "mutants_killed": sv.get("mutants_killed") or sum(int(v.get("mutants_killed", 0)) for v in accepted) or None,
-        "tasks_on_disk": len(task_dirs) or None,
+        "validated": _pick(sv, "candidates", len(validations)),
+        "accepted": _pick(sv, "accepted", len(accepted)),
+        "mutants_total": _pick(sv, "mutants_total", sum(int(v.get("mutants_total", 0)) for v in accepted)),
+        "mutants_killed": _pick(sv, "mutants_killed", sum(int(v.get("mutants_killed", 0)) for v in accepted)),
+        "tasks_total": _pick(summary, "tasks_total", len(task_dirs)),
         "targets": sorted({p.parent.name for p in task_dirs}) or None,
         "gold_instruction": gold[0].read_text() if gold else None,
     }
@@ -209,7 +216,7 @@ def build_html(d: dict[str, Any]) -> str:
             f"<div><b>{_v(d['validated'])}</b><span>tasks validated</span></div>"
             f"<div><b>{_v(d['accepted'])}</b><span>accepted</span></div>"
             f"<div><b>{_v(mut)}</b><span>mutants killed</span></div>"
-            f"<div><b>{_v(s.get('tasks_total') or d['tasks_on_disk'])}</b><span>tasks in dataset</span></div>"
+            f"<div><b>{_v(d['tasks_total'])}</b><span>tasks in dataset</span></div>"
             "</div><table class='grid small'><tr><th>Gate</th><th>Proves</th></tr>"
             "<tr><td>fail on base</td><td>the feature is really missing</td></tr>"
             "<tr><td>pass with reference</td><td>the task is solvable</td></tr>"
@@ -268,7 +275,7 @@ def build_html(d: dict[str, Any]) -> str:
         slide(
             "Deliverables",
             f"<ul><li>Public repo (MIT): <code>{REPO_URL}</code></li>"
-            f"<li>Dataset: {_v(s.get('tasks_total') or d['tasks_on_disk'])} validated Harbor tasks across "
+            f"<li>Dataset: {_v(d['tasks_total'])} validated Harbor tasks across "
             f"8 families and {_v(len(d['targets']) if d['targets'] else None)} target repos</li>"
             "<li>Validation log per task (<code>reports/validation/</code>)</li>"
             "<li>Evaluation report (<code>reports/index.html</code>)</li>"
