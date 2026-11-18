@@ -1,0 +1,33 @@
+slug: tolerant-typed-config
+title: accept the formats operators actually write
+intent: >-
+  typed settings accept the spellings operators really use for lists, booleans, numbers and durations,
+  and reject garbage with a clear message naming the key and the bad value instead of a raw parser trace.
+surface_kinds: [settings-class, env-read, pool-config, validator]
+fault_catalogue:
+  - id: csv-list
+    description: a list setting is written as a comma-separated string, e.g. "a, b,c"
+  - id: json-list
+    description: a list setting is written as a json array string, e.g. '["a","b"]'
+  - id: empty-list
+    description: a list setting is set to an empty string and must become an empty list
+  - id: bool-words
+    description: a boolean setting is written as yes/no, on/off, 1/0 in any case
+  - id: duration-suffix
+    description: a duration setting is written with a unit suffix such as "30s", "5m", "2h" or "1d"
+  - id: garbage
+    description: a value that cannot be parsed must fail with an error naming the key and the bad value
+acceptance:
+  - every accepted spelling yields the same typed value as the canonical form
+  - unparseable input raises at settings construction with the key name and offending value in the message
+  - the canonical form that worked before still works
+  - the repository's existing test suite still passes
+difficulty_levers:
+  - one parser shared by several settings of the same type
+  - durations converted to the unit the existing field uses (e.g. minutes or hours)
+  - surrounding whitespace and mixed case
+examples:
+  - an allowed-origins list accepts "a.com,b.com", '["a.com","b.com"]' and "" alike
+  - a token lifetime in minutes accepts "90", "90m" and "1h30m"
+weight: 2.0
+languages: [python, go]
