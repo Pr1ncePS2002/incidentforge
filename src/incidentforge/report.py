@@ -80,7 +80,7 @@ def _family_of(data: Data) -> dict[str, str]:
 
 
 def model_label(r: EvalResult) -> str:
-    return r.model if r.agent in {"terminus-2", ""} else f"{r.agent}:{r.model}"
+    return r.model if r.agent in {"terminus-2", "", r.model} else f"{r.agent}:{r.model}"
 
 
 def summarize(data: Data) -> dict[str, Any]:
@@ -188,7 +188,7 @@ def findings(data: Data) -> list[str]:
         acc = sum(v.accepted for v in data.validation)
         mt = sum(v.mutants_total for v in data.validation)
         mk = sum(v.mutants_killed for v in data.validation)
-        line = f"{acc} of {len(data.validation)} generated candidates passed every validation gate"
+        line = f"{acc} of {len(data.validation)} task candidates passed every validation gate"
         if mt:
             line += f"; accepted tasks' tests killed {mk} of {mt} injected mutants ({mk / mt:.0%})"
         out.append(line + ".")
@@ -308,7 +308,7 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
             gate_stats[g.gate][0] += int(g.passed)
             gate_stats[g.gate][1] += 1
     if gate_stats:
-        s.append("<p>validation gates over all generated candidates:</p>")
+        s.append("<p>validation gates over all task candidates:</p>")
         s.append(
             _table(
                 ["gate", "passed", "rate"],

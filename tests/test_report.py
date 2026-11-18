@@ -73,7 +73,7 @@ def test_build_writes_html_and_summary(tmp_path: Path) -> None:
     assert var["attempt_pass_rates"] == [1.0, 0.5] and var["unstable_tasks"] == 1
     assert summary["failures"]["gemini/gemini-3.8-flash"]["fault"] == 4
     text = " ".join(summary["findings"])
-    assert "2 of 3 generated candidates" in text and "hardest family is cross-field-validation" in text
+    assert "2 of 3 task candidates" in text and "hardest family is cross-field-validation" in text
     assert "injected fault case" in text
 
 
