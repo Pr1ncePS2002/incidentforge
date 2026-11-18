@@ -82,10 +82,10 @@ def eval_(
     from pathlib import Path
 
     from incidentforge.backends.gemini import load_env
-    from incidentforge.evaluate import discover_tasks, pick_subset, run_eval
+    from incidentforge.evaluate import frozen_subset, run_eval
 
     root = Path(tasks)
-    picked = pick_subset(discover_tasks(root), subset) if subset else None
+    picked = frozen_subset(root, subset) if subset else None
     models = model or ["gemini/gemini-3.8-flash"]
     # keys come from .env unless already exported; harbor only ever sees the routed one
     env = {**load_env(".env"), **os.environ}

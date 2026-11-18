@@ -25,6 +25,8 @@ GEMINI_KEY_VARS = ("GEMINI_API_KEY", "GEMINI_API_KEY2", "GOOGLE_API_KEY")
 CLAUDE_TOKEN_VARS = ("CLAUDE_CODE_OAUTH_TOKEN",)
 
 DEFAULT_RESULTS = Path("reports/eval/results.jsonl")
+# turn cap of the main comparison; rows written before max_turns was recorded ran at this cap
+DEFAULT_MAX_TURNS = 30
 TRIALS_NAME = "trials.jsonl"
 
 
@@ -32,7 +34,7 @@ TRIALS_NAME = "trials.jsonl"
 class Limits:
     """per-trial ceilings; passed to the agent so the worst case is bounded."""
 
-    max_turns: int = 30
+    max_turns: int = DEFAULT_MAX_TURNS
     max_input_per_turn: int = 64_000
     max_output_per_turn: int = 8_192
 
@@ -133,6 +135,19 @@ def harbor_model(model: str) -> str:
     return model.removesuffix(PAID_SUFFIX)
 
 
+DEFAULT_SUBSET = Path("reports/eval/subset.json")
+
+
+def frozen_subset(tasks_root: Path, n: int, path: Path = DEFAULT_SUBSET) -> list[str]:
+    """seeded subset picked once and kept in a file, so later dataset growth doesn't move it."""
+    if path.exists():
+        return [str(t) for t in json.loads(path.read_text())]
+    picked = pick_subset(discover_tasks(tasks_root), n)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(picked, indent=2) + "\n")
+    return picked
+
+
 def bare_model(model: str) -> str:
     return harbor_model(model).split("/")[-1]
 
@@ -175,6 +190,7 @@ class Trial:
     exception: str | None = None
     failed_tests: tuple[str, ...] = ()
     parts: tuple[tuple[str, float], ...] = ()  # reward.json sub-scores, e.g. feature_tests / repo_suite
+    turns: int = 0  # agent steps taken, from the trajectory; compared with the cap to spot turn exhaustion
     trial_dir: str = ""
 
 
@@ -213,6 +229,14 @@ def _failed_tests(trial_dir: Path) -> tuple[str, ...]:
     return tuple(failed)
 
 
+def _turns(trial_dir: Path) -> int:
+    try:
+        steps = json.loads((trial_dir / "agent" / "trajectory.json").read_text()).get("steps") or []
+    except (json.JSONDecodeError, OSError, AttributeError):
+        return 0
+    return sum(1 for s in steps if isinstance(s, dict) and s.get("source") == "agent")
+
+
 def _parts(trial_dir: Path) -> tuple[tuple[str, float], ...]:
     try:
         data = json.loads((trial_dir / "verifier" / "reward.json").read_text())
@@ -244,6 +268,7 @@ def read_trials(job_dir: Path) -> list[Trial]:
                 exception=exc.get("exception_type"),
                 failed_tests=_failed_tests(result.parent),
                 parts=_parts(result.parent),
+                turns=_turns(result.parent),
                 trial_dir=str(result.parent),
             )
         )
@@ -294,10 +319,14 @@ class ResultsStore:
     def load(self) -> list[EvalResult]:
         if not self.path.exists():
             return []
-        return [EvalResult.model_validate_json(line) for line in self.path.read_text().splitlines() if line.strip()]
+        rows = [EvalResult.model_validate_json(line) for line in self.path.read_text().splitlines() if line.strip()]
+        for r in rows:
+            if r.max_turns is None and r.agent not in SUBSCRIPTION_AGENTS:
+                r.max_turns = DEFAULT_MAX_TURNS
+        return rows
 
-    def done(self) -> set[tuple[str, str, str, int]]:
-        return {(r.task_id, r.agent, r.model, r.attempt) for r in self.load()}
+    def done(self) -> set[tuple[str, str, str, int, int | None]]:
+        return {(r.task_id, r.agent, r.model, r.attempt, r.max_turns) for r in self.load()}
 
     def append(self, result: EvalResult, trial: Trial) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -311,6 +340,8 @@ class ResultsStore:
             "failed_tests": list(trial.failed_tests),
             "parts": dict(trial.parts),
             "exception": trial.exception,
+            "max_turns": result.max_turns,
+            "turns": trial.turns,
         }
         with self.trials_path.open("a") as f:
             f.write(json.dumps(side) + "\n")
@@ -373,6 +404,7 @@ def run_eval(
     runner = runner or harbor_runner
     ledger = ledger or Ledger.default()
     limits = limits or Limits()
+    cap = None if agent in SUBSCRIPTION_AGENTS else limits.max_turns
     base_env = dict(env if env is not None else os.environ)
     store = ResultsStore(results_path)
     tasks = discover_tasks(tasks_root)
@@ -384,7 +416,7 @@ def run_eval(
     plan: list[tuple[str, int, list[TaskInfo]]] = []
     for model in models:
         for attempt in range(1, k + 1):
-            pending = [t for t in tasks if (t.task_id, agent, harbor_model(model), attempt) not in done]
+            pending = [t for t in tasks if (t.task_id, agent, harbor_model(model), attempt, cap) not in done]
             if pending:
                 plan.append((model, attempt, pending))
     prog = _Progress(total=sum(len(p) for _, _, p in plan))
@@ -467,6 +499,7 @@ def run_eval(
                         if key == "paid"
                         else 0.0,
                         key=key,
+                        max_turns=cap,
                     )
                     store.append(res, tr)
                     new.append(res)

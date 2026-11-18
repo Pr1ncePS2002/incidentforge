@@ -73,8 +73,15 @@ def test_build_writes_html_and_summary(tmp_path: Path) -> None:
     assert var["attempt_pass_rates"] == [1.0, 0.5] and var["unstable_tasks"] == 1
     assert summary["failures"]["gemini/gemini-3.8-flash"]["fault"] == 4
     text = " ".join(summary["findings"])
-    assert "2 of 3 task candidates" in text and "hardest family is cross-field-validation" in text
-    assert "injected fault case" in text
+    assert "2 of 3 tasks with a validation report" in text and "hardest family is cross-field-validation" in text
+    assert "injected fault-case test" in text
+
+
+def test_committed_ledger_snapshot_is_used_for_spend(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    Ledger(reports / "eval/spend-ledger.jsonl").record("gemini-2.5-pro", 0, 1_000_000)
+    build(reports / "index.html", tasks, reports)
+    assert json.loads((reports / "summary.json").read_text())["spend_usd"] == 15.0
 
 
 def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
@@ -91,6 +98,42 @@ def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
     assert summary["spend_usd"] == 0.5 and summary["excluded_models"] == note
     assert any("gemini-4-hydrogen was left out" in f for f in summary["findings"])
     assert "Models left out" in out.read_text() and "empty &lt;completions&gt;" in out.read_text()
+
+
+def test_results_for_removed_tasks_are_ignored(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    gone = EvalResult(task_id="x/removed", family="f", agent="terminus-2", model="m", attempt=1, reward=1.0)
+    with (reports / "eval/results.jsonl").open("a") as f:
+        f.write(gone.model_dump_json() + "\n")
+    build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    summary = json.loads((reports / "summary.json").read_text())
+    assert all(m["model"] != "m" for m in summary["models"])
+
+
+def test_turn_ablation_is_reported_apart_from_the_main_table(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    flash = "gemini/gemini-3.8-flash"
+    side = [json.loads(x) for x in (reports / "eval/trials.jsonl").read_text().splitlines()]
+    for s in side:
+        if s["model"] == flash and s["attempt"] == 1:
+            s["turns"] = 30 if s["task_id"].endswith("ff-001") else 12
+    more = [
+        EvalResult(task_id=t, family="f", agent="terminus-2", model=flash, attempt=1, reward=r, max_turns=60)
+        for t, r in [("fastapi-template/ff-001", 1.0), ("fastapi-template/cf-001", 0.0)]
+    ]
+    with (reports / "eval/results.jsonl").open("a") as f:
+        f.write("".join(r.model_dump_json() + "\n" for r in more))
+    side.append({"task_id": "fastapi-template/ff-001", "model": flash, "attempt": 1, "max_turns": 60, "turns": 40})
+    (reports / "eval/trials.jsonl").write_text("".join(json.dumps(s) + "\n" for s in side))
+    out = build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    summary = json.loads((reports / "summary.json").read_text())
+    main = next(m for m in summary["models"] if m["model"] == flash)
+    assert main["n"] == 4 and main["pass_rate"] == 0.0
+    [ab] = summary["turn_ablation"]
+    assert (ab["base_pass_rate"], ab["more_pass_rate"], ab["tasks"]) == (0.0, 0.5, 2)
+    assert (ab["failures_turn_exhausted"], ab["failures_wrong_code"], ab["failures_no_turn_data"]) == (1, 1, 2)
+    assert "turn budget ablation" in out.read_text()
+    assert any("with 60 turns instead of 30" in f for f in summary["findings"])
 
 
 def test_empty_inputs_still_render(tmp_path: Path) -> None:

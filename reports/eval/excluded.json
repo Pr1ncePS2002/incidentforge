@@ -1,0 +1,8 @@
+[
+  {
+    "model": "gemini/gemini-4-hydrogen",
+    "agent": "terminus-2",
+    "reason": "through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model",
+    "evidence": "3 gold-task trials on 2026-11-18: 72 of 84 turns got 'No valid JSON found in response', at most 1,376 completion tokens per trial; direct google-genai calls to the same model work"
+  }
+]

@@ -1,0 +1,990 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IncidentForge report</title><style>
+:root{--bg:#fbfbfa;--fg:#1d1d1f;--muted:#6b6b70;--line:#e2e2e0;--card:#fff;--accent:#2f6fde;--ok:#1f8a4c;--bad:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#111214;--fg:#e8e8ea;--muted:#9a9aa2;--line:#2a2b2f;--card:#18191c;
+--accent:#6f9cf0;--ok:#4cc38a;--bad:#f0875a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
+font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}h1{font-size:26px;margin:0 0 4px}
+h2{font-size:19px;margin:36px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.muted{color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card b{display:block;font-size:22px}.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--card);font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-weight:600}.bar{display:inline-block;width:90px;height:8px;background:var(--line);border-radius:4px;
+vertical-align:middle}.bar span{display:block;height:100%;background:var(--accent);border-radius:4px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}details{background:var(--card);border:1px solid var(--line);
+border-radius:8px;margin:6px 0;padding:6px 10px}summary{cursor:pointer}
+pre{white-space:pre-wrap;font-size:13px;background:var(--bg);padding:8px;border-radius:6px}
+input{padding:6px 8px;width:100%;max-width:360px;margin:6px 0;background:var(--card);color:var(--fg);
+border:1px solid var(--line);border-radius:6px}
+</style></head><body><main><h1>IncidentForge report</h1><p class="muted">generated 2026-11-18T19:54:57+0530 from files under reports/ and tasks/</p><div class="cards">
+<div class="card"><span class="muted">tasks</span><b>34</b></div>
+<div class="card"><span class="muted">families</span><b>8</b></div>
+<div class="card"><span class="muted">acceptance</span><b>100%</b></div>
+<div class="card"><span class="muted">mutants killed</span><b>179/201</b></div>
+<div class="card"><span class="muted">eval runs</span><b>162</b></div>
+<div class="card"><span class="muted">paid spend</span><b>$43.96 / $70</b></div>
+</div>
+<h2>Headline findings</h2>
+<ul><li>34 of 34 tasks with a validation report passed every gate; accepted tasks&#x27; tests killed 179 of 201 injected mutants (89%).</li><li>pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).</li><li>hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).</li><li>of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.</li><li>gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.</li><li>gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -&gt; 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped with wrong code.</li><li>gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -&gt; 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped with wrong code.</li></ul>
+<h2>Models left out</h2>
+<div class="scroll"><table><thead><tr><th>model</th><th>agent</th><th>why</th><th>evidence</th></tr></thead><tbody><tr><td>gemini/gemini-4-hydrogen</td><td>terminus-2</td><td>through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model</td><td>3 gold-task trials on 2026-11-18: 72 of 84 turns got &#x27;No valid JSON found in response&#x27;, at most 1,376 completion tokens per trial; direct google-genai calls to the same model work</td></tr></tbody></table></div>
+<h2>Dataset</h2>
+<div class="scroll"><table><thead><tr><th>dimension</th><th>tasks</th></tr></thead><tbody><tr><td>family</td><td>config-round-trip: 5, cross-field-validation: 3, env-aware-naming: 5, fail-fast-config: 7, hot-reload-config: 4, idempotent-consumer: 3, resource-aware-defaults: 3, tolerant-typed-config: 4</td></tr><tr><td>language/target</td><td>fastapi-template: 24, miniflux: 10</td></tr><tr><td>difficulty</td><td>easy: 3, hard: 26, medium: 5</td></tr><tr><td>origin</td><td>hand-written: 2, llm: 32</td></tr></tbody></table></div>
+<p>validation gates over all task candidates:</p>
+<div class="scroll"><table><thead><tr><th>gate</th><th>passed</th><th>rate</th></tr></thead><tbody><tr><td>fail_on_base</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>flakiness</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>leak</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>mutation</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>pass_on_reference</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>regression</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr></tbody></table></div>
+<h2>Results</h2>
+<div class="scroll"><table><thead><tr><th>model</th><th>agent</th><th>tasks</th><th>runs</th><th>pass rate</th><th>tokens in / out</th><th>billed</th><th>at list price</th></tr></thead><tbody><tr><td>claude-code</td><td>claude-code</td><td>34</td><td>54</td><td><span class="bar"><span style="width:98.2%"></span></span> 98%</td><td>5,883,658 / 122,370</td><td>$0.00</td><td>$32.48</td></tr><tr><td>gemini/gemini-2.5-flash</td><td>terminus-2</td><td>34</td><td>54</td><td><span class="bar"><span style="width:33.3%"></span></span> 33%</td><td>19,937,970 / 1,636,360</td><td>$6.11</td><td>$10.07</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>terminus-2</td><td>34</td><td>54</td><td><span class="bar"><span style="width:27.8%"></span></span> 28%</td><td>28,269,016 / 925,624</td><td>$22.07</td><td>$49.35</td></tr></tbody></table></div>
+<p>pass rate per model and family:</p>
+<div class="scroll"><table><thead><tr><th>family</th><th>claude-code</th><th>gemini/gemini-2.5-flash</th><th>gemini/gemini-3.8-flash</th></tr></thead><tbody><tr><td>config-round-trip</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=7</span></td><td><span class="bar"><span style="width:0.0%"></span></span> 0% <span class='muted'>n=7</span></td><td><span class="bar"><span style="width:0.0%"></span></span> 0% <span class='muted'>n=7</span></td></tr><tr><td>cross-field-validation</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=5</span></td><td><span class="bar"><span style="width:0.0%"></span></span> 0% <span class='muted'>n=5</span></td><td><span class="bar"><span style="width:80.0%"></span></span> 80% <span class='muted'>n=5</span></td></tr><tr><td>env-aware-naming</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=7</span></td><td><span class="bar"><span style="width:85.7%"></span></span> 86% <span class='muted'>n=7</span></td><td><span class="bar"><span style="width:71.4%"></span></span> 71% <span class='muted'>n=7</span></td></tr><tr><td>fail-fast-config</td><td><span class="bar"><span style="width:90.9%"></span></span> 91% <span class='muted'>n=11</span></td><td><span class="bar"><span style="width:36.4%"></span></span> 36% <span class='muted'>n=11</span></td><td><span class="bar"><span style="width:0.0%"></span></span> 0% <span class='muted'>n=11</span></td></tr><tr><td>hot-reload-config</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=6</span></td><td><span class="bar"><span style="width:16.7%"></span></span> 17% <span class='muted'>n=6</span></td><td><span class="bar"><span style="width:0.0%"></span></span> 0% <span class='muted'>n=6</span></td></tr><tr><td>idempotent-consumer</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=5</span></td><td><span class="bar"><span style="width:60.0%"></span></span> 60% <span class='muted'>n=5</span></td><td><span class="bar"><span style="width:60.0%"></span></span> 60% <span class='muted'>n=5</span></td></tr><tr><td>resource-aware-defaults</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=5</span></td><td><span class="bar"><span style="width:60.0%"></span></span> 60% <span class='muted'>n=5</span></td><td><span class="bar"><span style="width:60.0%"></span></span> 60% <span class='muted'>n=5</span></td></tr><tr><td>tolerant-typed-config</td><td><span class="bar"><span style="width:100.0%"></span></span> 100% <span class='muted'>n=8</span></td><td><span class="bar"><span style="width:12.5%"></span></span> 12% <span class='muted'>n=8</span></td><td><span class="bar"><span style="width:0.0%"></span></span> 0% <span class='muted'>n=8</span></td></tr></tbody></table></div>
+<p>which path the failing tests were on (a failed run can count on more than one path):</p>
+<div class="scroll"><table><thead><tr><th>model</th><th>fault path</th><th>happy path</th><th>repo regression</th><th>no detail</th></tr></thead><tbody><tr><td>claude-code</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>gemini/gemini-2.5-flash</td><td>23</td><td>9</td><td>13</td><td>12</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>26</td><td>12</td><td>1</td><td>12</td></tr></tbody></table></div>
+<p>turn budget ablation (same tasks, first attempt):</p>
+<div class="scroll"><table><thead><tr><th>model</th><th>tasks</th><th>pass rate</th><th>with more turns</th><th>main-run failures</th></tr></thead><tbody><tr><td>gemini/gemini-2.5-flash</td><td>10</td><td>30% at 30</td><td>40% at 60</td><td>17 hit the cap / 19 stopped with wrong code</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>10</td><td>30% at 30</td><td>80% at 60</td><td>35 hit the cap / 4 stopped with wrong code</td></tr></tbody></table></div>
+<p>repeat runs on the fixed subset (variance):</p>
+<div class="scroll"><table><thead><tr><th>model</th><th>tasks</th><th>k</th><th>pass rate per attempt</th><th>stdev</th><th>tasks that flip</th></tr></thead><tbody><tr><td>claude-code</td><td>10</td><td>3</td><td>100%, 100%, 100%</td><td>0.000</td><td>0</td></tr><tr><td>gemini/gemini-2.5-flash</td><td>10</td><td>3</td><td>30%, 30%, 40%</td><td>0.047</td><td>4</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>10</td><td>3</td><td>30%, 40%, 40%</td><td>0.047</td><td>1</td></tr></tbody></table></div>
+<h2>Task browser</h2>
+<input id="q" placeholder="filter tasks" aria-label="filter tasks">
+<div id="tasks">
+<details><summary><b>fastapi-template/cf-001-settings</b> <span class='muted'>cross-field-validation · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span></p><p>fault cases:</p><ul><li>negative-or-zero: ACCESS_TOKEN_EXPIRE_MINUTES or EMAIL_RESET_TOKEN_EXPIRE_HOURS set to 0 or a negative value</li><li>dependent-bound: EMAIL_RESET_TOKEN_EXPIRE_HOURS * 60 exceeds ACCESS_TOKEN_EXPIRE_MINUTES (48h reset token with a 60 min session)</li><li>boundary-equal: reset lifetime equal to session lifetime (2h vs 120 min) is accepted, one minute short (119 min) is rejected</li><li>mutually-exclusive: SMTP_TLS and SMTP_SSL both enabled</li></ul><pre># Reject token-lifetime and SMTP settings that cannot work together
+
+The backend loads its configuration through `app.core.config.Settings`. Today it accepts several combinations where each value is valid alone but the combination is not. The app starts normally and only misbehaves later:
+
+- `ACCESS_TOKEN_EXPIRE_MINUTES` or `EMAIL_RESET_TOKEN_EXPIRE_HOURS` can be zero or negative. Tokens then expire as soon as they are issued, so logins or password resets fail with no clear cause.
+- A password-reset token (`EMAIL_RESET_TOKEN_EXPIRE_HOURS`, in **hours**) can be set to outlive a normal login session (`ACCESS_TOKEN_EXPIRE_MINUTES`, in **minutes**). A reset link is a credential that bypasses the password, so it must never stay valid longer than a session.
+- `SMTP_TLS` (STARTTLS) and `SMTP_SSL` (implicit TLS) can both be enabled. These modes exclude each other, and sending mail fails at runtime.
+
+Make `Settings` reject these combinations when it validates, so a misconfigured deployment fails at startup.
+
+Requirements:
+
+1. `ACCESS_TOKEN_EXPIRE_MINUTES` must be strictly positive (greater than 0). Zero or a negative value must be rejected, and the error must name `ACCESS_TOKEN_EXPIRE_MINUTES`.
+2. `EMAIL_RESET_TOKEN_EXPIRE_HOURS` must be strictly positive. Zero or a negative value must be rejected, and the error must name `EMAIL_RESET_TOKEN_EXPIRE_HOURS`.
+3. When both lifetimes are positive, the reset-token lifetime converted to minutes (`EMAIL_RESET_TOKEN_EXPIRE_HOURS * 60`) must not be greater than `ACCESS_TOKEN_EXPIRE_MINUTES`. **Boundary rule: equal values are allowed.** For example, 2 hours with 120 minutes is valid, and 2 hours with 119 minutes is rejected. The error must name both `EMAIL_RESET_TOKEN_EXPIRE_HOURS` and `ACCESS_TOKEN_EXPIRE_MINUTES`.
+4. Setting `SMTP_TLS` and `SMTP_SSL` both to true must be rejected, and the error must name both `SMTP_TLS` and `SMTP_SSL`. Either one alone, or neither, stays valid.
+5. When several of these problems occur together, one error must name **every** offending variable, not only the first one found.
+6. Rejection means that constructing `Settings` raises a `ValueError`. Pydantic&#x27;s `ValidationError` counts.
+7. The shipped defaults (8-day access token, 48-hour reset token, TLS on and SSL off) must still validate, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/cf-002-userbase</b> <span class='muted'>cross-field-validation · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#3 fail</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#2 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#3 pass</span></p><p>fault cases:</p><ul><li>mutually-exclusive: is_superuser=True together with is_active=False on UserBase, UserCreate and POST /api/v1/users/</li><li>negative-or-zero: full_name given as an empty string (length zero)</li><li>boundary-equal: full_name made only of whitespace (zero length after removing whitespace) is rejected, while exactly one non-whitespace character and exactly 255 characters are accepted</li></ul><pre># Reject impossible user account states at validation time
+
+User account data is described by `UserBase` in `backend/app/models.py`. `UserCreate` and the other user schemas inherit from it. Each field is checked on its own, so some combinations that cannot work are still accepted:
+
+- **A disabled superuser.** An admin can send `POST /api/v1/users/` with `&quot;is_superuser&quot;: true` and `&quot;is_active&quot;: false`. The account is stored, but the inactive flag stops it from logging in or using any admin power. Nobody notices until someone tries to use that admin account during an incident.
+- **A blank display name.** `full_name` accepts `&quot;&quot;` or a string of only spaces. Later, every screen that shows the user&#x27;s name shows nothing at all instead of falling back to the email address, which it does only when the name is missing (`null`).
+
+Make `UserBase` reject these states when the data is validated, so bad input fails right away with a clear error.
+
+## Requirements
+
+1. **Superuser must be active.** If `is_superuser` is `true` and `is_active` is `false`, reject the data. The error message must name **both** `is_superuser` and `is_active`.
+   - Every other combination stays valid: an active superuser, an active regular user, and an inactive regular user.
+2. **`full_name` must be missing or have real content.** `full_name` may be `null` or not given at all. If it is given, it must contain at least one character that is not whitespace. An empty string or a whitespace-only string must be rejected, and the error must name `full_name`.
+3. **Boundary rule:** a `full_name` of exactly one non-whitespace character (for example `&quot;A&quot;`) is valid. A `full_name` of exactly 255 characters (the existing maximum length) is still valid. A string whose length is zero after removing whitespace is invalid.
+4. If more than one problem is present, one error must name every field involved.
+5. Rejection means building the model raises pydantic&#x27;s `ValidationError`. This covers `UserBase` and `UserCreate`. Over the HTTP API, `POST /api/v1/users/` with an impossible combination must return `422` and must not create the user.
+6. The shipped defaults (`is_active=True`, `is_superuser=False`, `full_name=None`) still validate, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/cf-003-usercreate</b> <span class='muted'>cross-field-validation · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>dependent-bound: password contains the email local part (case-insensitive), e.g. marigold@example.com with xxMARIGOLD2024</li><li>dependent-bound: password contains the stripped full_name (case-insensitive)</li><li>dependent-bound: password contains both the local part and full_name; one error must name password, email and full_name</li><li>dependent-bound: signup payload converted via UserCreate.model_validate with a password containing the local part</li><li>boundary-equal: password exactly equal to the email local part or to full_name (ignoring case) is rejected</li><li>boundary-equal: a 3-character local part is checked, a 2-character one is not</li></ul><pre># Reject passwords built from the user&#x27;s own identity
+
+User accounts are created from the `app.models.UserCreate` schema. This happens when an admin creates a user, when someone signs up (the signup payload is converted into a `UserCreate`), and when the first superuser is bootstrapped. Each field is checked separately. That means `email=&quot;marigold@example.com&quot;` and `password=&quot;Marigold2024&quot;` both pass, even though together the password is just the address with a few characters added. These accounts get taken over by simple credential-stuffing, and nobody notices until much later.
+
+`UserCreate` must reject this combination when the schema validates it, and the error must name both fields involved.
+
+## Rules
+
+All comparisons ignore case.
+
+1. **Email local part.** The local part is everything before the last `@` of `email`. If it is **3 or more characters** long, `password` must not contain it as a substring. Local parts shorter than 3 characters are not checked.
+2. **Full name.** Strip leading and trailing whitespace from `full_name`. If the result is **3 or more characters** long, `password` must not contain it as a substring. A `full_name` that is `None`, or shorter than 3 characters after stripping, is not checked.
+3. **Equal-values boundary.** A password that is *equal* to the local part or to the stripped full name (ignoring case) counts as containing it and is **rejected**. A local part or full name of exactly 3 characters is checked; one of 2 characters is not.
+
+## Error behaviour
+
+- A rejected combination makes constructing or validating `UserCreate` raise a pydantic `ValidationError`. This includes `UserCreate.model_validate(...)` on a signup payload.
+- The error message must name both fields involved: `password` and `email` for rule 1, `password` and `full_name` for rule 2.
+- If both rules are broken at once, a single error must name `password`, `email` **and** `full_name`.
+
+## Unchanged behaviour
+
+- Valid combinations still validate exactly as before. This includes users with no `full_name` and the default `is_active` / `is_superuser` values.
+- The existing field-level limits (such as password length 8–128) stay as they are.
+- The repository&#x27;s existing test suite must keep passing.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/en-001-create-user</b> <span class='muted'>env-aware-naming · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span></p><p>fault cases:</p><ul><li>unscoped-key: the same user cache key built for staging and production must carry the environment prefix and come out different</li><li>wrong-env-source: names must use the FASTAPI_ENV value configured at call time, not a hardcoded or import-time default</li><li>unknown-env: an empty, whitespace-only, None or unknown FASTAPI_ENV (qa, prod, Production) must raise a ValueError naming FASTAPI_ENV, and create_user must raise it before writing anything</li><li>separator-injection: a name part containing &#x27;:&#x27; (or an empty part) must be rejected so that (&#x27;a:b&#x27;,&#x27;c&#x27;) and (&#x27;a&#x27;,&#x27;b:c&#x27;) cannot collide</li></ul><pre># Scope shared cache, queue and topic names by deployment environment
+
+Our deployments (development, staging, production) are about to share one cache cluster and one message broker. Any key, queue or topic name built without the deployment environment, or with a hardcoded one, would let staging overwrite production entries, and one environment&#x27;s consumers would pick up another environment&#x27;s jobs. The backend has no single place that builds these names yet, and nothing checks that the environment setting is usable before user records are written.
+
+Add a module `app.core.naming` that becomes the only place where environment-scoped names are built.
+
+Requirements:
+
+1. The environment comes from the existing `FASTAPI_ENV` field on the settings object `app.core.config.settings`. Read it **every time a name is built**, not once at import, and never fall back to a hardcoded or default value.
+2. The allowed environments are exactly `local`, `development`, `staging` and `production`, and the check is case-sensitive.
+3. `current_environment()` returns the configured environment. If `FASTAPI_ENV` is missing, `None`, empty or only whitespace, or is not one of the allowed values, it raises `ValueError`, and the message must contain the setting name `FASTAPI_ENV`.
+4. `scoped_name(*parts)` returns the environment followed by each part converted with `str()`, all joined with `:`. For example, with `FASTAPI_ENV=development`, `scoped_name(&quot;user&quot;, 42)` returns `&quot;development:user:42&quot;`. It raises `ValueError` if no parts are given, if a part is an empty string, or if a part contains `:`, because such names could collide with other names. It also raises the same environment errors as in requirement 3.
+5. `user_cache_key(user_id)` returns the cache key for one user record, which is `scoped_name(&quot;user&quot;, user_id)`. For example: `&quot;development:user:&lt;id&gt;&quot;`.
+6. The same logical key built under two different environments must give two different names.
+7. `app.crud.create_user` must check the environment (as in requirement 3) **before** it adds anything to the session. If the environment is misconfigured, it raises that `ValueError` and does not write anything.
+8. Names for the default `development` environment must follow the format above exactly. With a valid environment, user creation works as before, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/en-002-update-user</b> <span class='muted'>env-aware-naming · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span></p><p>fault cases:</p><ul><li>unscoped-key: the user-updated topic or per-user message key is built without the FASTAPI_ENV prefix, so staging and production publish identical names</li><li>wrong-env-source: names use a hardcoded or import-time &#x27;development&#x27; environment instead of the FASTAPI_ENV configured on settings at call time</li><li>unknown-env: FASTAPI_ENV is empty, None or not one of development/staging/production; scoped_name and update_user must raise ValueError naming FASTAPI_ENV before any write or publish</li><li>separator-injection: a name part containing &#x27;:&#x27; (or empty) would make (&#x27;a:b&#x27;,&#x27;c&#x27;) collide with (&#x27;a&#x27;,&#x27;b:c&#x27;); it must be rejected with ValueError</li></ul><pre># Environment-scoped names for user change events
+
+Staging and production share one message broker and one cache cluster. When a user is updated, other components need to hear about it so they can drop cached copies of that user. Today `app.crud.update_user` does not publish anything. If it did so with a fixed topic name, staging updates would invalidate production caches and the reverse. Add the event, and build every name it uses from the configured deployment environment.
+
+The environment comes from the existing setting `FASTAPI_ENV` on `app.core.config.settings`. Its shipped default is `development`.
+
+## Requirements
+
+1. **Naming helper.** Add a module `app.core.naming` with a function `scoped_name(*parts: str) -&gt; str`.
+   - It returns the environment followed by the parts, joined with `:`, in the form `&lt;env&gt;:&lt;part1&gt;:&lt;part2&gt;...`. For example, with `FASTAPI_ENV=development`, `scoped_name(&quot;user&quot;, &quot;42&quot;)` returns `development:user:42`.
+   - It reads `FASTAPI_ENV` from `app.core.config.settings` **each time it is called**. Don&#x27;t cache the value at import time, and don&#x27;t fall back to a hardcoded default.
+2. **Allowed environments.** The only accepted values are `development`, `staging` and `production`. Matching is exact: no trimming and no case-folding. If `FASTAPI_ENV` is empty, missing, not a string or any other value, `scoped_name` must raise `ValueError`, and the message must contain the setting name `FASTAPI_ENV`.
+3. **Unambiguous parts.** Each part must be a non-empty string with no `:` in it. Otherwise `scoped_name` raises `ValueError`. This way `(&quot;a:b&quot;, &quot;c&quot;)` and `(&quot;a&quot;, &quot;b:c&quot;)` can never produce the same name. Calling it with no parts at all also raises `ValueError`.
+4. **Broker stand-in.** Add a module `app.core.broker` with:
+   - a module-level list `published`
+   - a function `publish(topic: str, key: str) -&gt; None` that appends the tuple `(topic, key)` to that list
+5. **Publish on update.** After a successful commit, `app.crud.update_user` must publish exactly one message:
+   - topic: `scoped_name(&quot;users&quot;, &quot;updated&quot;)`, for example `development:users:updated`
+   - key: `scoped_name(&quot;user&quot;, str(db_user.id))`, for example `development:user:&lt;uuid&gt;`
+6. **Fail fast.** Resolve both names **before** the user row is modified or committed. With an invalid `FASTAPI_ENV`, `update_user` must raise the `ValueError` without changing the user object, without calling `session.add`/`commit`, and without publishing anything.
+7. **Stable default.** Names for the default `development` environment follow exactly the format above. The rest of `update_user`&#x27;s behaviour is unchanged, including password hashing and the return value, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/en-003-create-item</b> <span class='muted'>env-aware-naming · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>unscoped-key: the item-created event name is built without the DEPLOYMENT_ENV prefix, so staging and production events collide</li><li>wrong-env-source: the name uses a hardcoded &#x27;local&#x27; or default environment instead of the configured DEPLOYMENT_ENV</li><li>unknown-env: DEPLOYMENT_ENV is empty or not local/staging/production; settings construction, scoped_name and create_item must fail fast with an error naming DEPLOYMENT_ENV</li><li>separator-injection: a name part containing &#x27;:&#x27; would make (&#x27;a:b&#x27;,&#x27;c&#x27;) and (&#x27;a&#x27;,&#x27;b:c&#x27;) produce the same name, so it must be rejected</li></ul><pre># Environment-scoped names for item events
+
+Several of our deployments (local, staging, production) share one message broker. We are starting to publish an event every time an item is created. If the event name does not include the deployment environment, or uses a hardcoded one, staging consumers will pick up production events and the other way round. Every such name must come from one helper that reads the environment from configuration and refuses to build an ambiguous or unscoped name.
+
+Build the following:
+
+1. **Setting.** Add a new module `app.core.namespacing` with a pydantic-settings class `NamespaceSettings`. It has one field, `DEPLOYMENT_ENV`, read from the environment variable of the same name. The default is `&quot;local&quot;`, the environment the repo ships with. The allowed values are exactly `local`, `staging` and `production`. Matching is case-sensitive and whitespace is not stripped. If you construct `NamespaceSettings` with an empty or unknown value, it must raise a `ValueError` whose message contains `DEPLOYMENT_ENV` (pydantic&#x27;s `ValidationError` counts). The module also exposes a module-level instance named `namespace_settings`.
+2. **Helper.** Add `scoped_name(*parts, settings=None) -&gt; str` to `app.core.namespacing`.
+   - It reads `DEPLOYMENT_ENV` from `settings` when one is given. The argument can be any object with that attribute. Otherwise it reads the module&#x27;s `namespace_settings`, looked up at call time, so replacing that attribute changes the result.
+   - It returns the environment followed by each part converted with `str()`, joined with `:`. For example, `local:items:created:&lt;id&gt;`. The format for the default `local` environment must be exactly this.
+   - If the environment is missing, empty or not one of the allowed values, it raises `ValueError` and the message names `DEPLOYMENT_ENV`. Never fall back to a default environment.
+   - If no parts are given, or any part is `None`, empty or contains the separator `:`, it raises `ValueError`. This prevents two different part lists, such as `(&quot;a:b&quot;, &quot;c&quot;)` and `(&quot;a&quot;, &quot;b:c&quot;)`, from producing the same name.
+3. **Event outbox.** Add a module `app.core.events` with a module-level list `OUTBOX` and a function `publish(name: str, payload: dict) -&gt; None`. The function appends `(name, payload)` to `OUTBOX`, which is looked up at call time.
+4. **Attach to `app.crud.create_item`.**
+   - When an item is created, publish one event through `app.core.events.publish`. Its name is `scoped_name(&quot;items&quot;, &quot;created&quot;, &lt;item id&gt;)` and its payload is `{&quot;item_id&quot;: str(item.id), &quot;owner_id&quot;: str(owner_id)}`.
+   - Build the name **before** anything is written. If the environment is invalid, `create_item` must raise the `ValueError` without calling `session.add`, `session.commit` or `publish`.
+   - Otherwise `create_item` behaves and returns exactly as before.
+5. The same logical name built for two different environments must produce two different strings. The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ff-001-email-config</b> <span class='muted'>fail-fast-config · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>SMTP_HOST set without EMAILS_FROM_EMAIL</li><li>SMTP_USER without SMTP_PASSWORD</li><li>SMTP_PASSWORD without SMTP_USER</li><li>SMTP_TLS and SMTP_SSL both true</li><li>SMTP_PORT outside 1-65535</li><li>several faults at once reported in one error</li></ul><pre># Fail fast on a half-configured mailer
+
+The backend reads its email settings (`SMTP_*`, `EMAILS_FROM_EMAIL`) in `app.core.config.Settings`.
+Today a partial email configuration is accepted without complaint: if, for example, `SMTP_HOST` is set but
+no sender address is, the app starts normally and quietly never sends email. Operators only find out when
+password-reset mails never arrive.
+
+Make the settings refuse inconsistent email configuration at startup, so a misconfigured deployment crashes
+immediately with a clear message instead of degrading silently.
+
+Requirements:
+
+1. `SMTP_HOST` set without `EMAILS_FROM_EMAIL` must be rejected.
+2. `SMTP_USER` and `SMTP_PASSWORD` must be provided together; one without the other must be rejected.
+3. Enabling both `SMTP_TLS` and `SMTP_SSL` at the same time must be rejected.
+4. `SMTP_PORT` must be a valid TCP port (1 to 65535 inclusive); anything else must be rejected.
+5. When several of these problems exist at once, a single error must name **every** offending variable,
+   not just the first one found.
+6. Rejection means constructing `Settings` raises a `ValueError` (pydantic&#x27;s `ValidationError` counts).
+7. With no email configuration at all, behaviour is unchanged and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ff-002-settings</b> <span class='muted'>fail-fast-config · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#2 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#3 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#2 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#3 fail</span></p><p>fault cases:</p><ul><li>empty: SECRET_KEY, PROJECT_NAME or FIRST_SUPERUSER_PASSWORD set to an empty or whitespace-only string</li><li>placeholder: SECRET_KEY, PROJECT_NAME or FIRST_SUPERUSER_PASSWORD set to todo, tbd, fixme, changeme, replace-me, xxx or &lt;fill-me&gt; (ignoring case and surrounding whitespace)</li><li>several-bad: two or three of these settings are bad at once and the single error names every one of them</li></ul><pre># Refuse to start with blank or placeholder core settings
+
+The backend builds its configuration in `app.core.config.Settings`. Pydantic already rejects a required setting that is missing entirely. It does not reject one that is present but useless. If a deployment sets `SECRET_KEY`, `PROJECT_NAME` or `FIRST_SUPERUSER_PASSWORD` to an empty string, to whitespace only, or leaves template text such as `todo` or `&lt;fill-me&gt;` in it, the service starts normally. It then signs tokens with a trivial key, shows a blank project name in emails, or creates the first superuser with a guessable password. The only placeholder caught today is the literal `changethis`.
+
+Make `Settings` reject these values when it is constructed, so a misconfigured deployment fails at startup.
+
+Requirements:
+
+1. Apply these checks to `SECRET_KEY`, `PROJECT_NAME` and `FIRST_SUPERUSER_PASSWORD`.
+2. **Empty:** reject a value that is empty or contains only whitespace.
+3. **Placeholder:** after removing surrounding whitespace, reject a value that is any of the following:
+   - one of these words, ignoring case: `todo`, `tbd`, `fixme`, `changeme`, `replaceme`, `replace-me`, `xxx`
+   - text wrapped in angle brackets, for example `&lt;fill-me&gt;` or `&lt;your-secret-here&gt;`
+4. Only reject a value that is one of these placeholders as a whole. A value that merely contains one of the words (for example `todo-app` or `my-todo-secret-123`) is valid.
+5. Leave the existing handling of the literal `changethis` exactly as it is: a warning in development, rejection otherwise.
+6. **Several bad values:** if more than one of the three settings is bad, raise one error whose message names **every** offending setting, not just the first one found.
+7. Rejection means constructing `Settings` raises a `ValueError`. Pydantic&#x27;s `ValidationError` counts.
+8. Valid configurations, including the repository&#x27;s shipped defaults, must still load unchanged, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ff-003-access-token-expire</b> <span class='muted'>fail-fast-config · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>empty: ACCESS_TOKEN_EXPIRE_MINUTES passed as a whitespace-only string, and EMAIL_RESET_TOKEN_EXPIRE_HOURS set to whitespace in the environment</li><li>placeholder: ACCESS_TOKEN_EXPIRE_MINUTES left as changethis / TODO / &lt;fill-me&gt;, and EMAIL_RESET_TOKEN_EXPIRE_HOURS left as fixme in the environment</li><li>several-bad: ACCESS_TOKEN_EXPIRE_MINUTES=0 with EMAIL_RESET_TOKEN_EXPIRE_HOURS=-5, and a placeholder access lifetime with a zero reset lifetime; one error must name both keys</li></ul><pre># Fail fast on unusable token lifetimes
+
+`app.core.config.Settings` holds two token lifetimes:
+
+- `ACCESS_TOKEN_EXPIRE_MINUTES` sets how long a login access token lasts.
+- `EMAIL_RESET_TOKEN_EXPIRE_HOURS` sets how long a password-reset token lasts.
+
+Both values go into `timedelta(...)` on every login and every password-reset request. Today the settings accept values that break the service later:
+
+- A lifetime of `0` or a negative number lets the app start, but every token it issues has already expired.
+- A huge value such as `99999999999` lets the app start, then makes `datetime + timedelta` overflow on the first login.
+- A blank value or a template placeholder fails only with pydantic&#x27;s generic &quot;unable to parse string as an integer&quot; message. That message does not tell the operator that the variable was never filled in.
+
+Make the settings reject bad token lifetimes when they are built, with a clear message.
+
+## Requirements
+
+1. **Blank values.** If either setting is given a string that is empty or only whitespace (for example `&quot;   &quot;`), it must be rejected. The error text must contain the word `blank`.
+   - An environment variable set to exactly `&quot;&quot;` keeps today&#x27;s behaviour: it is ignored and the default is used. This comes from the existing `env_ignore_empty=True`.
+2. **Placeholders.** If either setting still holds a template placeholder, it must be rejected. The error text must contain the word `placeholder`. Ignore surrounding whitespace and letter case when checking. These count as placeholders:
+   - `changethis`, `changeme`, `change-me`, `todo`, `tbd`, `fixme`, `fill-me`, `fill_me`
+   - any value wrapped in angle brackets, such as `&lt;fill-me&gt;` or `&lt;minutes&gt;`
+3. **Allowed ranges.**
+   - `ACCESS_TOKEN_EXPIRE_MINUTES` must be a whole number from 1 to 525600 inclusive (one year).
+   - `EMAIL_RESET_TOKEN_EXPIRE_HOURS` must be a whole number from 1 to 8760 inclusive (one year).
+   - Any value outside these ranges must be rejected.
+4. **Timing.** Rejection happens when `Settings(...)` is constructed, not when a token is first issued. Constructing `Settings` must raise a `ValueError`; pydantic&#x27;s `ValidationError` counts.
+5. **One error for all problems.** If both settings are bad at once, for any mix of the reasons above, a single error must name both `ACCESS_TOKEN_EXPIRE_MINUTES` and `EMAIL_RESET_TOKEN_EXPIRE_HOURS`.
+6. **Valid values unchanged.**
+   - The shipped defaults (`ACCESS_TOKEN_EXPIRE_MINUTES` = 11520 and `EMAIL_RESET_TOKEN_EXPIRE_HOURS` = 48) must still load.
+   - Valid values must load whether they arrive as integers or as numeric strings from the environment (for example `&quot;120&quot;`).
+   - The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ff-004-email-reset-token</b> <span class='muted'>fail-fast-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>conditional-missing: SMTP_HOST set (email enabled) but EMAILS_FROM_EMAIL absent; SMTP_USER set without SMTP_PASSWORD</li><li>empty: SMTP_HOST is whitespace-only, FRONTEND_HOST is whitespace-only, or SMTP_PASSWORD is blank while email is enabled</li><li>placeholder: SMTP_PASSWORD left as changethis / TODO / &lt;fill-me&gt;, FRONTEND_HOST as &lt;fill-me&gt;, or SMTP_HOST as changethis</li><li>several-bad: EMAILS_FROM_EMAIL missing, FRONTEND_HOST blank and SMTP_PASSWORD placeholder at once; the single error names all three</li></ul><pre># Fail fast when password-recovery email cannot work
+
+The backend turns on outgoing email once `SMTP_HOST` is configured (`app.core.config.Settings`). Password-recovery mails (valid for `EMAIL_RESET_TOKEN_EXPIRE_HOURS`) are then sent from `EMAILS_FROM_EMAIL`. They contain a reset link built from `FRONTEND_HOST`, and they are sent through the SMTP server with `SMTP_USER` / `SMTP_PASSWORD` when credentials are used.
+
+Right now, a deployment where `SMTP_HOST` is set but the related settings are missing, blank or still hold template placeholders starts without any error. The reset flow then fails later. The app either quietly stops sending mail or sends broken links, and nobody notices until a user can&#x27;t reset their password.
+
+Change the settings so that this problem stops the app from starting.
+
+## Requirements
+
+Treat email as enabled when `SMTP_HOST` is set, meaning it is not `None`. A blank string still counts as set. When email is enabled, constructing `Settings` must fail if any of the following is true:
+
+1. `SMTP_HOST` itself is empty or contains only whitespace.
+2. `EMAILS_FROM_EMAIL` is missing.
+3. `FRONTEND_HOST` is empty or contains only whitespace.
+4. `SMTP_USER` is set and `SMTP_PASSWORD` is missing, empty or whitespace-only.
+5. One of the values checked above (`SMTP_HOST`, `EMAILS_FROM_EMAIL`, `FRONTEND_HOST`, and `SMTP_USER` / `SMTP_PASSWORD` when `SMTP_USER` is set) still holds a template placeholder.
+   - A value is a placeholder if, after trimming whitespace and ignoring case, it equals one of `changethis`, `changeme`, `change-me`, `todo`, `tbd`, `fixme` or `placeholder`.
+   - A value is also a placeholder if it is wrapped in angle brackets, for example `&lt;fill-me&gt;`.
+
+How the failure must work:
+
+- Construction must raise a `ValueError`. Pydantic&#x27;s `ValidationError` counts.
+- The failure must happen when `Settings` is constructed, not when a mail is first sent.
+- When several settings are wrong at once, one error must name **every** offending key.
+- The message must not name keys that are fine. In particular, don&#x27;t put the literal names of other settings in a generic prefix.
+
+When `SMTP_HOST` is not set, none of these checks apply and behaviour is unchanged. For example, an unused `SMTP_PASSWORD=&quot;changethis&quot;` is still accepted. Valid email setups must keep loading. That includes `SMTP_HOST` plus `EMAILS_FROM_EMAIL` without credentials, and a complete setup with credentials. The repository&#x27;s shipped defaults must also keep loading, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/hr-001-settings</b> <span class='muted'>hot-reload-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>stale-capture: a consumer or module alias keeps the Settings instance it got at startup, and a reload that builds a new object instead of updating that one in place leaves it serving the old ACCESS_TOKEN_EXPIRE_MINUTES / SMTP_PORT</li><li>invalid-reload: reload supplies SMTP_PORT=&#x27;not-a-port&#x27;, an invalid EMAILS_FROM_EMAIL or leaves out SECRET_KEY; the reload must raise an error naming the key and every previous value (including valid keys in the same reload) must stay active</li><li>partial-reload: reload changes related values (SMTP_USER/SMTP_PASSWORD/SMTP_HOST/EMAILS_FROM_EMAIL, PROJECT_NAME and the derived EMAILS_FROM_NAME, the computed emails_enabled); readers must never see the new value paired with the old one, and a rejected reload must not apply half of the pair</li><li>reload-unset: ACCESS_TOKEN_EXPIRE_MINUTES / SMTP_HOST / SMTP_PORT are left out of the reload (even when set in the process env); they must fall back to their declared defaults, not keep the stale value</li></ul><pre># Apply new settings at runtime without a restart
+
+The backend keeps its configuration in one shared `Settings` instance (`app.core.config.settings`, class `app.core.config.Settings`). Every module imports that object once at startup, so the only way to change a value today, such as `ACCESS_TOKEN_EXPIRE_MINUTES` or the `SMTP_*` settings, is a redeploy. Operators want to push a new configuration into a running process and have the next read use it.
+
+Add an explicit reload path to `Settings`.
+
+Requirements:
+
+1. Add an instance method `reload(values)` to `Settings`. `values` is a mapping from setting name (the field name, e.g. `&quot;SMTP_PORT&quot;`) to its **raw** value. Raw values may be strings as they would come from the environment (for example `&quot;15&quot;` for an int setting) and must be parsed and validated the same way they are at startup, including the existing field and model validators.
+2. `values` is the **complete** new configuration. Reload does not read process environment variables or the dotenv file. A setting that is missing from `values` falls back to its default declared in `Settings`, not to the value it had before the reload (for example, `ACCESS_TOKEN_EXPIRE_MINUTES` goes back to 8 days in minutes and `SMTP_HOST` goes back to `None`). A missing required setting (such as `SECRET_KEY`) makes the reload invalid.
+3. The reload updates the existing instance **in place** and returns that same instance. Any code that already holds a reference to it (a module-level import of `settings`, or an object that stored it in a constructor) sees the new values on its very next attribute read, with no restart and no re-import.
+4. The reload is all-or-nothing. If any value is invalid, `reload` raises a `ValueError` (pydantic&#x27;s `ValidationError` counts) whose message names the offending setting. Nothing changes: every setting, including the valid ones in the same reload, keeps its previous value, and a later valid reload still works.
+5. Related values swap together. After a successful reload, every value comes from the new configuration, including values derived by validators (for example `EMAILS_FROM_NAME` defaulting to `PROJECT_NAME`, and the computed `emails_enabled`). A reader must never see a new value next to a stale one.
+6. If no reload happens, behaviour is unchanged: constructing `Settings` works exactly as it does today and the existing test suite still passes. You do not need to rebuild objects that are created once from settings at startup (the DB engine, CORS middleware).
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/hr-002-access-token-expire</b> <span class='muted'>hot-reload-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>stale-capture: after a reload, the login endpoint keeps issuing access tokens with the old ACCESS_TOKEN_EXPIRE_MINUTES (for example because a new Settings object was rebound instead of updating the shared one)</li><li>invalid-reload: a reload with a non-integer, zero, negative, float or bool ACCESS_TOKEN_EXPIRE_MINUTES is rejected with a ValueError naming the key, and the last good value keeps serving</li><li>partial-reload: a reload with a valid ACCESS_TOKEN_EXPIRE_MINUTES and an invalid EMAIL_RESET_TOKEN_EXPIRE_HOURS (or the other way round) must not apply the valid half</li><li>reload-unset: a key that is missing, None or blank on reload falls back to the Settings default (11520 minutes / 48 hours) instead of keeping the stale runtime value</li></ul><pre># Change token lifetimes at runtime without a restart
+
+Two values in `app.core.config.Settings` control how long the backend&#x27;s tokens stay valid:
+
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: lifetime of the access tokens issued by the login endpoint. Default `60 * 24 * 8`.
+- `EMAIL_RESET_TOKEN_EXPIRE_HOURS`: lifetime of password-reset tokens. Default `48`.
+
+Today the only way to change either value is to edit the environment and redeploy. During a security incident, operators need to shorten token lifetimes right away, and the change must apply to the very next token issued.
+
+Add a module `app.core.runtime_config` that exposes the following.
+
+1. `reload_token_lifetimes(raw)` takes a mapping of raw values keyed by the setting names above (`&quot;ACCESS_TOKEN_EXPIRE_MINUTES&quot;`, `&quot;EMAIL_RESET_TOKEN_EXPIRE_HOURS&quot;`). It validates both values and then applies them. Values can be ints or strings (for example `&quot;30&quot;`). Any other keys in the mapping are ignored. On success it returns the new lifetimes (same shape as in point 2).
+2. `get_token_lifetimes()` returns the lifetimes currently in effect as a named tuple with the fields `access_token_expire_minutes` and `email_reset_token_expire_hours`. The two fields must always be a consistent pair.
+
+Required behaviour:
+
+- **Takes effect immediately.** After a successful reload, the next read returns the new values, with no restart and no re-import. This applies to `get_token_lifetimes()`, to `settings.ACCESS_TOKEN_EXPIRE_MINUTES` / `settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS` on the shared `app.core.config.settings` object (including in modules that imported it at startup), and to tokens issued by `POST {API_V1_STR}/login/access-token`. For example, after reloading `ACCESS_TOKEN_EXPIRE_MINUTES` to `5`, a newly issued access token must expire about 5 minutes from now.
+- **Validation.** Each value must be a positive integer (≥ 1). Booleans, floats, non-numeric strings, decimal strings such as `&quot;1.5&quot;`, zero and negative numbers are all invalid.
+- **Invalid reload is rejected as a whole.** If any value is invalid, raise `ValueError`. The message must name every offending key. Neither value is changed, so the last good pair keeps serving.
+- **Related values swap together.** A reload that changes both values applies both or neither. Readers must never see a new access-token lifetime paired with an old reset-token lifetime, or the other way round.
+- **Unset keys fall back to defaults.** A key that is missing from the mapping, `None`, or an empty or blank string reverts to the default declared on `Settings`. It must not keep the previous runtime value.
+- **No reload, no change.** Startup behaviour stays exactly as it is today. Constructing `Settings` with no overrides still gives the defaults above, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/hr-003-email-reset-token</b> <span class='muted'>hot-reload-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>stale-capture: a reader holding the settings object from import time keeps the old token lifetime and host after a reload, unless the same object is updated in place</li><li>invalid-reload: a reload supplies EMAIL_RESET_TOKEN_EXPIRE_HOURS of 0, -3, 721, &#x27;abc&#x27;, True or 3.0, or a FRONTEND_HOST such as &#x27;localhost:5173&#x27; or &#x27;ftp://...&#x27;; the reload must raise a ValueError naming the key and keep the last good pair</li><li>partial-reload: a reload has a valid new value for one key and an invalid value for the other; neither key may change, and concurrent readers of get_password_reset_settings() must never see a mixed old/new pair</li><li>reload-unset: a key is missing, None or blank on reload; it must fall back to its default (48 / http://localhost:5173), not keep the stale value</li></ul><pre># Reload password-reset link settings at runtime, as one pair
+
+Password-reset emails depend on two settings in `app.core.config.Settings`:
+
+- `EMAIL_RESET_TOKEN_EXPIRE_HOURS` sets how long the reset token is valid. The email also prints it as &quot;valid for N hours&quot;.
+- `FRONTEND_HOST` is the host that the reset link points to.
+
+Both are read once, when the settings are built at startup. If an operator wants a shorter reset window or needs to move the frontend to a new host, today they must redeploy. The two values also belong together: an email whose link uses the new host but whose token uses the old lifetime (or the reverse) is confusing and hard to debug. Add a runtime reload path for these two values.
+
+## Requirements
+
+1. Add a method `Settings.reload_password_reset_settings(raw)`. `raw` is a mapping from setting name to a raw value, as an operator or config watcher would supply it. Values may be strings, as they come from an environment or config file, or ints. Ignore any keys other than `EMAIL_RESET_TOKEN_EXPIRE_HOURS` and `FRONTEND_HOST`.
+2. Add a method `Settings.get_password_reset_settings()` that returns the current pair as a tuple `(email_reset_token_expire_hours: int, frontend_host: str)`. The pair must be read together, so a caller never gets one value from before a reload and the other from after it, even while another thread is reloading.
+3. After a successful reload, the next read returns the new values. This applies to the accessor and to plain attribute reads (`settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS`, `settings.FRONTEND_HOST`) on the **same** settings object that existing code already imported. No restart and no re-import.
+4. Validation:
+   - `EMAIL_RESET_TOKEN_EXPIRE_HOURS` must be an integer from 1 to 720 inclusive. A numeric string such as `&quot;6&quot;` is accepted and stored as an `int`. Booleans, floats, non-numeric strings and out-of-range numbers are invalid.
+   - `FRONTEND_HOST` must be a URL with an `http` or `https` scheme and a non-empty host, such as `https://app.example.com`. Anything else is invalid, for example `localhost:5173`, `ftp://...` or `http://`.
+5. An invalid reload raises `ValueError`. The message must name **every** offending key. The whole reload is rejected: neither value changes, even if the other value in the same reload was valid, and the last good pair keeps serving.
+6. Unset keys: a key that is missing from `raw`, or whose value is `None` or an empty or whitespace-only string, falls back to its documented default (`48` and `http://localhost:5173`). It does not keep its previous value.
+7. Startup behaviour with no reload stays exactly as it is today. This includes not adding any new startup validation. The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ic-001-create-user</b> <span class='muted'>idempotent-consumer · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span></p><p>fault cases:</p><ul><li>duplicate-delivery: create_user is called twice with the same payload, in one session and in two separate sessions; the second call must return the original row and no second row may exist</li><li>retry-after-partial: the first attempt commits the user, then session.refresh raises; the retry must return the committed user and leave exactly one row</li><li>back-to-back-duplicate: another delivery commits the same user between get_user_by_email and the insert; the unique-constraint violation must be rolled back and the call must return the winning row</li><li>distinct-events: two payloads with different emails but otherwise identical fields must both create their own users, and replays must map back to the right row</li></ul><pre># Make user creation safe to run twice
+
+`app.crud.create_user(*, session, user_create)` is called by sign-up, by the admin &quot;create user&quot; endpoint and by provisioning jobs. Those callers retry: a client times out and sends the request again, a job restarts after a crash, or a worker gets the same provisioning event twice. Today a second call for the same user fails with a raw database `IntegrityError` from the unique email constraint. This happens even when the first call already committed the user and only the response was lost. Retries fail noisily, and callers can&#x27;t tell &quot;already done&quot; apart from &quot;real conflict&quot;.
+
+Make `create_user` idempotent. The **email address** of the `UserCreate` payload is the idempotency key, matched exactly as stored.
+
+Requirements:
+
+1. **Replay returns the original.** If a user with the same email already exists and the payload matches it, `create_user` returns the existing `User` row (same `id`). It inserts nothing, changes nothing and raises nothing. The payload matches when the password verifies against the stored hash and `full_name`, `is_active` and `is_superuser` are all equal. This must work when the repeat uses the same session and when it uses a fresh one.
+2. **Retry after a partial failure.** Sometimes the first attempt commits the user and then fails before it returns, for example when the refresh after the commit raises. A retry with the same payload must return that committed user and must not insert a second row.
+3. **Back-to-back duplicates.** Look up an existing user through `get_user_by_email` in `app.crud`. Another delivery of the same payload may commit the user after that check but before this call&#x27;s own insert, which hits the unique constraint. In that case, roll back and treat the call as a replay: return the row that won the race, not an error.
+4. **Real conflicts are still rejected.** If a user with that email exists but the payload differs (different password, `full_name`, `is_active` or `is_superuser`), raise a `ValueError` (a subclass is fine). Leave the stored user unchanged. The error message must not include the email address or the password.
+5. **Distinct users are never deduplicated.** Payloads with different emails always create separate users, even if every other field is the same.
+6. The existing API behaviour (the routes still check for an existing email first and return 400) and the existing test suite are unchanged.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ic-002-update-user</b> <span class='muted'>idempotent-consumer · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>duplicate-delivery: the same password+name update is delivered twice with one key; the stored hash must not change and the repeat returns the user</li><li>duplicate-delivery: a late redelivery of an older keyed update arrives after a newer update and must not undo it</li><li>retry-after-partial: the commit raises after the change was flushed; the change must be rolled back and the key left unrecorded, so the retry applies once and a third delivery does nothing</li><li>distinct-events: two different keys for the same user both apply, and one key used for two different users applies to each</li></ul><pre># Make user updates safe to apply twice
+
+`app.crud.update_user` applies a `UserUpdate` to a stored user. Clients retry a PATCH when it times out, and background jobs that change users can be redelivered. Today every delivery is applied again, which causes two problems:
+
+- A repeated password change re-hashes the password with a new salt, so the stored `hashed_password` changes again even though nothing new was requested.
+- A late redelivery of an older update overwrites any change made after it. For example, update A sets the name to &quot;A&quot;, update B sets it to &quot;B&quot;, then A is delivered again and the name goes back to &quot;A&quot;.
+
+Make `update_user` idempotent when the caller provides an idempotency key.
+
+Requirements:
+
+1. `update_user` accepts a new optional keyword argument `idempotency_key: str | None = None`. All existing arguments and their meaning stay the same.
+2. When `idempotency_key` is `None`, behaviour does not change: every call applies the update.
+3. When a key is given, the key is scoped to the user being updated. The first successful call with a given (user, key) pair applies the update. Any later call with the same pair is a repeat and must not change any stored field of the user. That includes `hashed_password`, and it includes fields changed by other updates in the meantime.
+4. A repeat is not an error. It returns the user record (same `id`) with its current stored state.
+5. Different keys for the same user are separate updates and must all apply. The same key used for two different users is also two separate updates, and both must apply.
+6. If an attempt fails before it is committed (for example, the commit raises after the change has been flushed), the half-applied change must be discarded: roll back the session so the stored state is unchanged, re-raise the original exception, and do not record the key. A retry with the same key must then apply the update exactly once.
+7. Two deliveries of the same key that arrive at the same time must not both apply.
+8. The record of applied keys may be kept in process memory. It must not grow without bound.
+9. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ic-003-create-item</b> <span class='muted'>idempotent-consumer · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='ok'>gemini/gemini-2.5-flash#3 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='ok'>gemini/gemini-3.8-flash#2 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#3 pass</span></p><p>fault cases:</p><ul><li>duplicate-delivery: create_item is called twice with the same owner and idempotency key, in the same session and in a new session (the second time with a changed payload); exactly one item exists and the original is returned</li><li>retry-after-partial: the first attempt commits the item and then raises (lost ack), or raises before anything is persisted; the retry with the same key leaves exactly one item</li><li>back-to-back-duplicate: a second delivery with the same key commits in another session after the first delivery has checked for an existing item but before it commits; both calls return the same item and exactly one row exists</li><li>distinct-events: different keys for one owner, and the same key for two different owners, each create their own item</li></ul><pre># Make item creation safe to deliver twice
+
+`app.crud.create_item(*, session, item_in, owner_id)` inserts a new `Item` on every call. Clients that retry after a timeout, queue consumers that receive the same message again, and jobs that restart after a crash all call it a second time for the same logical request, and each call adds another row. Users end up with duplicate items.
+
+Add idempotency support to `create_item` so that a repeated request creates nothing new and returns the item from the first request.
+
+Requirements:
+
+1. `create_item` takes a new optional keyword argument `idempotency_key: str | None = None`. All existing arguments and the return type (`Item`) stay the same.
+2. **No key (`None`):** behaviour does not change. Every call creates a new item.
+3. **Key given:** the first call for a pair of (`owner_id`, `idempotency_key`) creates the item. Any later call with the same owner and key creates no row and returns the item from the first call (same `id`, `title`, `description`, `owner_id`). It must not raise. If the later call carries a different payload, the key still wins: the original item comes back unchanged and nothing is updated or created.
+4. The key belongs to one owner. Two different owners can use the same key string, and each gets their own item. Different keys for the same owner always create different items.
+5. The guarantee must hold across separate database sessions and process restarts, so it cannot rely on in-memory state. In particular:
+   - If an earlier attempt committed the item but then failed before reporting success (for example, the connection dropped after the commit), a retry with the same key returns the stored item and does not insert a second one.
+   - If an earlier attempt failed before anything was persisted, a retry with the same key creates the item exactly once.
+   - If two deliveries with the same key run concurrently in different sessions, and both check for an existing item before either commits, the database must end up with exactly one item. Both calls must return that item, and neither may raise.
+6. A key that is empty or only whitespace is a caller error: `create_item` must raise `ValueError` and must not create anything.
+7. You must not change the database schema. No new tables or columns, and no migrations.
+8. The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/rd-001-access-token-expire</b> <span class='muted'>resource-aware-defaults · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>hardcoded-size: ACCESS_TOKEN_MAX_EXPIRE_MINUTES=90 with no explicit lifetime still yields the fixed 11520 instead of min(11520, ceiling)</li><li>exceeds-limit: ACCESS_TOKEN_EXPIRE_MINUTES=120 configured above ACCESS_TOKEN_MAX_EXPIRE_MINUTES=60 (via kwargs and via env)</li><li>zero-or-negative: ACCESS_TOKEN_EXPIRE_MINUTES or ACCESS_TOKEN_MAX_EXPIRE_MINUTES set to 0 or negative, so every token expires on issue</li><li>unset-limit: ACCESS_TOKEN_MAX_EXPIRE_MINUTES unset, so the documented default 11520 or an explicit value is used unchanged</li></ul><pre># Keep access token lifetime within its configured bounds
+
+`app.core.config.Settings.ACCESS_TOKEN_EXPIRE_MINUTES` sets how long issued access tokens stay valid. The default is a fixed 8 days (`60 * 24 * 8` = 11520 minutes). Nothing checks this value or limits it. A value of `0` or below makes every token expire as soon as it is issued, so every login fails afterwards. Security teams also have no way to set an upper limit on token lifetime, so a typo like `ACCESS_TOKEN_EXPIRE_MINUTES=1000000` goes unnoticed.
+
+Add an optional hard ceiling. Work out the effective lifetime from it, and reject impossible combinations when `Settings` is constructed.
+
+Requirements:
+
+1. Add a new setting, `ACCESS_TOKEN_MAX_EXPIRE_MINUTES` (integer, optional, default unset/`None`). It is the hard upper limit for access token lifetime, in minutes.
+2. `ACCESS_TOKEN_EXPIRE_MINUTES` must be at least 1. Zero or negative values must be rejected, and the error must name `ACCESS_TOKEN_EXPIRE_MINUTES`.
+3. If `ACCESS_TOKEN_MAX_EXPIRE_MINUTES` is set, it must be at least 1. Zero or negative values must be rejected, and the error must name `ACCESS_TOKEN_MAX_EXPIRE_MINUTES`.
+4. If the ceiling is set and `ACCESS_TOKEN_EXPIRE_MINUTES` is given explicitly (as a constructor argument or an environment variable) with a value above the ceiling, reject it with one error that names **both** `ACCESS_TOKEN_EXPIRE_MINUTES` and `ACCESS_TOKEN_MAX_EXPIRE_MINUTES`. A value equal to the ceiling is allowed.
+5. If the ceiling is set and `ACCESS_TOKEN_EXPIRE_MINUTES` is **not** given explicitly, use the formula `min(11520, ACCESS_TOKEN_MAX_EXPIRE_MINUTES)`, and store the result in `ACCESS_TOKEN_EXPIRE_MINUTES` so that everything reading the setting uses the derived value. Do not keep the fixed 11520.
+6. If the ceiling is unset, behaviour does not change. The default stays 11520, and any explicit positive value is accepted as-is.
+7. Rejection means constructing `Settings` raises a `ValueError` (pydantic&#x27;s `ValidationError` counts).
+8. The shipped defaults must still load, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/rd-003-create-engine-7</b> <span class='muted'>resource-aware-defaults · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>hardcoded-size: the engine keeps SQLAlchemy&#x27;s fixed overflow of 10 instead of DB_MAX_CONNECTIONS // WEB_CONCURRENCY - DB_POOL_SIZE</li><li>exceeds-limit: WEB_CONCURRENCY x DB_POOL_SIZE (or x (DB_POOL_SIZE + DB_MAX_OVERFLOW)) is greater than DB_MAX_CONNECTIONS</li><li>zero-or-negative: WEB_CONCURRENCY, DB_POOL_SIZE or DB_MAX_CONNECTIONS below 1, or DB_MAX_OVERFLOW below 0</li><li>unset-limit: DB_MAX_CONNECTIONS not configured; overflow must default to 2 x DB_POOL_SIZE</li></ul><pre># Size the database connection pool from the connection budget
+
+`backend/app/core/db.py` builds the SQLAlchemy engine with SQLAlchemy&#x27;s fixed default pool sizes: 5 persistent connections plus 10 overflow connections per process. Every worker process gets its own pool. On a laptop with one worker this is fine. In production with several workers (`WEB_CONCURRENCY`), the total number of connections can go over what the Postgres server allows, and requests then fail with &quot;too many clients&quot;. A zero or negative size is also accepted without complaint and only breaks later.
+
+Make the pool sizes come from configured limits, and reject impossible combinations at startup.
+
+## Settings
+
+Add a pydantic-settings class `DatabasePoolSettings` in a new module `app.core.db_pool`. It reads these environment variables:
+
+| variable | type | default | meaning |
+|---|---|---|---|
+| `WEB_CONCURRENCY` | int | `1` | number of worker processes sharing the database |
+| `DB_POOL_SIZE` | int | `5` | persistent connections per worker |
+| `DB_MAX_OVERFLOW` | int, optional | unset | extra burst connections per worker; derived when unset |
+| `DB_MAX_CONNECTIONS` | int, optional | unset | total connections the app may open across all workers |
+
+The class must accept the usual pydantic-settings construction, `DatabasePoolSettings(_env_file=None, **values)`. It exposes two read-only attributes: `pool_size` and `max_overflow`.
+
+## Formula (document it in the module)
+
+- `pool_size` = `DB_POOL_SIZE`.
+- If `DB_MAX_OVERFLOW` is set, `max_overflow` = `DB_MAX_OVERFLOW`.
+- Otherwise, if `DB_MAX_CONNECTIONS` is set, `max_overflow` = `DB_MAX_CONNECTIONS // WEB_CONCURRENCY - DB_POOL_SIZE`. Each worker&#x27;s share of the budget, minus its persistent connections.
+- Otherwise (no limit configured), `max_overflow` = `2 * DB_POOL_SIZE` as the safe default. With the shipped defaults this gives 5 + 10, the same as today.
+
+## Validation (raise at construction; a `ValueError` or pydantic `ValidationError` both count)
+
+1. `WEB_CONCURRENCY`, `DB_POOL_SIZE` and `DB_MAX_CONNECTIONS` (when set) must be at least 1. `DB_MAX_OVERFLOW` (when set) must be at least 0. The error names each offending variable.
+2. When `DB_MAX_CONNECTIONS` is set and `WEB_CONCURRENCY * DB_POOL_SIZE` is greater than it, reject. The message must name `DB_POOL_SIZE`, `WEB_CONCURRENCY` and `DB_MAX_CONNECTIONS`. This includes the case where there are more workers than allowed connections.
+3. When `DB_MAX_CONNECTIONS` and `DB_MAX_OVERFLOW` are both set and `WEB_CONCURRENCY * (DB_POOL_SIZE + DB_MAX_OVERFLOW)` is greater than the limit, reject. The message must name `DB_MAX_OVERFLOW` and `DB_MAX_CONNECTIONS`.
+4. A total exactly equal to the limit is allowed.
+
+## Engine wiring
+
+- Add `build_engine(database_url, pool_settings=None)` to `app.core.db`. It returns the engine created with `pool_pre_ping=True`, `pool_size=pool_settings.pool_size` and `max_overflow=pool_settings.max_overflow`. If no settings object is passed, it uses `DatabasePoolSettings()`.
+- The module-level `engine` must be built through this function, so the derived values are the ones actually used.
+
+The shipped defaults must still load, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/rt-001-settings</b> <span class='muted'>config-round-trip · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>dropped-field: changing SMTP_HOST must keep comments, blank lines, order, the unknown CUSTOM_UNKNOWN_FLAG key, CRLF endings and the missing final newline byte-for-byte; a new key is appended without touching existing lines</li><li>default-overwrite: explicit values equal to the defaults (SMTP_PORT=587, ACCESS_TOKEN_EXPIRE_MINUTES=11520), explicit empty values (EMAILS_FROM_NAME=&quot;&quot;, SENTRY_DSN=) and zero/false values must be written and read back, not omitted</li><li>type-drift: int/bool values must reload into Settings as int/bool, a string containing quotes, a backslash and # must round-trip exactly, and a list must be stored as JSON that loads back as the same list</li><li>partial-write: an unserialisable value or an os.replace failure during save must leave the previous .env byte-identical with no leftover temp file</li></ul><pre># Lossless editing of the backend `.env` file
+
+`app.core.config.Settings` loads its values from a dotenv file (the top-level `.env`). Nothing in the backend can safely *write* that file. Ops scripts that change one setting rewrite the whole file. When they do, unknown keys and comments get dropped. Explicit values equal to the default, and explicit empty values, are omitted. Booleans and numbers come back in a different form. A crash during the save leaves a truncated `.env`.
+
+Add a writer for this record in a new module, `app.core.env_file`, that makes the load → modify → save round trip lossless.
+
+## API
+
+- `read_env_file(path) -&gt; dict[str, str]`
+  - Returns every assignment in the dotenv file at `path` (a `str` or `os.PathLike`), mapped to its raw string value.
+  - A missing file returns `{}`.
+  - Blank lines and lines starting with `#` are ignored.
+  - An optional `export ` prefix is accepted.
+  - Single-quoted and double-quoted values are unquoted. Double quotes support backslash escapes such as `\\`, `\&quot;` and `\n`.
+  - For unquoted values, an inline comment (whitespace followed by `#`) is stripped.
+  - `KEY=` maps to `&quot;&quot;`. A key that does not appear in the file is absent from the result, so unset and explicitly empty stay distinguishable.
+  - If a key appears more than once, the last occurrence wins.
+- `update_env_file(path, changes: Mapping[str, object]) -&gt; None`
+  - Applies `changes` to the file at `path`.
+  - Creates the file if it does not exist.
+
+## Requirements for `update_env_file`
+
+1. **No-op saves are no-ops.** If, after applying `changes`, no value would differ, the file must not be rewritten at all; its bytes stay identical. This covers both `changes={}` and passing back exactly what `read_env_file` returned.
+2. **Only changed fields change.** For each key whose value changes, rewrite only that assignment line. Keep everything else byte-for-byte:
+   - comments and blank lines
+   - line order
+   - keys `Settings` does not know about
+   - untouched assignments, including their quoting and line endings (`\r\n` included)
+   - a missing final newline
+3. **New keys** are appended at the end as `KEY=value` lines.
+4. **Value conversion** (the value written must read back as exactly this string):
+   - `bool` becomes `true` / `false`.
+   - `int` / `float` becomes its decimal `str()`.
+   - `str` is written as is.
+   - `list` / `tuple` / `dict` becomes JSON.
+   - `None` removes every assignment of that key (unset).
+   - `&quot;&quot;` writes an explicit empty assignment (`KEY=`) and must not be dropped.
+   - Values equal to a `Settings` default, and zero or `false` values, must be written explicitly. Never omit them.
+   - Any other type raises `TypeError`.
+5. **Quoting.** Quote values as needed so they read back identically, both through `read_env_file` and through `Settings(_env_file=path)`. This includes values containing spaces, `#`, quotes, backslashes or newlines. Numbers and booleans must reload into `Settings` with their proper types.
+6. **Key names** must match `[A-Za-z_][A-Za-z0-9_]*`. Any other key raises `ValueError`.
+7. **Atomic save.** Validate and convert all values before touching the file. An invalid value or key leaves the file unchanged. Write the new content to a temporary file in the same directory, then move it into place with `os.replace`. If any step fails, including `os.replace` itself:
+   - the error propagates,
+   - the previous file is left intact,
+   - no temporary file is left behind.
+
+`Settings` and all existing behaviour are unchanged, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/rt-002-userbase</b> <span class='muted'>config-round-trip · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>dropped-field: unknown keys (id, team, preferences) or UserBase fields that were never set disappear or get filled with defaults after an update of another field</li><li>default-overwrite: explicit is_superuser=false, full_name=null, full_name=&quot;&quot; or login_count=0 is omitted or replaced after a save</li><li>type-drift: a boolean saved as the string &quot;false&quot; or as 1, a tuple, set, datetime or NaN silently converted to another JSON type, or an int/float/list changing type across the round trip</li><li>partial-write: os.replace or os.fsync fails mid-save, or the record fails validation, and the previous file is truncated, changed or left with stray temp files</li></ul><pre># Lossless read-modify-write for exported user records
+
+Ops tooling keeps per-user snapshots as JSON files. Each file is one JSON object holding the `UserBase` fields (`email`, `is_active`, `is_superuser`, `full_name`) plus any other keys that other tools wrote, such as ids, timestamps, team names or nested preference objects. Scripts load a snapshot, change one field and save it back. Today nothing in the backend owns this round trip, and the ad-hoc scripts lose data in several ways:
+
+- keys they don&#x27;t know about disappear
+- explicit `false`, `null` or `&quot;&quot;` values get dropped or replaced by model defaults
+- values change type (for example `&quot;false&quot;` gets stored for a boolean, a tuple turns into a list, a datetime turns into a string)
+- a crash mid-save leaves a truncated file
+
+Add a new module `app.user_record` (file `backend/app/user_record.py`) that makes this round trip lossless. It must expose:
+
+- `UserRecordError`: an exception that subclasses `ValueError`.
+- `load_user_record(path) -&gt; dict`: reads the JSON file and returns the object with every key and value exactly as stored. It raises `UserRecordError` in these cases:
+  - the file is not valid JSON
+  - the top level is not a JSON object
+  - the record fails validation (see rules below)
+- `save_user_record(path, record) -&gt; None`: validates the record and then writes it.
+- `update_user_record(path, changes) -&gt; dict`: loads the record, applies the `changes` mapping (keys not in `changes` stay untouched, new keys may be added), saves the result and returns the updated record.
+
+Paths may be `str` or `pathlib.Path`.
+
+## Rules
+
+1. **No-change round trip.** If you load a record and save it with no change, re-reading the file gives a semantically identical object: same keys, same values, same value types. If the content already on disk is exactly what would be written, saving must not rewrite the file. In that case the save must not perform a file replace at all.
+2. **Changing one field changes only that field.** Every other key keeps its value and its type, including keys that are not `UserBase` fields. Keys keep their original order.
+3. **Unset and explicit values stay distinct.** A `UserBase` field that is absent from the record stays absent after an update; it is not filled in with its default. A field explicitly set to its default (`is_superuser: false`, `is_active: true`), to `null`, to `&quot;&quot;` or to `0` is kept exactly as is.
+4. **No type drift.** `UserBase` fields are checked strictly, with no coercion: `is_active`/`is_superuser` must be real booleans (not strings or numbers), `email` must be a valid email string and `full_name` must be a string or null, within the model&#x27;s length limits. All values anywhere in the record, nested ones included, must be JSON-native: null, bool, int, finite float, str, list, or object with string keys. Anything that would come back as a different type or cannot be stored (tuples, sets, datetimes, NaN/inf) is rejected with `UserRecordError`, never silently converted. The email value is stored exactly as given (no case normalisation).
+5. **Atomic save.** Validation happens before the file is touched. If validation fails, or if writing, flushing, fsyncing or replacing the file fails, the previous file stays byte-for-byte intact, the original exception (or `UserRecordError` for validation problems) propagates, and no temporary files are left in the directory. Saving to a path that does not exist yet creates the file.
+6. Existing models, CRUD and API behaviour are unchanged, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/rt-003-usercreate</b> <span class='muted'>config-round-trip · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>dropped-field: keys UserCreate does not know (team, quota, tags, meta) or untouched known fields disappear after editing another field</li><li>default-overwrite: an absent field (is_active) gets written as its default, or an explicit default/null/empty value (is_superuser false, full_name null or empty string) is replaced or omitted</li><li>type-drift: untouched ints/floats/lists/objects/bools change type, or a changed boolean field is stored as the string it was given</li><li>partial-write: an invalid change or a failing os.replace leaves a modified/truncated draft or a stray temp file instead of the previous draft</li></ul><pre># Edit user-creation drafts without losing data
+
+Admins and onboarding tools prepare users ahead of time as **draft files**: a JSON object on disk with the fields of a `UserCreate` (`email`, `password`, `full_name`, `is_active`, `is_superuser`). Other tools can also add their own keys, such as a team name, a quota or a list of tags. Today the backend has no safe way to change a draft. Ad-hoc scripts load the draft into a `UserCreate`, change one field and dump it back. That drops every key the model doesn&#x27;t know. It also fills in or rewrites values the draft never set, turns explicit `null`/empty values into something else, and can leave a half-written file if the process dies during the save.
+
+Add a new module `app/user_drafts.py` (package path `app.user_drafts`) that exposes a function `edit_user_draft`. Its first argument is the draft path (a `str` or a path-like object). Its second, optional argument is a mapping of changes (field name to new value). It returns the validated `UserCreate`.
+
+Required behaviour:
+
+1. **Validation first.** Merge the stored record with the changes. Changes win, and keys in the changes that are not yet in the draft are added. Validate the `UserCreate` fields of the merged record with `UserCreate`. If validation fails (for example, a password that is too short or a malformed email), raise a `ValueError`; pydantic&#x27;s `ValidationError` counts. Leave the file on disk byte-for-byte unchanged.
+2. **No-op round trip.** If you call it with no changes, or with changes equal to the stored values, the file must not be rewritten. Its bytes stay identical.
+3. **Only the changed field changes.** Every other key keeps exactly its previous value after a save. This covers keys `UserCreate` does not know about, and their position in the object is irrelevant.
+4. **Unset vs explicit.** If a `UserCreate` field such as `is_active` is absent from the draft, it must stay absent after a save. Do not write defaults in. If a field is explicitly set to its default value (for example `&quot;is_superuser&quot;: false`), or to an explicit `null` or empty string (for example `full_name`), it must keep that exact value.
+5. **No type drift.** Untouched values keep their JSON type: integers stay integers, floats stay floats, lists stay lists, objects stay objects, booleans stay booleans. Changed `UserCreate` fields are stored with the field&#x27;s own type after validation. For example, changing `is_active` to the string `&quot;false&quot;` stores the JSON boolean `false`, not a string.
+6. **Atomic save.** Write the new content to a temporary file in the same directory, then move it over the draft with `os.replace` (called through the `os` module). If anything fails during the save, including `os.replace` raising, the error must propagate. The previous draft must stay intact, and no temporary file may be left in the directory.
+7. If the file does not contain a JSON object (for example, it contains a list), raise `ValueError`.
+8. Existing behaviour of `UserCreate` and the rest of the backend is unchanged, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/tt-001-settings</b> <span class='muted'>tolerant-typed-config · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>duration-suffix: ACCESS_TOKEN_EXPIRE_MINUTES / EMAIL_RESET_TOKEN_EXPIRE_HOURS written as &quot;30m&quot;, &quot;2h&quot;, &quot;1d&quot;, &quot;120s&quot;, &quot;8D&quot;, &quot; 45 M &quot; via kwargs and env must convert to the same int as the canonical form</li><li>garbage: values like &quot;abc&quot;, &quot;5x&quot;, &quot;1.5h&quot;, &quot;30 minutes&quot;, &quot;2w&quot;, or non-whole conversions (&quot;30s&quot; for minutes, &quot;90m&quot; for hours) must raise at Settings construction naming the key and the bad value</li></ul><pre># Accept the duration spellings operators actually write
+
+The backend reads two expiry durations in `app.core.config.Settings`:
+
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: an integer number of **minutes** (default 8 days = `11520`)
+- `EMAIL_RESET_TOKEN_EXPIRE_HOURS`: an integer number of **hours** (default `48`)
+
+Operators often write these with a unit suffix, for example `ACCESS_TOKEN_EXPIRE_MINUTES=2h` or `EMAIL_RESET_TOKEN_EXPIRE_HOURS=2d`. Right now that crashes the service at startup with a generic integer parsing error. Make both settings accept unit-suffixed durations and convert them to the setting&#x27;s own unit. Input that cannot be parsed must still fail at startup, with a clear message.
+
+Requirements:
+
+1. Both settings accept a whole number followed by a unit suffix: `s` (seconds), `m` (minutes), `h` (hours) or `d` (days). The suffix is case-insensitive. Whitespace around the value, and between the number and the suffix, is allowed (for example `&quot; 45 M &quot;`).
+2. The value is converted to the setting&#x27;s unit, so `ACCESS_TOKEN_EXPIRE_MINUTES=&quot;2h&quot;` gives `120`, `&quot;1d&quot;` gives `1440` and `&quot;120s&quot;` gives `2`. `EMAIL_RESET_TOKEN_EXPIRE_HOURS=&quot;2d&quot;` gives `48` and `&quot;3600s&quot;` gives `1`. The result is a plain `int` equal to what the canonical integer form would give.
+3. If the duration does not convert to a whole number of the setting&#x27;s unit, it must be rejected. Examples: `&quot;30s&quot;` for the minutes setting, or `&quot;90m&quot;` for the hours setting.
+4. Anything else that is not a plain integer must be rejected. This includes an unknown suffix (`&quot;5x&quot;`), a fractional number (`&quot;1.5h&quot;`), a spelled-out unit (`&quot;30 minutes&quot;`) and non-numeric text (`&quot;abc&quot;`).
+5. Rejection means constructing `Settings` raises a `ValueError` (pydantic&#x27;s `ValidationError` counts). The error message must include the setting&#x27;s name and the offending value as written.
+6. The new spellings must work both from environment variables and from keyword arguments passed to `Settings(...)`.
+7. The canonical forms keep working exactly as before: integers, plain integer strings such as `&quot;60&quot;`, and the defaults when nothing is set. The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/tt-002-access-token-expire</b> <span class='muted'>tolerant-typed-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#3 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#2 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#3 fail</span></p><p>fault cases:</p><ul><li>csv-list: BACKEND_CORS_ORIGINS written as &quot;http://localhost:3000, https://app.example.com,https://admin.example.com&quot; (keyword argument and env var), including blank entries and trailing slashes</li><li>json-list: BACKEND_CORS_ORIGINS written as a JSON array string, e.g. &#x27;[&quot;http://localhost:3000&quot;,&quot;https://app.example.com&quot;]&#x27; (keyword argument and env var)</li><li>empty-list: BACKEND_CORS_ORIGINS set to &quot;&quot;, whitespace, &quot; , &quot; or &quot;[]&quot; must become []</li><li>garbage: BACKEND_CORS_ORIGINS set to malformed JSON, a non-string JSON array, or an entry without an http(s) scheme must raise naming the key and the bad value</li></ul><pre># Load the extra CORS origins however operators write them
+
+The backend settings (`app.core.config.Settings`) only know one browser origin, `FRONTEND_HOST`. Operators need to allow more origins, such as an admin console or a staging frontend. When list settings like this are rolled out, the same value turns up in several spellings: a JSON array (`[&quot;https://a.example.com&quot;,&quot;https://b.example.com&quot;]`), a comma-separated string (`https://a.example.com, https://b.example.com`), or an empty string meaning &quot;none&quot;. A typed list binding that only accepts JSON crashes the service at startup with an unreadable parser trace.
+
+Add a new setting, `BACKEND_CORS_ORIGINS`, that holds the extra allowed origins. Also add a computed setting, `all_cors_origins`, that gives the full list of allowed origins.
+
+Requirements:
+
+1. `BACKEND_CORS_ORIGINS` defaults to an empty list. Once `Settings` is built, it is always a plain `list[str]`.
+2. These inputs must all produce the same list. This holds whether the value comes from the environment variable `BACKEND_CORS_ORIGINS` or is passed to `Settings(...)` as a keyword argument:
+   - a real Python list of strings (the canonical form)
+   - a JSON array string, e.g. `&#x27;[&quot;http://localhost:3000&quot;,&quot;https://app.example.com&quot;]&#x27;`
+   - a comma-separated string, e.g. `&quot;http://localhost:3000, https://app.example.com&quot;`
+3. Normalisation applies to every spelling:
+   - strip whitespace around each entry
+   - drop entries that are empty or blank (e.g. `&quot;a,,b,&quot;`)
+   - remove trailing `/` from each origin, so `https://app.example.com/` becomes `https://app.example.com`
+4. An empty or whitespace-only string, and the JSON array `[]`, give an empty list.
+5. Each origin must start with `http://` or `https://`. Reject the value if:
+   - an entry has no such scheme (e.g. `localhost:3000` or `ftp://files.example.com`)
+   - a string that starts with `[` is not valid JSON
+   - a JSON array holds anything other than strings
+   - the value is not a list or a string at all
+
+   Rejection means constructing `Settings` raises a `ValueError` (pydantic&#x27;s `ValidationError` counts). The error message must contain the name `BACKEND_CORS_ORIGINS` and the offending input exactly as given (the raw value, or the bad entry).
+6. `all_cors_origins` is `FRONTEND_HOST` with any trailing `/` removed, followed by the entries of `BACKEND_CORS_ORIGINS` in order, with duplicates removed.
+7. Existing settings behave as before, and the repository&#x27;s existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/tt-003-email-reset-token</b> <span class='muted'>tolerant-typed-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>csv-list: EMAILS_BCC written as a comma-separated string, e.g. &quot;audit@example.com, ops@example.com&quot; or with a trailing comma</li><li>json-list: EMAILS_BCC written as a JSON array string, e.g. &#x27;[&quot;audit@example.com&quot;, &quot;ops@example.com&quot;]&#x27;</li><li>empty-list: EMAILS_BCC set to an empty or whitespace-only string must become []</li><li>garbage: EMAILS_BCC containing an invalid address, malformed JSON, or a non-string JSON item must fail naming EMAILS_BCC and the bad value</li></ul><pre># Let operators write the BCC recipient list the way they actually write lists
+
+The backend reads its email settings (`SMTP_*`, `EMAILS_FROM_*`, `EMAIL_RESET_TOKEN_EXPIRE_HOURS`) in `app.core.config.Settings`. Ops wants a list of extra addresses (for example an audit mailbox) that are blind-copied on outgoing email such as password-reset mail. Add a new setting for this: **`EMAILS_BCC`**, a list of email addresses that defaults to an empty list.
+
+Operators set this from env files and deployment manifests, and they write lists in different ways. With pydantic-settings&#x27; default list handling, `EMAILS_BCC=audit@example.com,ops@example.com` makes the service crash at startup with a JSON parser trace that names neither the problem nor the value. The setting must accept the spellings people use and turn each one into the same typed value.
+
+Requirements (whether the value comes from the environment variable `EMAILS_BCC` or is passed straight to `Settings(...)`):
+
+1. **Comma-separated string**: `&quot;audit@example.com, ops@example.com&quot;` must give `[&quot;audit@example.com&quot;, &quot;ops@example.com&quot;]`. Whitespace around each item is ignored. Empty items, such as a trailing comma, are dropped. A single address with no comma gives a one-element list.
+2. **JSON array string**: `&#x27;[&quot;audit@example.com&quot;, &quot;ops@example.com&quot;]&#x27;` must give the same list.
+3. **Empty value**: an empty or whitespace-only string must give `[]`. Leaving the setting unset also gives `[]`.
+4. **Canonical form**: passing a real Python list of addresses must keep working and give the same list.
+5. **Bad input fails clearly**: constructing `Settings` must raise a `ValueError` (pydantic&#x27;s `ValidationError` counts) whose message contains the key name `EMAILS_BCC` and the offending value, in these cases:
+   - an item is not a valid email address (e.g. `&quot;audit@example.com, not-an-email&quot;` must mention `not-an-email`)
+   - the value looks like a JSON array but is malformed (e.g. `&#x27;[&quot;audit@example.com&quot;, &#x27;`)
+   - a JSON array contains a non-string item (e.g. `&#x27;[&quot;audit@example.com&quot;, 42]&#x27;` must mention `42`)
+6. Every accepted spelling must produce exactly the same list as the canonical form.
+7. Existing settings and the existing test suite must keep working unchanged.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/en-001-deleteapikeycontext</b> <span class='muted'>env-aware-naming · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#2 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#3 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#2 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#3 pass</span></p><p>fault cases:</p><ul><li>unscoped-key: API key cache key built without the environment, so production and staging keys for the same ID collide</li><li>wrong-env-source: key uses a hardcoded/default environment instead of CacheKeySettings.Environment</li><li>unknown-env: empty, misspelled or wrongly-cased Environment must fail with an error naming Environment</li><li>separator-injection: a part containing &#x27;:&#x27; (or an empty part) produces an ambiguous key and must be rejected</li></ul><pre># Scope client-side cache keys to the deployment environment
+
+Teams that build on the Go API client (package `client`, import path `miniflux.app/v2/client`) cache API resources such as API keys, for example to invalidate an entry after `DeleteAPIKeyContext`. Staging and production often share one cache cluster. Today there is no shared way to build those names, so each caller writes its own, usually without the environment. When that happens, a staging delete evicts or overwrites the production entry for the same API key ID.
+
+Add one helper to the `client` package that builds every such name from an explicit settings object.
+
+Requirements:
+
+1. Add an exported struct `CacheKeySettings` with an exported string field named `Environment`. Also add an exported constant `DefaultCacheEnvironment` with the value `production`.
+2. The allowed environments are exactly `development`, `production`, `staging` and `test`. They are lowercase and matched exactly, with no trimming and no case folding.
+3. Add `func BuildCacheKey(settings CacheKeySettings, parts ...string) (string, error)`.
+   - If `settings.Environment` is empty or not one of the allowed values, return an error. The error message must contain the setting name `Environment`, and nothing should be built.
+   - Return an error if no parts are given, if any part is empty, or if any part contains the separator character `:`. Without that last check, `(&quot;a:b&quot;)` and `(&quot;a&quot;, &quot;b&quot;)` would produce the same name.
+   - On success, return the namespace `miniflux`, then the configured environment, then the parts, all joined by `:`. For example, parts `feed` and `7` in environment `staging` give `miniflux:staging:feed:7`.
+   - The environment must always come from the settings argument. Never fall back to a hardcoded or default value.
+4. Add `func APIKeyCacheKey(settings CacheKeySettings, apiKeyID int64) (string, error)`. It returns the key for an API key resource: the parts `api-key` and the decimal ID, built through `BuildCacheKey`. For `production` and ID `42` the result must be exactly `miniflux:production:api-key:42`. Names for the default environment must stay stable.
+5. The same logical key built for two different environments must give two different names.
+6. Existing client behaviour, including `DeleteAPIKeyContext`, stays unchanged, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/en-002-subscribe</b> <span class='muted'>env-aware-naming · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>unscoped-key: subscription name built without the environment prefix, so staging and production produce the same name</li><li>wrong-env-source: name built from a hardcoded/default environment instead of the MINIFLUX_ENVIRONMENT setting</li><li>unknown-env: MINIFLUX_ENVIRONMENT empty, whitespace or not one of production/staging/development/test must fail with an error naming the setting</li><li>separator-injection: a feed URL or part containing &#x27;:&#x27; must be escaped so it cannot collide with a name built from separate parts</li></ul><pre># Scope Google Reader subscription names to the deployment environment
+
+When a Google Reader client subscribes to a feed (`subscribe` in `internal/googlereader/handler.go`), nothing records which deployment the subscription belongs to. Staging and production often share caches, brokers and log pipelines. Any identifier built for a subscription without the environment is the same in every deployment, so staging entries overwrite production ones and the other way round. Add a single helper that builds every such name from the configured deployment environment, and make `subscribe` use it.
+
+## Setting
+
+- The deployment environment is read from the environment variable `MINIFLUX_ENVIRONMENT`.
+- Allowed values, matched case-sensitively: `production`, `staging`, `development`, `test`.
+- If the variable is **not set at all**, the default environment is `production`.
+- If the variable is set but is empty or whitespace only, do **not** fall back to the default. Building a name must fail.
+
+## API (package `internal/googlereader`)
+
+1. A struct type `NameSettings` with one exported string field, `Environment`.
+2. `NameSettingsFromEnv() NameSettings` reads `MINIFLUX_ENVIRONMENT` as described above. An unset variable gives `production`. A set value is passed through unchanged, even when it is empty.
+3. `ScopedName(settings NameSettings, parts ...string) (string, error)`:
+   - It returns an error when `settings.Environment` is empty, whitespace only, or not one of the allowed values. The error message must contain the setting name `MINIFLUX_ENVIRONMENT`.
+   - It returns an error when no parts are given.
+   - Otherwise the name is the environment followed by each part, joined with `:`. Every part (not the environment) is escaped with Go&#x27;s `url.QueryEscape`. A part that contains `:` (or `%`, `+`, a space and so on) therefore cannot be mistaken for several parts or collide with a different name.
+4. `SubscriptionName(settings NameSettings, userID int64, feedURL string) (string, error)` returns the scoped name for the parts `googlereader`, `subscription`, the decimal user ID and the feed URL. Errors are the same as for `ScopedName`.
+
+The format for the shipped default environment must be stable. For example, user 42 subscribing to `https://example.org/feed.xml` in `production` must produce exactly:
+`production:googlereader:subscription:42:https%3A%2F%2Fexample.org%2Ffeed.xml`
+
+The same logical name built for two different environments must produce two different strings.
+
+## Wiring
+
+At the very start of `subscribe`, build the subscription name with `NameSettingsFromEnv()` and `SubscriptionName`. If that fails because the environment is misconfigured, return the error before creating any category or feed.
+
+## Constraints
+
+- No behaviour changes when `MINIFLUX_ENVIRONMENT` is unset.
+- The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/ff-001-create-admin-credentials</b> <span class='muted'>fail-fast-config · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>conditional-missing: CREATE_ADMIN on without ADMIN_USERNAME</li><li>conditional-missing: CREATE_ADMIN on without ADMIN_PASSWORD</li><li>empty: ADMIN_USERNAME set to whitespace only</li><li>several-bad: CREATE_ADMIN on with no credentials, error names both keys</li></ul><pre># Fail fast when admin bootstrap credentials are missing
+
+Miniflux can create its first admin account at startup: with `CREATE_ADMIN` enabled it creates a user from
+`ADMIN_USERNAME` and `ADMIN_PASSWORD` (the password can also come from `ADMIN_PASSWORD_FILE`). Today the
+configuration check accepts `CREATE_ADMIN` without those credentials. The process connects to the database,
+runs migrations, and only then exits with a user-validation error. During a rollout that looks like a
+crash loop, far away from the real cause: a missing setting.
+
+Make the configuration check catch this before anything else starts.
+
+Requirements:
+
+1. `Validate()` on the parsed configuration options (package `internal/config`) must return an error when
+   `CREATE_ADMIN` is enabled and `ADMIN_USERNAME` is missing, empty or whitespace only.
+2. The same applies to `ADMIN_PASSWORD`. A password supplied through `ADMIN_PASSWORD_FILE` counts as set.
+3. When both are missing, one error must name **both** variables, and it must mention `CREATE_ADMIN` so the
+   operator knows why they are required. When only one is missing, the error must name only that one.
+4. With `CREATE_ADMIN` disabled (the default), no admin credentials are required and behaviour is unchanged.
+5. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/ff-002-configvalue</b> <span class='muted'>fail-fast-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#3 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#2 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#3 fail</span></p><p>fault cases:</p><ul><li>conditional-missing: CREATE_ADMIN enabled while ADMIN_USERNAME or ADMIN_PASSWORD is absent</li><li>empty: CREATE_ADMIN enabled with ADMIN_USERNAME set to whitespace only</li><li>placeholder: ADMIN_PASSWORD left as changethis/TODO (also via ADMIN_PASSWORD_FILE), ADMIN_USERNAME left as &lt;fill-me&gt;, DATABASE_URL left as todo</li><li>several-bad: CREATE_ADMIN on with ADMIN_USERNAME missing, ADMIN_PASSWORD=changeme and DATABASE_URL=&lt;fill-me&gt;; one error names all three keys</li></ul><pre># Refuse to start when required settings are missing or still hold template placeholders
+
+Miniflux can create its first admin account at startup. With `CREATE_ADMIN` enabled, it creates a user from `ADMIN_USERNAME` and `ADMIN_PASSWORD`. The password can also come from `ADMIN_PASSWORD_FILE`. Deployment templates often ship these values as placeholders such as `changethis`, `TODO` or `&lt;fill-me&gt;`, and `DATABASE_URL` is often left the same way. Today the configuration check accepts all of these. The process then either fails later, after connecting to the database and running migrations, or it creates an admin account whose password is literally `changethis`.
+
+Make the configuration check catch these problems before anything else starts.
+
+## What to build
+
+Extend `Validate() error` on the parsed configuration options (`*configOptions` in package `internal/config`, the method that `NewConfigParser()` → `ParseEnvironmentVariables()` / `ParseFile()` callers already run) so that it reports these problems:
+
+1. **Conditional requirement.** When `CREATE_ADMIN` is enabled, `ADMIN_USERNAME` and `ADMIN_PASSWORD` must be set. A value that is missing, empty or whitespace-only counts as not set. A password supplied through `ADMIN_PASSWORD_FILE` counts as set. The error must mention `CREATE_ADMIN` so the operator knows why the credentials are required.
+2. **Placeholders.** A value counts as a template placeholder when, after trimming surrounding whitespace and ignoring case, it is exactly one of `changethis`, `changeme`, `change-me`, `change_me`, `todo`, `tbd`, `fixme`, `placeholder` or `replaceme`, or when it is wrapped in angle brackets such as `&lt;fill-me&gt;`. A real value that only *contains* one of those words (for example `todo-list-2024`) is not a placeholder. The rules are:
+   - When `CREATE_ADMIN` is enabled, a placeholder in `ADMIN_USERNAME` or `ADMIN_PASSWORD` is an error. This includes a password read from `ADMIN_PASSWORD_FILE`.
+   - A placeholder in `DATABASE_URL` is always an error.
+3. **One aggregated error.** All problems found must be reported in one returned error, and its message must name every offending key. The error must not name a key that is fine. For example, if only `ADMIN_USERNAME` is missing, the message must not mention `ADMIN_PASSWORD`.
+4. **Unchanged behaviour for valid configurations.** The shipped defaults must still validate with no error. That includes `CREATE_ADMIN` disabled and the default `DATABASE_URL`. With `CREATE_ADMIN` disabled, the admin credentials are not checked at all. Complete, non-placeholder credentials and a real database DSN must validate.
+5. Existing validation rules, such as the OIDC discovery endpoint check, keep working, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/ff-003-configoptions</b> <span class='muted'>fail-fast-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='bad'>claude-code#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>conditional-missing: CERT_FILE set while KEY_FILE is absent (and the reverse), which today silently falls back to plain HTTP</li><li>empty: KEY_FILE set to whitespace only while CERT_FILE is set</li><li>placeholder: CERT_FILE left as changethis / TODO / &lt;fill-me&gt; / ChangeMe, or KEY_FILE left as xxx</li><li>several-bad: CERT_FILE=&lt;fill-me&gt; and KEY_FILE=todo together, or CERT_FILE=changethis with KEY_FILE missing; one error must name both keys</li></ul><pre># Fail fast on incomplete or placeholder TLS certificate settings
+
+Miniflux can serve HTTPS directly from a certificate and private key on disk, set with `CERT_FILE` and `KEY_FILE`. The HTTP server only turns TLS on when **both** values are non-empty. If an operator sets only one of them, leaves one blank, or ships a deployment template where a value is still a placeholder like `changethis`, Miniflux starts anyway. In the half-configured case it quietly serves plain HTTP. In the placeholder case it fails later, when it tries to load a file that doesn&#x27;t exist. Either way the problem shows up far from its cause.
+
+Make the configuration check reject these settings, so the service refuses to start.
+
+## Requirements
+
+1. `Validate() error` on the parsed configuration options (package `internal/config`, method on `*configOptions`) must return an error when `CERT_FILE` or `KEY_FILE` is set to a non-blank value but the other one is missing, empty or whitespace only. Setting either one makes the pair required.
+2. If at least one of the two is set, `Validate()` must also reject a value in either setting that is still a template placeholder. Compare case-insensitively after trimming surrounding whitespace. At minimum, treat these as placeholders: `changethis`, `changeme`, `todo`, `tbd`, `fixme`, `placeholder`, `xxx`, and any value wrapped in angle brackets such as `&lt;fill-me&gt;`. A real path that only contains one of these words (for example `/etc/todo/cert.pem`) is not a placeholder.
+3. Collect every problem in the pair into **one** error, and name each offending key (`CERT_FILE` and/or `KEY_FILE`) in its message. If only one key is bad, the message must name only that key and must not mention the other one.
+4. If neither `CERT_FILE` nor `KEY_FILE` is set (the shipped default), nothing changes. When both are set to real values, validation passes. The checks `Validate()` already performs keep working.
+5. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/hr-001-configvalue</b> <span class='muted'>hot-reload-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='ok'>gemini/gemini-2.5-flash#3 pass</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#2 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#3 fail</span></p><p>fault cases:</p><ul><li>stale-capture: options are copied once at startup; after Reload, the next Current() read must return the new ADMIN_USERNAME/CREATE_ADMIN, and snapshots taken earlier must not be changed in place</li><li>invalid-reload: a reload sets OAUTH2_PROVIDER=oidc with no OAUTH2_OIDC_DISCOVERY_ENDPOINT, or contains a malformed line; it must be rejected with an error naming the key or line, and the last good options keep serving</li><li>partial-reload: ADMIN_USERNAME and ADMIN_PASSWORD change together while readers run concurrently; no reader may see the new username paired with the old password</li><li>reload-unset: ADMIN_USERNAME and CREATE_ADMIN are dropped on reload and must fall back to their defaults instead of keeping the stale values</li></ul><pre># Reload configuration at runtime without serving stale values
+
+Miniflux reads its configuration once at startup (`config.NewConfigParser()` → `parseLines` / `ParseEnvironmentVariables`) and keeps the parsed `*configOptions` until the process exits. Operators who change a value, such as an admin credential or an OAuth2 setting, must redeploy. Any code that copied the options at startup keeps serving the old values. We need an explicit reload path and one accessor that always returns the active options.
+
+Add this to package `internal/config` (`miniflux.app/v2/internal/config`):
+
+- An exported type `LiveOptions` that holds the active configuration.
+- `func NewLiveOptions(initial *configOptions) *LiveOptions` returns a holder that serves `initial` unchanged: `Current()` must return that same pointer. When `initial` is `nil`, it serves the default options, which are the same values a fresh `NewConfigParser()` produces before any parsing.
+- `func (l *LiveOptions) Current() *configOptions` returns the options that are active at the moment of the call. Readers call it on every read. It must be safe to call from many goroutines while a reload runs, with no data races.
+- `func (l *LiveOptions) Reload(lines []string) error` takes new raw values in the same `KEY=VALUE` form as the environment (`os.Environ()`). It builds a complete new configuration from those lines on top of the documented defaults, using the existing parser, and then runs the existing `Validate()` check.
+
+Required behaviour:
+
+1. **The next read sees the reload.** After `Reload` succeeds, the very next `Current()` returns the new values. No restart, no new holder and no re-parse by the caller is needed.
+2. **Snapshots are immutable.** A `*configOptions` returned earlier by `Current()` is never changed in place. A reload swaps in a whole new set of options atomically. A reader that takes one snapshot therefore never sees a mix of old and new values, for example a new `ADMIN_USERNAME` paired with the old `ADMIN_PASSWORD`.
+3. **Invalid reloads are rejected.** If the new values fail parsing or `Validate()`, `Reload` returns a non-nil error and the previously active options keep serving. For example, `OAUTH2_PROVIDER=oidc` without `OAUTH2_OIDC_DISCOVERY_ENDPOINT` fails validation, and the error must name `OAUTH2_OIDC_DISCOVERY_ENDPOINT`. A non-blank line that has no `=` or has an empty key is also rejected, and the error must include the offending line. Blank or whitespace-only lines are ignored.
+4. **Unset keys go back to their defaults.** A reload is a full replacement. If a key was set before but is missing from the reload, it returns to its default value; it does not keep the stale value.
+5. Startup behaviour without any reload is unchanged, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/rd-003-databasemaxconns</b> <span class='muted'>resource-aware-defaults · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='ok'>gemini/gemini-2.5-flash#2 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#3 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#2 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#3 pass</span></p><p>fault cases:</p><ul><li>min-over-max: DATABASE_MIN_CONNS configured above DATABASE_MAX_CONNS</li><li>exceeds-limit: WORKER_POOL_SIZE greater than or equal to DATABASE_MAX_CONNS leaves no connection for the web UI and API</li><li>zero-or-negative: DATABASE_MAX_CONNS or WORKER_POOL_SIZE below 1, or DATABASE_MIN_CONNS negative</li><li>hardcoded-size: derived pool sizes must follow the configured limits and the documented ReservedConns formula, not fixed numbers</li></ul><pre># Derive database pool sizing from the configured limits and reject impossible combinations
+
+Miniflux runs a pool of feed refresh workers (`WORKER_POOL_SIZE`, default 16). Each worker uses a PostgreSQL connection from the pool limited by `DATABASE_MAX_CONNS` (default 20), with `DATABASE_MIN_CONNS` (default 1) idle connections kept open. The parser checks each setting on its own, but nothing checks them against each other. If an operator lowers `DATABASE_MAX_CONNS` below the worker count, the refresh workers take every connection. The web UI, the API and the scheduler then hang waiting for a connection. If `DATABASE_MIN_CONNS` is above `DATABASE_MAX_CONNS`, the pool cannot start in a consistent state. A size of zero or below makes the pool or the worker pool deadlock.
+
+Add one place, in package `internal/config`, that derives the pool sizes from these settings and rejects impossible combinations at startup.
+
+## API
+
+1. An exported struct `PoolSizing` with the `int` fields `Workers`, `MinConns`, `MaxConns` and `ReservedConns`.
+2. An exported function `DerivePoolSizing(workers, minConns, maxConns int) (PoolSizing, error)`. The arguments are the values of `WORKER_POOL_SIZE`, `DATABASE_MIN_CONNS` and `DATABASE_MAX_CONNS`.
+3. A method on the parsed options, `func (c *configOptions) DatabasePoolSizing() (PoolSizing, error)`. It calls `DerivePoolSizing` with the configured `WORKER_POOL_SIZE`, `DATABASE_MIN_CONNS` and `DATABASE_MAX_CONNS`.
+
+## Formula
+
+Every refresh worker holds at most one connection, and at least one connection must stay free for the web UI and the API. So:
+
+- `Workers`, `MinConns` and `MaxConns` are exactly the configured values. Never use a fixed constant.
+- `ReservedConns = DATABASE_MAX_CONNS - WORKER_POOL_SIZE`, and it must be at least 1.
+
+## Errors
+
+Return an error and a zero `PoolSizing` in each of these cases:
+
+- `DATABASE_MAX_CONNS` below 1. The error names `DATABASE_MAX_CONNS`.
+- `WORKER_POOL_SIZE` below 1. The error names `WORKER_POOL_SIZE`.
+- `DATABASE_MIN_CONNS` negative. The error names `DATABASE_MIN_CONNS`. Zero is allowed.
+- `DATABASE_MIN_CONNS` greater than `DATABASE_MAX_CONNS`. A single error names **both** settings. Equal values are allowed.
+- `WORKER_POOL_SIZE` greater than or equal to `DATABASE_MAX_CONNS`. A single error names **both** settings.
+
+When one of the first three range checks fails, the error names only the offending setting.
+
+## Compatibility
+
+The shipped defaults (16 workers, 1 to 20 connections) must derive without error, giving `ReservedConns` = 4. The existing test suite must keep passing.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/rt-001-configvalue</b> <span class='muted'>config-round-trip · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#3 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#2 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#3 fail</span></p><p>fault cases:</p><ul><li>dropped-field: comments, blank lines, unknown keys or untouched settings disappear when one key is set or unset</li><li>default-overwrite: an explicit value equal to the default (LOG_LEVEL=info) or an explicit empty value (ADMIN_USERNAME=) is omitted or treated as unset</li><li>partial-write: a rejected update (line-break injection, invalid key, untrimmable value, set+unset conflict) modifies the file or leaves temporary files behind</li></ul><pre># Lossless updates to the Miniflux configuration file
+
+Miniflux reads its settings from a `KEY=value` configuration file (`miniflux -config-file ...`, loaded by the config parser&#x27;s `ParseFile`). Operators and tooling often need to change one setting in that file, for example to flip `LOG_LEVEL` during an incident. Today there is no writer for this file. Ad-hoc scripts rewrite it from the parsed options, and that loses data. Comments and keys Miniflux does not know about disappear. An explicitly set value that equals the default is dropped, so it silently follows future default changes. An explicit empty value turns into &quot;unset&quot;. A crash half-way through leaves a truncated file.
+
+Add a writer to package `internal/config` (`miniflux.app/v2/internal/config`) that makes load, modify, save lossless:
+
+```
+func UpdateConfigFile(filename string, set map[string]string, unset []string) error
+```
+
+## Behaviour
+
+1. **Everything you did not ask to change is preserved byte for byte.** This covers comment lines (first non-blank character `#`), blank lines, lines without a key, keys unknown to Miniflux, their order, their spacing and the presence or absence of a final newline. A line is a setting when, after trimming, it does not start with `#` and contains `=` at a position greater than 0. Its key and value are the trimmed text before and after the first `=`. These are the same rules the file parser uses.
+2. **Set.** For every key in `set`, the first line holding that key is replaced by `KEY=value` (no spaces). Later duplicate lines for that key are removed, so the file ends up with exactly one effective value. If the existing (trimmed) value already equals the requested value, keep the original line exactly as it was. Keys from `set` that are not yet in the file are appended at the end as `KEY=value`, one per line, in ascending key order.
+3. **Explicit values are written explicitly.** A value equal to Miniflux&#x27;s default (for example `LOG_LEVEL=info`) is still written. An empty string writes an explicit empty value, `KEY=`. That is not the same as removing the key.
+4. **Unset.** Every line for a key listed in `unset` is removed. Unsetting a key that is not present changes nothing.
+5. **No-op.** If the resulting content is identical to the current content (for example `set` and `unset` are both empty, or every value already matches), the file is not rewritten. If the file does not exist in that case, it is not created.
+6. **Missing file.** A missing file is treated as empty and is created when there is something to write, with permissions `0600`. Content written to a new or previously empty file ends with a newline. If the existing file ended with a newline, the result does too. If it did not, the result does not either.
+7. **Permissions.** When an existing file is rewritten, its permission bits are kept.
+
+## Rejection and failure safety
+
+`UpdateConfigFile` must return a non-nil error and leave the file **exactly as it was**, with no leftover temporary files next to it, when:
+
+- a key in `set` or `unset` is empty or contains a character other than ASCII letters, digits and `_` (for example `BAD KEY` or `A=B`);
+- a value contains a line break (`\n` or `\r`), because that would inject extra settings into the file;
+- a value starts or ends with whitespace, because the parser trims it and the value could not round-trip;
+- the same key appears in both `set` and `unset`;
+- the resulting configuration is rejected by the configuration parser;
+- reading, writing, syncing or replacing the file fails. The new content must be written to a temporary file in the same directory and then atomically renamed over the original, so a failed save never leaves a truncated or mixed file.
+
+A file produced by `UpdateConfigFile` must still load with the parser&#x27;s `ParseFile`. The existing behaviour of the configuration parser is unchanged, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/rt-002-configoptions</b> <span class='muted'>config-round-trip · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>dropped-field: comments, blank lines, unknown keys and settings not in the environment disappear when the environment is merged into the config file</li><li>default-overwrite: a setting equal to its default or explicitly empty (OAUTH2_CLIENT_ID=) is omitted or keeps the old value instead of being written as KEY=</li><li>type-drift: values are normalised on write (RUN_MIGRATIONS=yes rewritten as true/1) instead of kept verbatim</li><li>partial-write: an export with an unwritable value (line break) truncates or mixes the previous file or leaves temporary files behind</li></ul><pre># Export environment settings into the configuration file without losing anything
+
+Operators who move a Miniflux deployment from environment variables to a configuration file (or keep both in sync) need to write the current environment settings into an existing config file. Doing this by hand or with ad-hoc scripts loses data. Comments and keys the script doesn&#x27;t know about disappear. Values that equal the default, or are explicitly empty, are dropped and later read back as something else. Values get normalised (`yes` becomes `true`). An interrupted write leaves a truncated file.
+
+Add a lossless merge-writer to package `internal/config` (`miniflux.app/v2/internal/config`):
+
+```go
+func ExportEnvironmentToFile(filename string, environ []string) error
+```
+
+`environ` uses the `KEY=VALUE` form that `os.Environ()` returns. A value is everything after the first `=`.
+
+Requirements:
+
+1. **Only Miniflux settings are exported.** An entry is used only if its key is an option the configuration parser knows about (for example `LOG_LEVEL`, `POLLING_FREQUENCY`, `RUN_MIGRATIONS`, `OAUTH2_CLIENT_ID`). All other entries (`PATH`, `HOME`, …) are ignored. If the same key appears more than once, the last one wins.
+2. **Nothing in the existing file is dropped.** Comment lines (`#`), blank lines, keys Miniflux doesn&#x27;t know and settings not present in `environ` stay byte for byte, in their original order.
+3. **Changing one field changes only that field.** An assignment line counts as a setting when, after trimming, it isn&#x27;t empty, doesn&#x27;t start with `#` and has a non-empty key before the first `=`. Keys and values are compared after trimming surrounding whitespace.
+   - If a key from `environ` is already in the file with the same value, its line is left untouched (original spacing included).
+   - If the value differs, the line is rewritten as `KEY=VALUE`. A trailing `\r` on that line is kept.
+   - Keys from `environ` that aren&#x27;t in the file are appended at the end as `KEY=VALUE` lines, in alphabetical order by key.
+4. **Explicit values are kept verbatim.** A value equal to Miniflux&#x27;s default is still written. An explicitly empty value is written as `KEY=` and must not be skipped or replaced. Values are never normalised or converted: `RUN_MIGRATIONS=yes` stays `yes`, and `POLLING_FREQUENCY=15` stays `15`.
+5. **Load then save with no change is a no-op.** If nothing changes, the function returns `nil` and does not rewrite the file. A file that doesn&#x27;t end in a newline, or uses `\r\n` line endings, stays byte-identical.
+6. **When the file is written**, lines are joined with `\n` and the content ends with exactly one trailing `\n`. If the original file had no trailing newline, appended keys go on new lines after the last existing line.
+7. **A failed save keeps the previous record.**
+   - If any exported value contains a line break (`\n` or `\r`), return an error that names the key, and don&#x27;t touch the file.
+   - If the parser rejects the merged settings, return an error and don&#x27;t touch the file.
+   - The new content is written to a temporary file in the same directory and then renamed over the target. On failure, the original file stays intact and no temporary file is left in the directory.
+8. **Permissions:** an existing file keeps its permission bits. A file that doesn&#x27;t exist yet is created with mode `0600`. If the file exists but can&#x27;t be read, return an error.
+9. The result must be loadable with the existing configuration file parser (`NewConfigParser().ParseFile(filename)`).
+10. Existing configuration parsing behaviour and the repository&#x27;s existing test suite are unchanged.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/tt-002-configoptions</b> <span class='muted'>tolerant-typed-config · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#2 fail</span>, <span class='bad'>gemini/gemini-2.5-flash#3 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#2 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#3 fail</span></p><p>fault cases:</p><ul><li>json-list: a list setting written as a JSON array string such as [&quot;10.0.0.0/8&quot;, &quot;192.168.0.0/16&quot;] (also compact, padded, and the empty array []) must give the same list as the comma-separated form</li><li>garbage: a list value that starts with [ but is not a valid JSON array of strings (an unterminated array, or [1, 2]) must fail Validate() with an error that names the key and the offending value</li></ul><pre># Accept JSON arrays for list settings and reject malformed list values
+
+Some Miniflux settings hold a list of values, for example networks or resource types. Today they only work as a comma-separated string such as `10.0.0.0/8, 192.168.0.0/16`. Operators often write these values as JSON arrays instead, for example `[&quot;10.0.0.0/8&quot;,&quot;192.168.0.0/16&quot;]`, because that is how their Helm values, Compose files or secret managers render lists. The parser then splits that string on commas without complaint. The service ends up with list items such as `[&quot;10.0.0.0/8&quot;` and `&quot;192.168.0.0/16&quot;]`. Nothing fails at startup, but the setting quietly stops working, for example an allow-list that matches nothing. A truncated or malformed array such as `[&quot;10.0.0.0/8&quot;,` is also accepted without any error.
+
+Make every list-valued setting accept both spellings, and fail loudly on a list value that is clearly broken.
+
+## Requirements
+
+All of this lives in package `internal/config` (`miniflux.app/v2/internal/config`). Startup parses the options with `NewConfigParser()` and then the parser&#x27;s line or environment parsing, and calls `Validate() error` on the resulting options right away. The new behaviour must be in place once both steps have run.
+
+1. **JSON array spelling.** For every option whose value type is the string-list type, a value that starts with `[` (after trimming surrounding whitespace) must be read as a JSON array of strings. The parsed list must be exactly what the equivalent comma-separated spelling gives. Each item has its surrounding whitespace trimmed, empty items are dropped and items keep their order. For example, `[&quot;10.0.0.0/8&quot;, &quot;192.168.0.0/16&quot;, &quot;172.16.0.0/12&quot;]` and `10.0.0.0/8, 192.168.0.0/16,172.16.0.0/12` must give the same three-item list.
+2. **Empty array.** `[]` must give an empty list (length 0), not a one-item list.
+3. **Malformed lists are rejected.** If a list value starts with `[` but is not a valid JSON array of strings, `Validate()` must return an error. This covers unterminated arrays, trailing garbage and non-string elements such as `[1, 2]`. The error message must contain the setting&#x27;s key (for example `METRICS_ALLOWED_NETWORKS`) and the offending value exactly as written, after trimming surrounding whitespace.
+4. If the setting has a value validator, the items decoded from a JSON array must still pass that validator, judged as their comma-separated equivalent. On failure, return an error naming the key and the value.
+5. **Unchanged canonical behaviour.** Comma-separated values, defaults and every other setting type behave exactly as before. A default configuration must still validate.
+6. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+</div></main><script>
+document.getElementById('q').addEventListener('input',e=>{const q=e.target.value.toLowerCase();
+document.querySelectorAll('#tasks details').forEach(d=>{
+d.style.display=d.textContent.toLowerCase().includes(q)?'':'none'})});
+</script></body></html>
