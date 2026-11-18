@@ -25,5 +25,4 @@ difficulty_levers:
 examples:
   - a "create item" request retried by a client with the same request id creates one item, not two
   - a user sign-up event replayed by a queue sends exactly one welcome email
-weight: 2.0
 languages: [python, go]

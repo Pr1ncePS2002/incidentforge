@@ -11,7 +11,8 @@ families/<slug>/
 
 `incidentforge.families.load_family(slug)` parses `family.yaml` into a `Family` model (schema below) and
 `render_prompt(family, ...)` fills `prompt.md` and appends the shared output contract
-(`families/output-contract.md`), so every family returns the same `TaskSpec` json shape.
+(`families/output-contract-<language>.md` when present, else `families/output-contract.md`), so every
+family returns the same `TaskSpec` json shape. Family weights for sampling live in `families/taxonomy.json`.
 
 ## `family.yaml` schema
 
@@ -25,7 +26,6 @@ families/<slug>/
 | `acceptance` | list[str] | yes, ≥1 | criteria every generated task must meet |
 | `difficulty_levers` | list[str] | yes | what makes a task in this family harder |
 | `examples` | list[str] | yes, 1–2 | short, generic, not tied to any repo |
-| `weight` | float | no (1.0) | relative frequency of the failure class; read by `sampling.pick_families` |
 | `languages` | list[str] | no (`[python, go]`) | languages the family applies to |
 
 Surface kinds (`Surface.kind`): `settings-class`, `env-read`, `validator`, `consumer`, `cache-key`,
@@ -49,7 +49,6 @@ difficulty_levers:
   - several settings with different rules must be validated together
 examples:
   - an smtp host is required whenever email sending is enabled
-weight: 3.0
 ```
 
 ## `prompt.md` placeholders
