@@ -4,12 +4,12 @@ set -u
 mkdir -p /logs/verifier
 cd /app
 
-mkdir -p "$(dirname internal/config/forge_combination_test.go)" && cp /tests/feature/internal/config/forge_combination_test.go internal/config/forge_combination_test.go
+mkdir -p "$(dirname internal/config/forge_tls_files_test.go)" && cp /tests/feature/internal/config/forge_tls_files_test.go internal/config/forge_tls_files_test.go
 run_tests ./internal/config > /logs/verifier/feature_tests.log 2>&1
 feature=$?
 
 # the repo suite must pass on its own, so the feature tests are taken out again
-rm -f internal/config/forge_combination_test.go
+rm -f internal/config/forge_tls_files_test.go
 bash -c 'run_tests ./...' > /logs/verifier/repo_suite.log 2>&1
 suite=$?
 

@@ -1,5 +1,5 @@
 {
-  "task_id": "miniflux/cf-001-configvalue",
+  "task_id": "miniflux/ff-003-configoptions",
   "accepted": true,
   "gates": [
     {
@@ -12,13 +12,13 @@
       "gate": "fail_on_base",
       "passed": true,
       "detail": "reward=0.0 feature_tests=0.0 repo_suite=1.0",
-      "seconds": 12.2
+      "seconds": 14.2
     },
     {
       "gate": "pass_on_reference",
       "passed": true,
       "detail": "reward=1.0",
-      "seconds": 12.4
+      "seconds": 14.2
     },
     {
       "gate": "regression",
@@ -29,17 +29,17 @@
     {
       "gate": "mutation",
       "passed": true,
-      "detail": "killed 5/6; survived: disable-if@internal/config/parser.go:55",
-      "seconds": 33.3
+      "detail": "killed 4/6; survived: disable-if@internal/config/tls_validation.go:24, flip-logical@internal/config/tls_validation.go:30",
+      "seconds": 35.7
     },
     {
       "gate": "flakiness",
       "passed": true,
       "detail": "oracle rewards over 3 runs: [1.0, 1.0, 1.0]",
-      "seconds": 14.6
+      "seconds": 16.2
     }
   ],
   "mutants_total": 6,
-  "mutants_killed": 5,
+  "mutants_killed": 4,
   "log_path": "jobs/validation"
 }
