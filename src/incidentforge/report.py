@@ -50,9 +50,18 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
 
 
 def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
-    """fault | happy | regression, from the test naming contract (test_fault_*)."""
-    if "fault" in test_name.lower():
+    """fault | happy | regression | unknown, from the log prefix and the naming contract (test_fault_*)."""
+    if test_name.startswith("repo::") or test_name == "repo_suite":
+        return "regression"
+    if test_name == "feature_tests":
+        # coarse ctrf entry with no per-test detail
+        return "unknown"
+    # match the test function name only: a bare substring would also hit "default"
+    func = test_name.rsplit("::", 1)[-1].lower()
+    if func.startswith(("test_fault", "testfault")):
         return "fault"
+    if test_name.startswith("feature::"):
+        return "happy"
     stems = [f.rsplit(".", 1)[0] for f in feature_files]
     if any(s and s in test_name for s in stems):
         return "happy"
