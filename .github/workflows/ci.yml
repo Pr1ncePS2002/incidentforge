@@ -7,12 +7,15 @@ on:
   push:
     branches: [develop, main]
   workflow_dispatch:
+  # nightly integration on develop catches docker/harbor breakage before the release pr
+  schedule:
+    - cron: "30 21 * * *"
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -82,8 +85,10 @@ jobs:
           if git ls-files | grep -E '(^|/)\.env$'; then echo "::error::.env must never be committed"; exit 1; fi
 
   integration:
-    # docker + harbor; required before anything reaches main, informational on develop
-    if: github.base_ref == 'main' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    # docker + harbor; required before anything reaches main, nightly and on demand for develop
+    if: >-
+      github.base_ref == 'main' || github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     needs: [lint, unit, security]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
