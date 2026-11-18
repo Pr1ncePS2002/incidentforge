@@ -1,3 +1,5 @@
+import os
+
 import typer
 
 app = typer.Typer(help="incidentforge coding task factory", no_args_is_help=True)
@@ -40,15 +42,31 @@ def eval_(
     model: list[str] = typer.Option(None, help="model ids, e.g. gemini/gemini-3.8-flash"),
     agent: str = typer.Option("terminus-2", help="harbor agent"),
     k: int = typer.Option(1, help="attempts per task"),
+    subset: int = typer.Option(None, help="only a fixed seeded subset of this many tasks (>=1 per family)"),
 ) -> None:
     """evaluate models on the dataset with the paid-key cap enforced. owner: phase 4."""
-    raise NotImplementedError
+    from pathlib import Path
+
+    from incidentforge.backends.gemini import load_env
+    from incidentforge.evaluate import discover_tasks, pick_subset, run_eval
+
+    root = Path(tasks)
+    picked = pick_subset(discover_tasks(root), subset) if subset else None
+    models = model or ["gemini/gemini-3.8-flash"]
+    # keys come from .env unless already exported; harbor only ever sees the routed one
+    env = {**load_env(".env"), **os.environ}
+    new = run_eval(root, models, agent, k, picked, env=env, echo=typer.echo)
+    typer.echo(f"recorded {len(new)} new result(s) in reports/eval/results.jsonl")
 
 
 @app.command()
 def report(out: str = typer.Option("reports/index.html")) -> None:
     """build the static html report. owner: phase 4."""
-    raise NotImplementedError
+    from pathlib import Path
+
+    from incidentforge.report import build
+
+    typer.echo(f"wrote {build(Path(out))}")
 
 
 @app.command()
