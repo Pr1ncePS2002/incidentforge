@@ -24,6 +24,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "hypothesis==6.170.15",
+    "mutmut==3.8.1",
     "mypy==2.4.1",
     "pip-audit==2.10.1",
     "pytest==9.2.0",
@@ -51,7 +52,7 @@ source = ["incidentforge"]
 branch = true
 
 [tool.coverage.report]
-fail_under = 75
+fail_under = 90
 show_missing = true
 # contract stubs and protocol bodies are filled by later phases
 exclude_also = ["raise NotImplementedError", "\\.\\.\\.$", "if __name__ == .__main__.:"]
@@ -61,3 +62,21 @@ python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 files = ["src"]
+
+[tool.mutmut]
+# mutation testing of our own gate and spend code, run nightly in ci (mutation job)
+source_paths = ["src"]
+only_mutate = ["src/incidentforge/budget.py", "src/incidentforge/ci_checks.py", "src/incidentforge/validate/*"]
+# a mutated signal number would send a real SIGHUP to the test run's own process group
+do_not_mutate_patterns = ["os\\.kill\\(pid, 0\\)"]
+pytest_add_cli_args_test_selection = [
+    "tests/test_budget.py",
+    "tests/test_budget_concurrency.py",
+    "tests/test_budget_strict.py",
+    "tests/test_properties.py",
+    "tests/test_ci_checks.py",
+    "tests/test_validate.py",
+    "tests/test_validate_strict.py",
+    "tests/test_go_mutants.py",
+    "tests/test_mutants_strict.py",
+]
