@@ -15,7 +15,8 @@ Reply with exactly one json object and nothing else (no prose, no code fences). 
 - `feature_tests` (object): repository-relative path → file content. One or two Go test files named
   `*_test.go`, placed in the directory of the package under test (for example
   `internal/config/forge_feature_test.go`) and declaring that same package, so unexported identifiers are
-  reachable. Use only the standard `testing` package. They must fail on the pinned commit (a compile error
+  reachable. The path must contain at least one directory: a bare file name is packaged under `tests/`,
+  so never attach a task to the package at the repository root (usually `package main`). Use only the standard `testing` package. They must fail on the pinned commit (a compile error
   because the new function does not exist yet counts as failing) and pass with the patch applied. Each
   fault you list below needs at least one test that injects it, named `TestFault<FaultId>` (fault id in
   CamelCase, an extra suffix is fine, e.g. `TestFaultPlaceholderSecretKey`). Tests of normal, unchanged
