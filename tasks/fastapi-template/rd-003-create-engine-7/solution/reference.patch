@@ -1,0 +1,119 @@
+diff --git a/backend/app/core/db.py b/backend/app/core/db.py
+index d11b0eb..143b5d4 100644
+--- a/backend/app/core/db.py
++++ b/backend/app/core/db.py
+@@ -1,10 +1,26 @@
++from sqlalchemy.engine import Engine
+ from sqlmodel import Session, create_engine, select
+ 
+ from app import crud
+ from app.core.config import settings
++from app.core.db_pool import DatabasePoolSettings
+ from app.models import User, UserCreate
+ 
+-engine = create_engine(str(settings.DATABASE_URL), pool_pre_ping=True)
++
++def build_engine(
++    database_url: str, pool_settings: DatabasePoolSettings | None = None
++) -> Engine:
++    """Create the engine with pool sizes derived from DatabasePoolSettings."""
++    pool = pool_settings if pool_settings is not None else DatabasePoolSettings()
++    return create_engine(
++        database_url,
++        pool_pre_ping=True,
++        pool_size=pool.pool_size,
++        max_overflow=pool.max_overflow,
++    )
++
++
++engine = build_engine(str(settings.DATABASE_URL))
+ 
+ 
+ # make sure all SQLModel models are imported (app.models) before initializing DB
+diff --git a/backend/app/core/db_pool.py b/backend/app/core/db_pool.py
+new file mode 100644
+index 0000000..68e1965
+--- /dev/null
++++ b/backend/app/core/db_pool.py
+@@ -0,0 +1,81 @@
++"""Database connection-pool sizing.
++
++Pool sizes are derived from configured limits instead of being hardcoded:
++
++* ``pool_size`` = ``DB_POOL_SIZE`` (persistent connections per worker process).
++* With ``DB_MAX_CONNECTIONS`` set, each of the ``WEB_CONCURRENCY`` workers gets a
++  budget of ``DB_MAX_CONNECTIONS // WEB_CONCURRENCY`` connections and
++  ``max_overflow`` = ``DB_MAX_OVERFLOW`` if set, else ``budget - DB_POOL_SIZE``.
++* Without ``DB_MAX_CONNECTIONS``, ``max_overflow`` = ``DB_MAX_OVERFLOW`` if set,
++  else ``2 * DB_POOL_SIZE`` (5 + 10 with the shipped defaults, SQLAlchemy's own).
++
++Impossible combinations raise at startup with an error naming the settings involved.
++"""
++
++from pydantic import model_validator
++from pydantic_settings import BaseSettings, SettingsConfigDict
++from typing_extensions import Self
++
++
++class DatabasePoolSettings(BaseSettings):
++    model_config = SettingsConfigDict(
++        env_file="../.env",
++        env_ignore_empty=True,
++        extra="ignore",
++    )
++
++    # worker processes sharing the database (uvicorn / fastapi run --workers)
++    WEB_CONCURRENCY: int = 1
++    # persistent connections kept open by each worker
++    DB_POOL_SIZE: int = 5
++    # extra burst connections per worker; derived when unset
++    DB_MAX_OVERFLOW: int | None = None
++    # total connections this app may open across all workers; unset = no cap
++    DB_MAX_CONNECTIONS: int | None = None
++
++    @model_validator(mode="after")
++    def _check_pool_limits(self) -> Self:
++        problems: list[str] = []
++        if self.WEB_CONCURRENCY < 1:
++            problems.append(f"WEB_CONCURRENCY must be >= 1, got {self.WEB_CONCURRENCY}")
++        if self.DB_POOL_SIZE < 1:
++            problems.append(f"DB_POOL_SIZE must be >= 1, got {self.DB_POOL_SIZE}")
++        if self.DB_MAX_OVERFLOW is not None and self.DB_MAX_OVERFLOW < 0:
++            problems.append(f"DB_MAX_OVERFLOW must be >= 0, got {self.DB_MAX_OVERFLOW}")
++        if self.DB_MAX_CONNECTIONS is not None and self.DB_MAX_CONNECTIONS < 1:
++            problems.append(
++                f"DB_MAX_CONNECTIONS must be >= 1, got {self.DB_MAX_CONNECTIONS}"
++            )
++        if problems:
++            raise ValueError("invalid database pool configuration: " + "; ".join(problems))
++        limit = self.DB_MAX_CONNECTIONS
++        if limit is None:
++            return self
++        workers = self.WEB_CONCURRENCY
++        if workers * self.DB_POOL_SIZE > limit:
++            raise ValueError(
++                f"DB_POOL_SIZE={self.DB_POOL_SIZE} x WEB_CONCURRENCY={workers} "
++                f"exceeds DB_MAX_CONNECTIONS={limit}"
++            )
++        if (
++            self.DB_MAX_OVERFLOW is not None
++            and workers * (self.DB_POOL_SIZE + self.DB_MAX_OVERFLOW) > limit
++        ):
++            raise ValueError(
++                f"(DB_POOL_SIZE={self.DB_POOL_SIZE} + DB_MAX_OVERFLOW="
++                f"{self.DB_MAX_OVERFLOW}) x WEB_CONCURRENCY={workers} "
++                f"exceeds DB_MAX_CONNECTIONS={limit}"
++            )
++        return self
++
++    @property
++    def pool_size(self) -> int:
++        return self.DB_POOL_SIZE
++
++    @property
++    def max_overflow(self) -> int:
++        if self.DB_MAX_OVERFLOW is not None:
++            return self.DB_MAX_OVERFLOW
++        if self.DB_MAX_CONNECTIONS is None:
++            return 2 * self.DB_POOL_SIZE
++        return self.DB_MAX_CONNECTIONS // self.WEB_CONCURRENCY - self.DB_POOL_SIZE

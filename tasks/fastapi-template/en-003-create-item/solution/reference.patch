@@ -1,0 +1,97 @@
+diff --git a/backend/app/core/events.py b/backend/app/core/events.py
+new file mode 100644
+index 0000000..096961e
+--- /dev/null
++++ b/backend/app/core/events.py
+@@ -0,0 +1,9 @@
++"""In-process outbox for domain events."""
++
++from typing import Any
++
++OUTBOX: list[tuple[str, dict[str, Any]]] = []
++
++
++def publish(name: str, payload: dict[str, Any]) -> None:
++    OUTBOX.append((name, dict(payload)))
+diff --git a/backend/app/core/namespacing.py b/backend/app/core/namespacing.py
+new file mode 100644
+index 0000000..2c4c4af
+--- /dev/null
++++ b/backend/app/core/namespacing.py
+@@ -0,0 +1,56 @@
++"""Environment-scoped names for keys, queues and topics on shared infrastructure."""
++
++from typing import Any
++
++from pydantic import field_validator
++from pydantic_settings import BaseSettings, SettingsConfigDict
++
++ALLOWED_ENVIRONMENTS: tuple[str, ...] = ("local", "staging", "production")
++SEPARATOR = ":"
++
++
++def _check_environment(value: Any) -> str:
++    if not isinstance(value, str) or value == "":
++        raise ValueError(
++            "DEPLOYMENT_ENV must be set to one of "
++            f"{', '.join(ALLOWED_ENVIRONMENTS)}; got {value!r}"
++        )
++    if value not in ALLOWED_ENVIRONMENTS:
++        raise ValueError(
++            "DEPLOYMENT_ENV must be one of "
++            f"{', '.join(ALLOWED_ENVIRONMENTS)}; got {value!r}"
++        )
++    return value
++
++
++class NamespaceSettings(BaseSettings):
++    model_config = SettingsConfigDict(env_file=None, extra="ignore")
++
++    DEPLOYMENT_ENV: str = "local"
++
++    @field_validator("DEPLOYMENT_ENV")
++    @classmethod
++    def _validate_env(cls, value: str) -> str:
++        return _check_environment(value)
++
++
++namespace_settings = NamespaceSettings()
++
++
++def scoped_name(*parts: Any, settings: Any = None) -> str:
++    """Build `<env>:<part>:<part>...` from the configured DEPLOYMENT_ENV."""
++    cfg = settings if settings is not None else namespace_settings
++    env = _check_environment(getattr(cfg, "DEPLOYMENT_ENV", None))
++    if not parts:
++        raise ValueError("scoped_name requires at least one name part")
++    rendered: list[str] = []
++    for part in parts:
++        if part is None:
++            raise ValueError("name parts must not be None")
++        text = str(part)
++        if text == "":
++            raise ValueError("name parts must not be empty")
++        if SEPARATOR in text:
++            raise ValueError(f"name part {text!r} must not contain {SEPARATOR!r}")
++        rendered.append(text)
++    return SEPARATOR.join([env, *rendered])
+diff --git a/backend/app/crud.py b/backend/app/crud.py
+index a8ceba6..402e8f6 100644
+--- a/backend/app/crud.py
++++ b/backend/app/crud.py
+@@ -61,8 +61,15 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
+ 
+ 
+ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
++    from app.core import events, namespacing
++
+     db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
++    # build the env-scoped name before writing so a bad DEPLOYMENT_ENV fails fast
++    event_name = namespacing.scoped_name("items", "created", db_item.id)
+     session.add(db_item)
+     session.commit()
+     session.refresh(db_item)
++    events.publish(
++        event_name, {"item_id": str(db_item.id), "owner_id": str(owner_id)}
++    )
+     return db_item

@@ -1,0 +1,120 @@
+diff --git a/backend/app/user_record.py b/backend/app/user_record.py
+new file mode 100644
+index 0000000..23e542a
+--- /dev/null
++++ b/backend/app/user_record.py
+@@ -0,0 +1,114 @@
++"""Lossless read-modify-write for exported user records.
++
++A user record is a JSON object holding the ``UserBase`` fields plus any other
++keys written by other tools (ids, timestamps, preferences). Loading a record,
++changing one field and saving it back must change exactly that field: unknown
++keys are kept, explicit defaults/empty values are not dropped, values never
++change type, and a failed save leaves the previous file untouched.
++"""
++
++import json
++import math
++import os
++import stat
++import tempfile
++from collections.abc import Mapping
++from pathlib import Path
++from typing import Any
++
++from pydantic import ValidationError
++
++from app.models import UserBase
++
++USER_FIELDS: tuple[str, ...] = tuple(UserBase.model_fields)
++
++
++class UserRecordError(ValueError):
++    """Raised when a user record cannot be loaded or saved without loss."""
++
++
++def _check_json_native(value: Any, where: str) -> None:
++    # only values that survive a JSON round trip unchanged are accepted
++    if value is None or isinstance(value, bool | int | str):
++        return
++    if isinstance(value, float):
++        if not math.isfinite(value):
++            raise UserRecordError(f"{where}: non-finite number cannot be stored")
++        return
++    if isinstance(value, list):
++        for i, item in enumerate(value):
++            _check_json_native(item, f"{where}[{i}]")
++        return
++    if isinstance(value, dict):
++        for key, item in value.items():
++            if not isinstance(key, str):
++                raise UserRecordError(f"{where}: object keys must be strings")
++            _check_json_native(item, f"{where}.{key}")
++        return
++    raise UserRecordError(
++        f"{where}: {type(value).__name__} would change type when saved"
++    )
++
++
++def validate_user_record(record: Any) -> None:
++    """Reject records whose user fields are invalid or whose values would drift."""
++    if not isinstance(record, dict):
++        raise UserRecordError("a user record must be a JSON object")
++    _check_json_native(record, "record")
++    known = {name: record[name] for name in USER_FIELDS if name in record}
++    try:
++        UserBase.model_validate(known, strict=True)
++    except ValidationError as exc:
++        raise UserRecordError(f"invalid user record: {exc}") from exc
++
++
++def _serialise(record: dict[str, Any]) -> str:
++    return json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
++
++
++def load_user_record(path: str | Path) -> dict[str, Any]:
++    """Read a user record, keeping every key and value exactly as stored."""
++    text = Path(path).read_text(encoding="utf-8")
++    try:
++        record = json.loads(text)
++    except json.JSONDecodeError as exc:
++        raise UserRecordError(f"{path}: not valid JSON: {exc}") from exc
++    validate_user_record(record)
++    return record
++
++
++def save_user_record(path: str | Path, record: dict[str, Any]) -> None:
++    """Atomically write a user record; the previous file survives any failure."""
++    validate_user_record(record)
++    target = Path(path)
++    text = _serialise(record)
++    if target.exists() and target.read_text(encoding="utf-8") == text:
++        return  # nothing changed: leave the file alone
++    fd, tmp_name = tempfile.mkstemp(
++        dir=target.parent, prefix=f".{target.name}.", suffix=".tmp"
++    )
++    try:
++        with os.fdopen(fd, "w", encoding="utf-8") as fh:
++            fh.write(text)
++            fh.flush()
++            os.fsync(fh.fileno())
++        if target.exists():
++            os.chmod(tmp_name, stat.S_IMODE(target.stat().st_mode))
++        os.replace(tmp_name, target)
++    except BaseException:
++        try:
++            os.unlink(tmp_name)
++        except FileNotFoundError:
++            pass
++        raise
++
++
++def update_user_record(
++    path: str | Path, changes: Mapping[str, Any]
++) -> dict[str, Any]:
++    """Load a record, apply ``changes`` and save it; untouched keys are kept as-is."""
++    record = load_user_record(path)
++    updated = dict(record)
++    updated.update(changes)
++    save_user_record(path, updated)
++    return updated
