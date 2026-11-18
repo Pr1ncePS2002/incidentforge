@@ -56,9 +56,15 @@ def check_schema(obj: dict[str, Any], schema: dict[str, Any]) -> None:
     if missing:
         raise MalformedOutput(f"missing keys: {missing}")
     for key, prop in schema.get("properties", {}).items():
-        want = _TYPES.get(prop.get("type", "")) if isinstance(prop, dict) else None
-        if key in obj and want is not None and not isinstance(obj[key], want):
-            raise MalformedOutput(f"key {key!r} should be {prop['type']}")
+        kind = prop.get("type") if isinstance(prop, dict) else None
+        # union types like ["string", "null"] are left to the caller's model
+        if key not in obj or not isinstance(kind, str) or kind not in _TYPES:
+            continue
+        value = obj[key]
+        # json schema keeps booleans apart from numbers, python does not
+        bad_bool = isinstance(value, bool) and kind in {"integer", "number"}
+        if bad_bool or not isinstance(value, _TYPES[kind]):
+            raise MalformedOutput(f"key {key!r} should be {kind}")
 
 
 DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"

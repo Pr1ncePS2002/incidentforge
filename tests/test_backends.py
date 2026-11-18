@@ -27,9 +27,13 @@ class FakeRunner:
     def __init__(self, *outs: tuple[int, str]) -> None:
         self.outs = list(outs)
         self.calls: list[tuple[list[str], str, float, str]] = []
+        self.envs: list[dict[str, str]] = []
 
-    def __call__(self, cmd: list[str], stdin: str, timeout: float, cwd: str) -> subprocess.CompletedProcess[str]:
+    def __call__(
+        self, cmd: list[str], stdin: str, timeout: float, cwd: str, env: dict[str, str]
+    ) -> subprocess.CompletedProcess[str]:
         self.calls.append((cmd, stdin, timeout, cwd))
+        self.envs.append(env)
         code, out = self.outs.pop(0)
         return subprocess.CompletedProcess(cmd, code, out, "boom")
 
@@ -54,12 +58,20 @@ def test_check_schema() -> None:
         check_schema({"b": "x"}, SCHEMA)
     with pytest.raises(MalformedOutput, match="should be"):
         check_schema({"a": "1"}, SCHEMA)
+    # booleans are not integers in json schema
+    with pytest.raises(MalformedOutput, match="should be integer"):
+        check_schema({"a": True}, SCHEMA)
+    # union types are left to the caller's model instead of crashing
+    union = {"properties": {"a": {"type": ["string", "null"]}}, "required": ["a"]}
+    check_schema({"a": "ok"}, union)
+    check_schema({"a": None}, union)
 
 
 def test_claude_structured_output() -> None:
     run = FakeRunner((0, envelope(structured_output={"a": 1}, result="ignored")))
     be = ClaudeCodeBackend(model="opus", runner=run)
-    assert be.generate_json("hello", SCHEMA, tag="t1") == {"a": 1}
+    assert be.generate_json("hello", SCHEMA, max_output_tokens=1234, tag="t1") == {"a": 1}
+    assert run.envs[0]["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] == "1234"
     cmd, stdin, timeout, _ = run.calls[0]
     assert stdin == "hello" and timeout == 600.0
     assert cmd[cmd.index("--model") + 1] == "opus"
@@ -77,8 +89,9 @@ def test_claude_result_text_fallback_and_no_model() -> None:
 
 def test_claude_retries_once_on_malformed() -> None:
     run = FakeRunner((0, envelope(result="oops")), (0, envelope(result='{"a": 7}')))
-    assert ClaudeCodeBackend(runner=run).generate_json("p", SCHEMA) == {"a": 7}
+    assert ClaudeCodeBackend(runner=run).generate_json("p", SCHEMA, max_output_tokens=99) == {"a": 7}
     assert "rejected" in run.calls[1][1]
+    assert [e["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] for e in run.envs] == ["99", "99"]
 
 
 def test_claude_gives_up_after_retry() -> None:
@@ -99,7 +112,7 @@ def test_claude_non_json_stdout() -> None:
 
 
 def test_claude_timeout() -> None:
-    def slow(cmd: list[str], stdin: str, timeout: float, cwd: str) -> subprocess.CompletedProcess[str]:
+    def slow(cmd: list[str], stdin: str, timeout: float, cwd: str, env: dict[str, str]) -> Any:
         raise subprocess.TimeoutExpired(cmd, timeout)
 
     with pytest.raises(ClaudeCodeError, match="timed out"):
@@ -109,7 +122,7 @@ def test_claude_timeout() -> None:
 def test_default_runner_executes(tmp_path: Any) -> None:
     from incidentforge.backends.claude_code import _run
 
-    proc = _run(["cat"], "hi", 5, str(tmp_path))
+    proc = _run(["cat"], "hi", 5, str(tmp_path), {"PATH": "/bin:/usr/bin"})
     assert proc.stdout == "hi"
 
 

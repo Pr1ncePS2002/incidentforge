@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 from collections.abc import Callable
@@ -11,11 +12,13 @@ from typing import Any
 
 from incidentforge.backends.base import MalformedOutput, check_schema, extract_json
 
-Runner = Callable[[list[str], str, float, str], "subprocess.CompletedProcess[str]"]
+Runner = Callable[[list[str], str, float, str, dict[str, str]], "subprocess.CompletedProcess[str]"]
 
 
-def _run(cmd: list[str], stdin: str, timeout: float, cwd: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, input=stdin, capture_output=True, text=True, timeout=timeout, cwd=cwd, check=False)
+def _run(cmd: list[str], stdin: str, timeout: float, cwd: str, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd, input=stdin, capture_output=True, text=True, timeout=timeout, cwd=cwd, env=env, check=False
+    )
 
 
 class ClaudeCodeError(RuntimeError):
@@ -42,10 +45,12 @@ class ClaudeCodeBackend:
             cmd += ["--model", self.model]
         return cmd
 
-    def _once(self, prompt: str, schema: dict[str, Any], tag: str) -> dict[str, Any]:
+    def _once(self, prompt: str, schema: dict[str, Any], max_output_tokens: int, tag: str) -> dict[str, Any]:
+        # the cli has no flag for the output cap, only this env var
+        env = {**os.environ, "CLAUDE_CODE_MAX_OUTPUT_TOKENS": str(max_output_tokens)}
         with tempfile.TemporaryDirectory(prefix="forge-claude-") as cwd:
             try:
-                proc = self.runner(self.command(schema), prompt, self.timeout, cwd)
+                proc = self.runner(self.command(schema), prompt, self.timeout, cwd, env)
             except subprocess.TimeoutExpired as exc:
                 raise ClaudeCodeError(f"claude timed out after {self.timeout}s") from exc
         try:
@@ -67,7 +72,7 @@ class ClaudeCodeBackend:
     ) -> dict[str, Any]:
         """one retry on malformed json, with the parse error appended so the model can correct it."""
         try:
-            return self._once(prompt, schema, tag)
+            return self._once(prompt, schema, max_output_tokens, tag)
         except MalformedOutput as exc:
             retry = f"{prompt}\n\nyour previous reply was rejected: {exc}. reply with only the json object."
-            return self._once(retry, schema, tag)
+            return self._once(retry, schema, max_output_tokens, tag)
