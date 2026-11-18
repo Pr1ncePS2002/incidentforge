@@ -1,0 +1,32 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..44c84d5 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,27 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    @model_validator(mode="after")
++    def _enforce_consistent_smtp_config(self) -> Self:
++        # a half-configured mailer used to disable email silently; fail at startup instead
++        problems: list[str] = []
++        if self.SMTP_HOST and not self.EMAILS_FROM_EMAIL:
++            problems.append("EMAILS_FROM_EMAIL is required when SMTP_HOST is set")
++        if bool(self.SMTP_USER) != bool(self.SMTP_PASSWORD):
++            missing = "SMTP_PASSWORD" if self.SMTP_USER else "SMTP_USER"
++            problems.append(
++                f"SMTP_USER and SMTP_PASSWORD must be set together ({missing} is missing)"
++            )
++        if self.SMTP_TLS and self.SMTP_SSL:
++            problems.append("SMTP_TLS and SMTP_SSL cannot both be enabled")
++        if not 1 <= self.SMTP_PORT <= 65535:
++            problems.append(
++                f"SMTP_PORT must be between 1 and 65535, got {self.SMTP_PORT}"
++            )
++        if problems:
++            raise ValueError("invalid email configuration: " + "; ".join(problems))
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]
