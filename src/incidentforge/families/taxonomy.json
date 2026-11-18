@@ -1,0 +1,10 @@
+{
+  "fail-fast-config": 0.16,
+  "tolerant-typed-config": 0.12,
+  "cross-field-validation": 0.10,
+  "idempotent-consumer": 0.10,
+  "hot-reload-config": 0.08,
+  "env-aware-naming": 0.10,
+  "resource-aware-defaults": 0.14,
+  "config-round-trip": 0.20
+}

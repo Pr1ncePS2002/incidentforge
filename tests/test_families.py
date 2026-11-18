@@ -11,6 +11,7 @@ from incidentforge.families import (
     PLACEHOLDERS,
     SURFACE_KINDS,
     Family,
+    contract_path,
     list_families,
     load_family,
     render_prompt,
@@ -55,7 +56,7 @@ def test_load_custom_root(tmp_path: Path) -> None:
     fam = load_family("demo-family", root=tmp_path)
     out = render_prompt(fam, {"surface": "f.py::S", "task_id": "t/1"})
     assert out.startswith("s=f.py::S t=t/1")
-    assert fam.weight == 1.0
+    assert fam.languages == ["python", "go"]
 
 
 def test_slug_must_match_dir(tmp_path: Path) -> None:
@@ -86,9 +87,24 @@ def test_missing_value_raises(tmp_path: Path) -> None:
         {"fault_catalogue": [{"id": "x", "description": "a"}, {"id": "x", "description": "b"}]},
         {"fault_catalogue": [{"id": "Not_Kebab", "description": "a"}, {"id": "y", "description": "b"}]},
         {"examples": []},
-        {"weight": 0},
+        {"surface_kinds": []},
     ],
 )
 def test_schema_rejects(patch: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         Family(**{**GOOD, **patch})
+
+
+def test_contract_path_falls_back_to_python() -> None:
+    assert contract_path("python").name == "output-contract.md"
+    assert contract_path("cobol").name == "output-contract.md"
+
+
+def test_contract_path_prefers_language_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import incidentforge.families as fams
+
+    (tmp_path / "output-contract.md").write_text("py")
+    (tmp_path / "output-contract-go.md").write_text("GO CONTRACT")
+    monkeypatch.setattr(fams, "FAMILIES_DIR", tmp_path)
+    fam = Family(**GOOD, prompt="x")
+    assert render_prompt(fam, {}, language="go").endswith("GO CONTRACT")
