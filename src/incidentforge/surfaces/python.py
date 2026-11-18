@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -51,8 +52,8 @@ def _excerpt(lines: list[str], start: int, end: int) -> str:
     return "\n".join(lines[start - 1 : min(end, start + MAX_EXCERPT - 1)])
 
 
-def _class_outline(cls: ast.ClassDef, lines: list[str]) -> str:
-    """header, field lines and method signatures; whole settings classes rarely fit in 40 lines."""
+def _class_outline(cls: ast.ClassDef, lines: list[str], focus: int | None = None) -> str:
+    """header, field lines and method signatures; a focus line is kept in view when the outline is cut."""
     end = cls.end_lineno or cls.lineno
     if end - cls.lineno < MAX_EXCERPT:
         return _excerpt(lines, cls.lineno, end)
@@ -62,7 +63,15 @@ def _class_outline(cls: ast.ClassDef, lines: list[str]) -> str:
             keep += range(node.lineno, (node.end_lineno or node.lineno) + 1)
         elif isinstance(node, ast.FunctionDef):
             keep += [d.lineno for d in node.decorator_list] + [node.lineno]
-    return "\n".join(lines[i - 1] for i in sorted(set(keep))[:MAX_EXCERPT])
+    keep = sorted(set(keep))
+    if len(keep) <= MAX_EXCERPT or focus is None or focus not in keep:
+        chosen = keep[:MAX_EXCERPT]
+    else:
+        # header plus a window of field lines centred on the focus
+        i = keep.index(focus)
+        lo = max(1, min(i - (MAX_EXCERPT - 1) // 2, len(keep) - (MAX_EXCERPT - 1)))
+        chosen = [keep[0], *keep[lo : lo + MAX_EXCERPT - 1]]
+    return "\n".join(lines[i - 1] for i in chosen)
 
 
 def _is_route_write(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
@@ -120,7 +129,10 @@ def _scan_function(
         yield Surface(file=rel, symbol=symbol, kind="config-writer", excerpt=excerpt)
 
 
-def _scan_class(cls: ast.ClassDef, rel: str, lines: list[str], module: str) -> Iterator[Surface]:
+def _scan_class(
+    cls: ast.ClassDef, rel: str, lines: list[str], module: str, models: dict[str, int]
+) -> Iterator[Surface]:
+    """models maps model class names seen earlier in the file to their field count, inherited ones included."""
     bases = {_name(b) for b in cls.bases}
     is_table = any(k.arg == "table" for k in cls.keywords)
     if bases & SETTINGS_BASES:
@@ -132,11 +144,12 @@ def _scan_class(cls: ast.ClassDef, rel: str, lines: list[str], module: str) -> I
                         file=rel,
                         symbol=f"{cls.name}.{node.target.id}",
                         kind="pool-config",
-                        excerpt=_class_outline(cls, lines),
+                        excerpt=_class_outline(cls, lines, focus=node.lineno),
                     )
-    elif bases & MODEL_BASES and not is_table:
-        fields = sum(isinstance(n, ast.AnnAssign) for n in cls.body)
-        if fields >= 2 and not OUTPUT_MODEL.search(cls.name):
+    elif bases & (MODEL_BASES | set(models)):
+        fields = sum(isinstance(n, ast.AnnAssign) for n in cls.body) + sum(models.get(b, 0) for b in bases)
+        models[cls.name] = fields
+        if fields >= 2 and not is_table and not OUTPUT_MODEL.search(cls.name):
             # request/input models are where cross-field rules belong
             yield Surface(file=rel, symbol=cls.name, kind="validator", excerpt=_class_outline(cls, lines))
     for node in cls.body:
@@ -155,7 +168,7 @@ def _module_level(tree: ast.Module, rel: str, lines: list[str]) -> Iterator[Surf
             if _is_pool_call(sub):
                 yield Surface(
                     file=rel,
-                    symbol=_name(sub.func),
+                    symbol=f"{_name(sub.func)}:{sub.lineno}",
                     kind="pool-config",
                     # module-level calls need their imports and neighbours to make sense
                     excerpt=_excerpt(lines, max(1, node.lineno - 10), (node.end_lineno or node.lineno) + 10),
@@ -164,7 +177,7 @@ def _module_level(tree: ast.Module, rel: str, lines: list[str]) -> Iterator[Surf
             if _is_env_read(sub):
                 yield Surface(
                     file=rel,
-                    symbol="<module>",
+                    symbol=f"<module>:{node.lineno}",
                     kind="env-read",
                     excerpt=_excerpt(lines, node.lineno, node.end_lineno or node.lineno),
                 )
@@ -180,22 +193,25 @@ def scan_file(path: Path, rel: str) -> list[Surface]:
     lines = source.splitlines()
     module = path.stem
     out: list[Surface] = list(_module_level(tree, rel, lines))
+    models: dict[str, int] = {}
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
-            out += _scan_class(node, rel, lines, module)
+            out += _scan_class(node, rel, lines, module, models)
         elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             out += _scan_function(node, node.name, rel, lines, module)
     return out
 
 
 def iter_py_files(root: Path) -> Iterator[Path]:
-    for p in sorted(root.rglob("*.py")):
-        rel_parts = p.relative_to(root).parts
-        if any(part in SKIP_DIRS or part.startswith(".") for part in rel_parts[:-1]):
-            continue
-        if p.name.startswith("test_") or p.name.endswith("_test.py") or p.name == "conftest.py":
-            continue
-        yield p
+    # prune while walking so vendored trees like .venv are never traversed
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS and not d.startswith("."))
+        for name in sorted(filenames):
+            if not name.endswith(".py"):
+                continue
+            if name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py":
+                continue
+            yield Path(dirpath) / name
 
 
 def find_python_surfaces(repo_dir: Path, kinds: set[str] | None = None, source_root: str = ".") -> list[Surface]:
