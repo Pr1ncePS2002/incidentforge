@@ -1,0 +1,73 @@
+diff --git a/client/cache_key.go b/client/cache_key.go
+new file mode 100644
+index 00000000..be84d67b
+--- /dev/null
++++ b/client/cache_key.go
+@@ -0,0 +1,67 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package client
++
++import (
++	"errors"
++	"fmt"
++	"strconv"
++	"strings"
++)
++
++// DefaultCacheEnvironment is the environment that deployments use when they keep the shipped defaults.
++const DefaultCacheEnvironment = "production"
++
++const (
++	cacheKeyNamespace = "miniflux"
++	cacheKeySeparator = ":"
++)
++
++// allowedCacheEnvironments lists the environments a cache key may be scoped to.
++var allowedCacheEnvironments = []string{"development", "production", "staging", "test"}
++
++// CacheKeySettings holds the settings used to scope cache keys, queue names and topic names.
++type CacheKeySettings struct {
++	// Environment is the deployment environment, for example "production" or "staging".
++	Environment string
++}
++
++func (s CacheKeySettings) environment() (string, error) {
++	allowed := strings.Join(allowedCacheEnvironments, ", ")
++	if s.Environment == "" {
++		return "", fmt.Errorf("client: CacheKeySettings.Environment must be set to one of: %s", allowed)
++	}
++	for _, env := range allowedCacheEnvironments {
++		if s.Environment == env {
++			return env, nil
++		}
++	}
++	return "", fmt.Errorf("client: CacheKeySettings.Environment %q is not one of: %s", s.Environment, allowed)
++}
++
++// BuildCacheKey returns a name scoped to the configured environment.
++// Parts must be non-empty and must not contain the separator.
++func BuildCacheKey(settings CacheKeySettings, parts ...string) (string, error) {
++	env, err := settings.environment()
++	if err != nil {
++		return "", err
++	}
++	if len(parts) == 0 {
++		return "", errors.New("client: a cache key needs at least one part")
++	}
++	for i, part := range parts {
++		if part == "" {
++			return "", fmt.Errorf("client: cache key part %d is empty", i)
++		}
++		if strings.Contains(part, cacheKeySeparator) {
++			return "", fmt.Errorf("client: cache key part %q must not contain %q", part, cacheKeySeparator)
++		}
++	}
++	return cacheKeyNamespace + cacheKeySeparator + env + cacheKeySeparator + strings.Join(parts, cacheKeySeparator), nil
++}
++
++// APIKeyCacheKey returns the environment-scoped cache key for the API key with the given ID.
++func APIKeyCacheKey(settings CacheKeySettings, apiKeyID int64) (string, error) {
++	return BuildCacheKey(settings, "api-key", strconv.FormatInt(apiKeyID, 10))
++}
