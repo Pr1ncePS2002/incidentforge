@@ -35,7 +35,8 @@ def render(summary: dict[str, Any]) -> str:
     if models:
         out += ["", "| Model | Agent | Runs | Pass rate |", "|---|---|---|---|"]
         out += [
-            f"| {m.get('model')} | {m.get('agent')} | {m.get('n')} (k={m.get('k')}) | {_pct(m.get('pass_rate', 0))} |"
+            f"| {m.get('model')} | {m.get('agent')} | {m.get('n')} (up to k={m.get('k')} per task) "
+            f"| {_pct(m.get('pass_rate', 0))} |"
             for m in sorted(models, key=lambda m: -float(m.get("pass_rate", 0)))
         ]
     failures = summary.get("failures") or {}
