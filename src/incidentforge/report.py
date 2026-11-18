@@ -24,6 +24,7 @@ class Data:
     trials: list[dict[str, Any]]
     instructions: dict[str, str] = field(default_factory=dict)
     spend_usd: float = 0.0
+    excluded: list[dict[str, Any]] = field(default_factory=list)  # models dropped for harness reasons, with why
 
 
 def _jsonl(path: Path) -> list[dict[str, Any]]:
@@ -45,8 +46,12 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
     eval_dir = reports_root / "eval"
     results = [EvalResult.model_validate(r) for r in _jsonl(eval_dir / "results.jsonl")]
     trials = _jsonl(eval_dir / TRIALS_NAME)
-    spend = (ledger or Ledger.default()).spent()
-    return Data(tasks, validation, results, trials, instructions, spend)
+    led = ledger or Ledger.default()
+    # a clean clone has no ledger, so fall back to what the committed results say was billed
+    spend = led.spent() if led.entries() else sum(r.cost_usd for r in results)
+    excluded_path = eval_dir / "excluded.json"
+    excluded = json.loads(excluded_path.read_text()) if excluded_path.exists() else []
+    return Data(tasks, validation, results, trials, instructions, spend, excluded)
 
 
 def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
@@ -127,6 +132,7 @@ def summarize(data: Data) -> dict[str, Any]:
         "failures": failure_breakdown(data),
         "variance": variance(data),
         "spend_usd": round(data.spend_usd, 4),
+        "excluded_models": data.excluded,
         "findings": findings(data),
     }
 
@@ -220,6 +226,8 @@ def findings(data: Data) -> list[str]:
             else f"of failed runs with test detail, {fault} broke on an injected fault case "
             f"and {happy} on the happy path."
         )
+    for x in data.excluded:
+        out.append(f"{x.get('model', '?')} was left out of scoring: {x.get('reason', 'no reason given')}.")
     return out
 
 
@@ -289,6 +297,23 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
         s.append("<ul>" + "".join(f"<li>{_esc(f)}</li>" for f in summary["findings"]) + "</ul>")
     else:
         s.append('<p class="muted">no results yet.</p>')
+
+    if data.excluded:
+        s.append("<h2>Models left out</h2>")
+        s.append(
+            _table(
+                ["model", "agent", "why", "evidence"],
+                [
+                    [
+                        _esc(x.get("model", "")),
+                        _esc(x.get("agent", "")),
+                        _esc(x.get("reason", "")),
+                        _esc(x.get("evidence", "")),
+                    ]
+                    for x in data.excluded
+                ],
+            )
+        )
 
     s.append("<h2>Dataset</h2>")
     dims: dict[str, dict[str, int]] = {"family": {}, "language/target": {}, "difficulty": {}, "origin": {}}

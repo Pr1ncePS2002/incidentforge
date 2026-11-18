@@ -77,6 +77,22 @@ def test_build_writes_html_and_summary(tmp_path: Path) -> None:
     assert "injected fault case" in text
 
 
+def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    rows = (reports / "eval/results.jsonl").read_text().splitlines()
+    paid = json.loads(rows[0]) | {"cost_usd": 0.5, "key": "paid"}
+    (reports / "eval/results.jsonl").write_text("\n".join([json.dumps(paid), *rows[1:]]) + "\n")
+    note = [
+        {"model": "gemini/gemini-4-hydrogen", "agent": "terminus-2", "reason": "empty <completions>", "evidence": "x"}
+    ]
+    (reports / "eval/excluded.json").write_text(json.dumps(note))
+    out = build(reports / "index.html", tasks, reports, Ledger(tmp_path / "missing.jsonl"))
+    summary = json.loads((reports / "summary.json").read_text())
+    assert summary["spend_usd"] == 0.5 and summary["excluded_models"] == note
+    assert any("gemini-4-hydrogen was left out" in f for f in summary["findings"])
+    assert "Models left out" in out.read_text() and "empty &lt;completions&gt;" in out.read_text()
+
+
 def test_empty_inputs_still_render(tmp_path: Path) -> None:
     out = build(tmp_path / "r/index.html", tmp_path / "none", tmp_path / "r", Ledger(tmp_path / "l.jsonl"))
     assert "no results yet" in out.read_text()
