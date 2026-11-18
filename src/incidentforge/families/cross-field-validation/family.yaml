@@ -27,5 +27,4 @@ difficulty_levers:
 examples:
   - a maintenance window with an end time before its start time is rejected
   - enabling both implicit tls and starttls for the same connection is rejected
-weight: 2.0
 languages: [python, go]

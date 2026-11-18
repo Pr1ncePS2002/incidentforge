@@ -1,0 +1,7 @@
+name: miniflux
+repo_url: https://github.com/miniflux/v2.git
+commit: b31f7867f4a1ad9b4abfcebd376c94cecf5f1942
+language: go
+env_template: env/miniflux
+test_command: run_tests ./...
+source_root: "."
