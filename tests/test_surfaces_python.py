@@ -1,12 +1,14 @@
 """python surface finder on a tiny fixture package and, when present, the fastapi-template clone."""
 
+import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from incidentforge.models import Language
 from incidentforge.surfaces import find_surfaces
-from incidentforge.surfaces.python import find_python_surfaces, scan_file
+from incidentforge.surfaces.python import find_python_surfaces, iter_py_files, scan_file
 
 CONFIG = """
 import os
@@ -122,7 +124,6 @@ def test_finds_every_kind(repo: Path) -> None:
         ("settings-class", cfg, "Settings"),
         ("pool-config", cfg, "Settings.DB_POOL_SIZE"),
         ("pool-config", cfg, "Settings.REQUEST_TIMEOUT"),
-        ("env-read", cfg, "<module>"),
         ("validator", mod, "WindowCreate"),
         ("validator", mod, "WindowCreate._order"),
         ("consumer", h, "create_item"),
@@ -132,9 +133,11 @@ def test_finds_every_kind(repo: Path) -> None:
         ("env-read", h, "handle_order_event"),
         ("cache-key", h, "build_cache_key"),
         ("config-writer", h, "save_config"),
-        ("pool-config", h, "create_engine"),
     }
     assert expected <= got
+    # module-level surfaces carry their line so several in one file stay distinct
+    assert {s for k, f, s in got if k == "env-read" and f == cfg} == {"<module>:6"}
+    assert any(k == "pool-config" and s.startswith("create_engine:") for k, _, s in got)
 
 
 def test_skips_noise(repo: Path) -> None:
@@ -176,3 +179,45 @@ def test_fastapi_template() -> None:
     assert {"settings-class", "validator", "consumer", "pool-config"} <= kinds
     assert all(len(s.excerpt.splitlines()) <= 40 for s in got)
     assert any(s.file == "backend/app/core/config.py" and s.kind == "settings-class" for s in got)
+
+
+def test_inherited_input_models(tmp_path: Path) -> None:
+    src = (
+        "from sqlmodel import SQLModel\n"
+        "class WindowBase(SQLModel):\n    start: int\n    end: int\n"
+        "class WindowCreate(WindowBase):\n    pass\n"
+        "class WindowUpdate(WindowBase):\n    note: str\n"
+        "class Window(WindowBase, table=True):\n    id: int\n"
+        "class WindowPublic(WindowBase):\n    id: int\n"
+    )
+    f = tmp_path / "m.py"
+    f.write_text(src)
+    got = {s.symbol for s in scan_file(f, "m.py") if s.kind == "validator"}
+    assert got == {"WindowBase", "WindowCreate", "WindowUpdate"}
+
+
+def test_late_pool_field_stays_in_excerpt(tmp_path: Path) -> None:
+    fields = "\n".join(f"    F{i}: int = {i}" for i in range(80))
+    src = f"from pydantic_settings import BaseSettings\nclass Big(BaseSettings):\n{fields}\n    LATE_TIMEOUT: int = 9\n"
+    f = tmp_path / "big.py"
+    f.write_text(src)
+    (s,) = [s for s in scan_file(f, "big.py") if s.symbol == "Big.LATE_TIMEOUT"]
+    lines = s.excerpt.splitlines()
+    assert len(lines) == 40 and lines[0].startswith("class Big") and "LATE_TIMEOUT: int = 9" in s.excerpt
+
+
+def test_skipped_dirs_not_walked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (tmp_path / ".venv" / "lib").mkdir(parents=True)
+    (tmp_path / ".venv" / "lib" / "x.py").write_text("import os\nos.getenv('A')\n")
+    (tmp_path / "app.py").write_text("import os\nos.getenv('A')\n")
+    walked: list[str] = []
+    real = os.walk
+
+    def spy(top: Path) -> Iterator[tuple[str, list[str], list[str]]]:
+        for d, dirs, files in real(top):
+            walked.append(d)
+            yield d, dirs, files
+
+    monkeypatch.setattr("incidentforge.surfaces.python.os.walk", spy)
+    assert [p.name for p in iter_py_files(tmp_path)] == ["app.py"]
+    assert not any(".venv" in w for w in walked)
