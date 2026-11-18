@@ -44,6 +44,8 @@ PREFIX = {
     "config-round-trip": "rt",
 }
 GOLD_LINES = 140
+# a full task (instruction, diff, two test files) overflows the 8k default
+OUTPUT_TOKENS = 32000
 Writer = Callable[[TaskSpec, Path], Path]
 Validator = Callable[[Path], ValidationReport]
 
@@ -208,7 +210,7 @@ class Generator:
         """one generate -> check -> write -> validate pass; never raises on a bad candidate."""
         prompt = self.prompt(pair, existing, previous_failure)
         try:
-            data = self.backend.generate_json(prompt, TASK_SCHEMA, tag=pair.task_id)
+            data = self.backend.generate_json(prompt, TASK_SCHEMA, max_output_tokens=OUTPUT_TOKENS, tag=pair.task_id)
             spec = self.build_spec(pair, data)
         except PatchError as exc:
             return _failed(pair.task_id, "patch_apply", str(exc)), ""
@@ -237,6 +239,7 @@ class Generator:
                     "accepted": report.accepted,
                     "title": title,
                     "failed_gates": [g.gate for g in report.gates if not g.passed],
+                    "detail": "; ".join(g.detail[:300] for g in report.gates if not g.passed),
                     "backend": self.backend.name,
                 }
             )

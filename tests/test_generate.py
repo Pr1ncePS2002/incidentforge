@@ -78,6 +78,7 @@ class FakeBackend:
         self, prompt: str, schema: dict[str, Any], max_output_tokens: int = 8192, tag: str = ""
     ) -> dict[str, Any]:
         self.prompts.append(prompt)
+        self.max_tokens = max_output_tokens
         a = self.answers.pop(0)
         if isinstance(a, Exception):
             raise a
@@ -136,6 +137,8 @@ def test_accepts_first_try(target: Target, tmp_path: Path) -> None:
     prompt = backend.prompts[0]
     assert "backend/app/config.py::Settings (settings-class)" in prompt
     assert "{{" not in prompt
+    # a whole task does not fit the protocol's 8k default
+    assert backend.max_tokens > 8192
     log = [json.loads(x) for x in (tmp_path / "work/generate-log.jsonl").read_text().splitlines()]
     assert log[0]["accepted"] is True and log[0]["attempt"] == 1
 
