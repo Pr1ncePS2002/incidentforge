@@ -1,0 +1,52 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..09fba25 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,47 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    @staticmethod
++    def _parse_duration(
++        name: str, value: object, unit: str, unit_seconds: int
++    ) -> object:
++        # operators write durations like "30m", "2h" or "1d"; accept them and
++        # convert to the setting's own unit instead of crashing on startup
++        import re
++
++        if not isinstance(value, str):
++            return value
++        text = value.strip()
++        if re.fullmatch(r"[+-]?\d+", text):
++            return text
++        match = re.fullmatch(r"(\d+)\s*([smhd])", text, flags=re.IGNORECASE)
++        if match is None:
++            raise ValueError(
++                f"{name}: invalid duration {value!r}; expected a whole number "
++                "optionally followed by s, m, h or d (e.g. 30m, 2h, 1d)"
++            )
++        factors = {"s": 1, "m": 60, "h": 3600, "d": 86400}
++        seconds = int(match.group(1)) * factors[match.group(2).lower()]
++        if seconds % unit_seconds:
++            raise ValueError(
++                f"{name}: duration {value!r} is not a whole number of {unit}"
++            )
++        return seconds // unit_seconds
++
++    @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES", mode="before")
++    @classmethod
++    def _parse_access_token_expiry(cls, value: object) -> object:
++        return cls._parse_duration(
++            "ACCESS_TOKEN_EXPIRE_MINUTES", value, "minutes", 60
++        )
++
++    @field_validator("EMAIL_RESET_TOKEN_EXPIRE_HOURS", mode="before")
++    @classmethod
++    def _parse_reset_token_expiry(cls, value: object) -> object:
++        return cls._parse_duration(
++            "EMAIL_RESET_TOKEN_EXPIRE_HOURS", value, "hours", 3600
++        )
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

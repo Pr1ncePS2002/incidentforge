@@ -1,0 +1,54 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..c1dd488 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,49 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    # token lifetimes feed timedelta() on every login and password reset; a
++    # blank, placeholder, non-positive or absurd value must stop startup
++    @field_validator(
++        "ACCESS_TOKEN_EXPIRE_MINUTES", "EMAIL_RESET_TOKEN_EXPIRE_HOURS", mode="before"
++    )
++    @classmethod
++    def _reject_blank_or_placeholder_lifetime(cls, value: object) -> object:
++        if isinstance(value, str):
++            text = value.strip()
++            if not text:
++                raise ValueError("value is blank; set a whole number")
++            placeholders = {
++                "changethis",
++                "changeme",
++                "change-me",
++                "todo",
++                "tbd",
++                "fixme",
++                "fill-me",
++                "fill_me",
++            }
++            if text.lower() in placeholders or (
++                text.startswith("<") and text.endswith(">")
++            ):
++                raise ValueError(f"value {value!r} is still a template placeholder")
++        return value
++
++    @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES")
++    @classmethod
++    def _check_access_token_lifetime(cls, value: int) -> int:
++        if not 1 <= value <= 60 * 24 * 365:
++            raise ValueError(
++                f"must be between 1 and {60 * 24 * 365} minutes, got {value}"
++            )
++        return value
++
++    @field_validator("EMAIL_RESET_TOKEN_EXPIRE_HOURS")
++    @classmethod
++    def _check_reset_token_lifetime(cls, value: int) -> int:
++        if not 1 <= value <= 24 * 365:
++            raise ValueError(f"must be between 1 and {24 * 365} hours, got {value}")
++        return value
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

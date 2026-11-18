@@ -1,0 +1,32 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..39b8051 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,27 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    @model_validator(mode="after")
++    def _enforce_consistent_token_and_smtp_settings(self) -> Self:
++        # each value is valid alone; reject combinations that cannot work together
++        problems: list[str] = []
++        access = self.ACCESS_TOKEN_EXPIRE_MINUTES
++        reset = self.EMAIL_RESET_TOKEN_EXPIRE_HOURS
++        if access <= 0:
++            problems.append(f"ACCESS_TOKEN_EXPIRE_MINUTES must be positive, got {access}")
++        if reset <= 0:
++            problems.append(f"EMAIL_RESET_TOKEN_EXPIRE_HOURS must be positive, got {reset}")
++        if access > 0 and reset > 0 and reset * 60 > access:
++            problems.append(
++                f"EMAIL_RESET_TOKEN_EXPIRE_HOURS ({reset}h = {reset * 60} min) must not "
++                f"exceed ACCESS_TOKEN_EXPIRE_MINUTES ({access} min)"
++            )
++        if self.SMTP_TLS and self.SMTP_SSL:
++            problems.append("SMTP_TLS and SMTP_SSL cannot both be enabled")
++        if problems:
++            raise ValueError("inconsistent settings: " + "; ".join(problems))
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

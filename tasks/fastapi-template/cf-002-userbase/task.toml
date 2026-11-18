@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject disabled superusers and blank full names on user schemas"
+family = "cross-field-validation"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["mutually-exclusive: is_superuser=True together with is_active=False on UserBase, UserCreate and POST /api/v1/users/", "negative-or-zero: full_name given as an empty string (length zero)", "boundary-equal: full_name made only of whitespace (zero length after removing whitespace) is rejected, while exactly one non-whitespace character and exactly 255 characters are accepted"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0
