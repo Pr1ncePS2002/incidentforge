@@ -61,5 +61,8 @@ Walk the judges through one task: `instruction.md`, a fault test, the validation
 
 | Repo | Language | Build | Suite | First accepted task | Total |
 |---|---|---|---|---|---|
-| python-dotenv (small config library) | python | 60 s | 3 s (287 tests) | _TBD_ | _TBD_ |
-| viper (config library) | go | 103 s | 1 s | _TBD_ | _TBD_ |
+| python-dotenv (small config library), `--n 3`, claude-code backend | python | 60 s cold / 1 s cached | 3 s (287 tests) | 521 s | 1184 s; 3/3 accepted (env-aware-naming, config-round-trip, fail-fast-config), 50% of generations accepted, 16/17 mutants killed |
+| viper (config library) | go | 103 s | 1 s | not run yet | scaffold, build and suite only |
+
+Plan for roughly 10 minutes to the first accepted task and 20 minutes for three on a laptop shared with other jobs;
+start the run before walking the judges through the slides.
