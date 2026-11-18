@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from incidentforge.budget import BudgetExhausted, Ledger
 
@@ -45,14 +46,14 @@ class GeminiBackend:
     free_key: str | None
     paid_key: str | None
     ledger: Ledger = field(default_factory=Ledger.default)
-    _clients: dict = field(default_factory=dict, repr=False)
+    _clients: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @classmethod
     def from_env(cls, env_path: str | Path = ".env") -> GeminiBackend:
         env = {**load_env(env_path), **os.environ}
         return cls(env.get("GEMINI_API_KEY"), env.get("GEMINI_API_KEY2"))
 
-    def _client(self, which: str):
+    def _client(self, which: str) -> Any:
         if which not in self._clients:
             from google import genai
 
@@ -60,7 +61,7 @@ class GeminiBackend:
             self._clients[which] = genai.Client(api_key=key)
         return self._clients[which]
 
-    def _call(self, which: str, model: str, prompt: str, max_output_tokens: int):
+    def _call(self, which: str, model: str, prompt: str, max_output_tokens: int) -> Any:
         from google.genai import types
 
         return self._client(which).models.generate_content(
@@ -70,14 +71,14 @@ class GeminiBackend:
         )
 
     @staticmethod
-    def _usage(resp) -> tuple[int, int]:
+    def _usage(resp: Any) -> tuple[int, int]:
         u = resp.usage_metadata
         out = (u.candidates_token_count or 0) + (getattr(u, "thoughts_token_count", 0) or 0)
         return u.prompt_token_count or 0, out
 
     def _count_prompt(self, model: str, prompt: str) -> int:
         try:
-            return self._client("paid").models.count_tokens(model=model, contents=prompt).total_tokens
+            return int(self._client("paid").models.count_tokens(model=model, contents=prompt).total_tokens)
         except Exception:  # noqa: BLE001
             # any counting failure falls back to a rough upper bound
             return len(prompt) // 2 + 1

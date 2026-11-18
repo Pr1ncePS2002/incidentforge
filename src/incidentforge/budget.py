@@ -7,6 +7,7 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 # absolute ceiling for the paid key; env may lower it, never raise it
 HARD_CAP_USD = 70.0
@@ -62,17 +63,17 @@ class Ledger:
     def default(cls) -> Ledger:
         return cls(default_ledger_path(), configured_cap())
 
-    def entries(self) -> list[dict]:
+    def entries(self) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
-        out = []
+        out: list[dict[str, Any]] = []
         for line in self.path.read_text().splitlines():
             if line.strip():
                 out.append(json.loads(line))
         return out
 
     def spent(self) -> float:
-        return sum(e["cost_usd"] for e in self.entries())
+        return float(sum(e["cost_usd"] for e in self.entries()))
 
     def remaining(self) -> float:
         return max(self.cap - self.spent(), 0.0)

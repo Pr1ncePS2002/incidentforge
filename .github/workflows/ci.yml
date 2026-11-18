@@ -1,0 +1,113 @@
+# quality gates: fast checks on every pr/push to develop and main, docker integration before main
+name: ci
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.11.17"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: lockfile matches pyproject
+        run: uv lock --check
+      - run: uv run ruff check src tests
+      - run: uv run ruff format --check src tests
+      - name: type check (mypy strict)
+        run: uv run mypy
+
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: unit tests with coverage gate
+        run: uv run pytest -q --cov --cov-report=term --cov-report=xml --junitxml=reports/junit.xml
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-reports
+          path: |
+            coverage.xml
+            reports/junit.xml
+          retention-days: 14
+
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: secret scan (verified + unknown findings fail the build)
+        uses: trufflesecurity/trufflehog@3bd2b5887eb0efb8fa18bfd1d296032924e4ffdc # v3.99.9
+        with:
+          extra_args: --results=verified,unknown
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: dependency vulnerability audit
+        run: |
+          uv export --frozen --no-hashes --no-emit-project -q > /tmp/requirements.txt
+          uv run --frozen pip-audit -r /tmp/requirements.txt --progress-spinner off --strict
+      - name: no tracked env files
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$'; then echo "::error::.env must never be committed"; exit 1; fi
+
+  integration:
+    # docker + harbor; required before anything reaches main, informational on develop
+    if: github.base_ref == 'main' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    needs: [lint, unit, security]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - run: uv tool install harbor==0.26.0
+      - name: target images build and repo suites pass (docker-marked tests)
+        run: uv run pytest -q -m docker -o addopts=""
+      - name: every committed task solves with the oracle and fails without it
+        run: |
+          if ! ls -d tasks/*/*/ >/dev/null 2>&1; then echo "no tasks committed yet"; exit 0; fi
+          harbor run -p tasks -a oracle -o jobs --job-name ci-oracle -n 2
+          harbor run -p tasks -a nop -o jobs --job-name ci-nop -n 2
+          uv run python -m incidentforge.ci_checks jobs/ci-oracle 1.0
+          uv run python -m incidentforge.ci_checks jobs/ci-nop 0.0
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: integration-jobs
+          path: jobs/
+          retention-days: 14
+          if-no-files-found: ignore

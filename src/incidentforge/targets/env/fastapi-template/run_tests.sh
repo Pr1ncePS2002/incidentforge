@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # starts postgres if needed, migrates, then runs pytest from the backend dir with any args
 set -e
+# login shells reset PATH, so pin the venv explicitly
+export PATH="/app/.venv/bin:$PATH"
 pg_ctlcluster "$(ls /etc/postgresql)" main start 2>/dev/null || true
 for i in $(seq 1 30); do runuser -u postgres -- pg_isready -q && break; sleep 1; done
 cd /app/backend
