@@ -320,3 +320,34 @@ def test_frozen_subset_is_picked_once(tasks_root: Path, tmp_path: Path) -> None:
     first = evaluate.frozen_subset(tasks_root, 2, path)
     make_task(tasks_root, "go-svc", "zz-001", "brand-new-family")
     assert evaluate.frozen_subset(tasks_root, 2, path) == first
+
+
+def test_turn_cap_is_recorded_and_part_of_resume(tasks_root: Path, tmp_path: Path) -> None:
+    h = FakeHarbor(tmp_path)
+    one = ["go-svc/hr-001"]
+    first = run(tasks_root, tmp_path, h, ["gemini/gemini-3.8-flash"], subset=one)
+    assert first[0].max_turns == 30
+    more = run(tasks_root, tmp_path, h, ["gemini/gemini-3.8-flash"], subset=one, limits=Limits(max_turns=60))
+    assert len(more) == 1 and more[0].max_turns == 60
+    side = [json.loads(x) for x in (tmp_path / "reports/eval/trials.jsonl").read_text().splitlines()]
+    assert [s["max_turns"] for s in side] == [30, 60]
+    cc = run(tasks_root, tmp_path, h, ["claude-code"], agent="claude-code", subset=one)
+    assert cc[0].max_turns is None
+
+
+def test_legacy_rows_without_a_cap_load_at_the_default(tmp_path: Path) -> None:
+    p = tmp_path / "r.jsonl"
+    p.write_text(
+        '{"task_id":"t","family":"f","agent":"terminus-2","model":"m","attempt":1,"reward":1.0}\n'
+        '{"task_id":"t","family":"f","agent":"claude-code","model":"claude-code","attempt":1,"reward":1.0}\n'
+    )
+    assert [r.max_turns for r in ResultsStore(p).load()] == [30, None]
+
+
+def test_turns_come_from_the_trajectory(tmp_path: Path) -> None:
+    trial = tmp_path / "job" / "t__1"
+    (trial / "agent").mkdir(parents=True)
+    (trial / "result.json").write_text(json.dumps({"task_name": "t"}))
+    steps = [{"source": "user"}] + [{"source": "agent"}] * 30
+    (trial / "agent" / "trajectory.json").write_text(json.dumps({"steps": steps}))
+    assert read_trials(tmp_path / "job")[0].turns == 30

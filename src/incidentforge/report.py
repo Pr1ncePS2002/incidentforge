@@ -12,7 +12,14 @@ from pathlib import Path
 from typing import Any
 
 from incidentforge.budget import Ledger, cost_usd
-from incidentforge.evaluate import TRIALS_NAME, TaskInfo, bare_model, discover_tasks
+from incidentforge.evaluate import (
+    DEFAULT_MAX_TURNS,
+    TRIALS_NAME,
+    ResultsStore,
+    TaskInfo,
+    bare_model,
+    discover_tasks,
+)
 from incidentforge.models import EvalResult, ValidationReport
 
 
@@ -25,6 +32,8 @@ class Data:
     instructions: dict[str, str] = field(default_factory=dict)
     spend_usd: float = 0.0
     excluded: list[dict[str, Any]] = field(default_factory=list)  # models dropped for harness reasons, with why
+    ablation: list[EvalResult] = field(default_factory=list)  # runs at a non-default turn cap, kept off the main table
+    ablation_trials: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _jsonl(path: Path) -> list[dict[str, Any]]:
@@ -44,7 +53,7 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
         for p in sorted((reports_root / "validation").rglob("*.json"))
     ]
     eval_dir = reports_root / "eval"
-    results = [EvalResult.model_validate(r) for r in _jsonl(eval_dir / "results.jsonl")]
+    results = ResultsStore(eval_dir / "results.jsonl").load()
     trials = _jsonl(eval_dir / TRIALS_NAME)
     if tasks:
         # tasks removed from the dataset after they were evaluated must not count
@@ -56,7 +65,12 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
     spend = led.spent() if led.entries() else sum(r.cost_usd for r in results)
     excluded_path = eval_dir / "excluded.json"
     excluded = json.loads(excluded_path.read_text()) if excluded_path.exists() else []
-    return Data(tasks, validation, results, trials, instructions, spend, excluded)
+    main_caps = {None, DEFAULT_MAX_TURNS}
+    ablation = [r for r in results if r.max_turns not in main_caps]
+    results = [r for r in results if r.max_turns in main_caps]
+    ablation_trials = [t for t in trials if t.get("max_turns") not in main_caps]
+    trials = [t for t in trials if t.get("max_turns") in main_caps]
+    return Data(tasks, validation, results, trials, instructions, spend, excluded, ablation, ablation_trials)
 
 
 def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
@@ -136,6 +150,7 @@ def summarize(data: Data) -> dict[str, Any]:
         ],
         "failures": failure_breakdown(data),
         "variance": variance(data),
+        "turn_ablation": turn_ablation(data),
         "spend_usd": round(data.spend_usd, 4),
         "excluded_models": data.excluded,
         "findings": findings(data),
@@ -192,6 +207,42 @@ def variance(data: Data) -> list[dict[str, Any]]:
     return out
 
 
+def turn_ablation(data: Data) -> list[dict[str, Any]]:
+    """per model and larger cap: pass rate at the default cap vs the larger one on the same tasks, attempt 1,
+    plus how many default-cap failures used up every turn versus stopped with wrong code."""
+    turns = {
+        (t.get("task_id"), t.get("model"), t.get("attempt")): int(t.get("turns") or 0)
+        for t in data.trials
+        if t.get("turns") is not None
+    }
+    out = []
+    caps = sorted({(r.model, r.max_turns or 0) for r in data.ablation})
+    for model, cap in caps:
+        big = {r.task_id: r for r in data.ablation if r.model == model and r.max_turns == cap and r.attempt == 1}
+        base = {r.task_id: r for r in data.results if r.model == model and r.attempt == 1 and r.task_id in big}
+        common = sorted(set(big) & set(base))
+        if not common:
+            continue
+        fails = [r for r in data.results if r.model == model and r.reward < 1.0]
+        known = [r for r in fails if (r.task_id, r.model, r.attempt) in turns]
+        exhausted = sum(turns[(r.task_id, r.model, r.attempt)] >= DEFAULT_MAX_TURNS for r in known)
+        out.append(
+            {
+                "model": model,
+                "tasks": len(common),
+                "base_turns": DEFAULT_MAX_TURNS,
+                "more_turns": cap,
+                "base_pass_rate": round(_rate([base[t] for t in common]), 4),
+                "more_pass_rate": round(_rate([big[t] for t in common]), 4),
+                "base_failures": len(fails),
+                "failures_turn_exhausted": exhausted,
+                "failures_wrong_code": len(known) - exhausted,
+                "failures_no_turn_data": len(fails) - len(known),
+            }
+        )
+    return out
+
+
 def findings(data: Data) -> list[str]:
     """headline findings computed from the data; empty when there is nothing to say."""
     out: list[str] = []
@@ -233,6 +284,13 @@ def findings(data: Data) -> list[str]:
         )
     for x in data.excluded:
         out.append(f"{x.get('model', '?')} was left out of scoring: {x.get('reason', 'no reason given')}.")
+    for a in turn_ablation(data):
+        out.append(
+            f"{a['model']} with {a['more_turns']} turns instead of {a['base_turns']}: "
+            f"{a['base_pass_rate']:.0%} -> {a['more_pass_rate']:.0%} on {a['tasks']} tasks; of its "
+            f"{a['base_failures']} main-run failures, {a['failures_turn_exhausted']} used every turn and "
+            f"{a['failures_wrong_code']} stopped with wrong code."
+        )
     return out
 
 
@@ -392,6 +450,20 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
                 for m, c in summary["failures"].items()
             ]
             s.append(_table(["model", "fault path", "happy path", "repo regression", "no detail"], rows))
+        if summary["turn_ablation"]:
+            s.append("<p>turn budget ablation (same tasks, first attempt):</p>")
+            rows = [
+                [
+                    _esc(x["model"]),
+                    str(x["tasks"]),
+                    f"{x['base_pass_rate']:.0%} at {x['base_turns']}",
+                    f"{x['more_pass_rate']:.0%} at {x['more_turns']}",
+                    f"{x['failures_turn_exhausted']} hit the cap / {x['failures_wrong_code']} stopped with wrong code"
+                    + (f" / {x['failures_no_turn_data']} no data" if x["failures_no_turn_data"] else ""),
+                ]
+                for x in summary["turn_ablation"]
+            ]
+            s.append(_table(["model", "tasks", "pass rate", "with more turns", "main-run failures"], rows))
         if summary["variance"]:
             s.append("<p>repeat runs on the fixed subset (variance):</p>")
             rows = [

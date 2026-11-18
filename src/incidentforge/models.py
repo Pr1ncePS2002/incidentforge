@@ -77,3 +77,4 @@ class EvalResult(BaseModel):
     output_tokens: int = 0
     cost_usd: float = 0.0
     key: str = "free"  # free | paid | subscription
+    max_turns: int | None = None  # agent turn cap for the run; none = uncapped (e.g. claude-code)
