@@ -21,7 +21,9 @@ Reply with exactly one json object and nothing else (no prose, no code fences). 
   mutating `os.environ` globally. A bare file name is placed in the repository's own tests directory
   (e.g. `tests/test_x.py` under the source root), so the repo's conftest fixtures and test helpers are
   available and the database is up. When a test builds a settings object, turn off dotenv loading
-  (pydantic-settings: `Settings(_env_file=None)`) and pass every required field explicitly.
+  (pydantic-settings: `Settings(_env_file=None)`) and pass every required field explicitly. Never write
+  api keys, tokens or credential-shaped urls in tests or patches; a database url with a password may only
+  point at `localhost`.
 - `fault_cases` (array of strings): one line per injected fault, starting with its catalogue id, e.g.
   `"placeholder: SECRET_KEY left as changethis"`.
 - `difficulty` (string): `easy`, `medium` or `hard`.
