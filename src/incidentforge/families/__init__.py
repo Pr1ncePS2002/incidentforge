@@ -60,7 +60,6 @@ class Family(BaseModel):
     acceptance: list[str] = Field(min_length=1)
     difficulty_levers: list[str] = Field(default_factory=list)
     examples: list[str] = Field(min_length=1, max_length=2)
-    weight: float = Field(default=1.0, gt=0)
     languages: list[str] = Field(default_factory=lambda: ["python", "go"])
     prompt: str = ""  # prompt.md contents, filled by load_family
 
@@ -94,7 +93,13 @@ def bullets(items: list[str]) -> str:
     return "\n".join(f"- {i}" for i in items)
 
 
-def render_prompt(family: Family, values: dict[str, str]) -> str:
+def contract_path(language: str) -> Path:
+    """language-specific contract when present (output-contract-go.md), else the python default."""
+    specific = FAMILIES_DIR / f"output-contract-{language}.md"
+    return specific if specific.exists() else FAMILIES_DIR / "output-contract.md"
+
+
+def render_prompt(family: Family, values: dict[str, str], language: str = "python") -> str:
     """fill prompt.md placeholders and append the shared output contract."""
     filled = {
         "faults": bullets([f"{f.id}: {f.description}" for f in family.fault_catalogue]),
@@ -108,5 +113,5 @@ def render_prompt(family: Family, values: dict[str, str]) -> str:
     if missing:
         raise KeyError(f"no value for placeholders: {sorted(missing)}")
     body = _PLACEHOLDER.sub(lambda m: filled[m.group(1)], family.prompt)
-    contract = (FAMILIES_DIR / "output-contract.md").read_text()
+    contract = contract_path(language).read_text()
     return f"{body.rstrip()}\n\n{contract}"

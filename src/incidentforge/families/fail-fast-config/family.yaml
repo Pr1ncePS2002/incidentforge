@@ -27,5 +27,4 @@ difficulty_levers:
 examples:
   - when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
   - a signing secret left as a documented placeholder refuses to load in every environment
-weight: 3.0
 languages: [python, go]
