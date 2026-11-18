@@ -217,8 +217,8 @@ def findings(data: Data) -> list[str]:
             hard = min(by_fam.items(), key=lambda kv: _rate(kv[1]))
             easy = max(by_fam.items(), key=lambda kv: _rate(kv[1]))
             out.append(
-                f"hardest family is {hard[0]} ({_rate(hard[1]):.0%} across all models); "
-                f"easiest is {easy[0]} ({_rate(easy[1]):.0%})."
+                f"hardest family is {hard[0]} ({_rate(hard[1]):.0%} of {len(hard[1])} runs across all models); "
+                f"easiest is {easy[0]} ({_rate(easy[1]):.0%} of {len(easy[1])} runs)."
             )
     fb = failure_breakdown(data)
     fault = sum(v.get("fault", 0) for v in fb.values())
