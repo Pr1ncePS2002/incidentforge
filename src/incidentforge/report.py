@@ -46,6 +46,11 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
     eval_dir = reports_root / "eval"
     results = [EvalResult.model_validate(r) for r in _jsonl(eval_dir / "results.jsonl")]
     trials = _jsonl(eval_dir / TRIALS_NAME)
+    if tasks:
+        # tasks removed from the dataset after they were evaluated must not count
+        known = {t.task_id for t in tasks}
+        results = [r for r in results if r.task_id in known]
+        trials = [t for t in trials if t.get("task_id") in known]
     led = ledger or Ledger.default()
     # a clean clone has no ledger, so fall back to what the committed results say was billed
     spend = led.spent() if led.entries() else sum(r.cost_usd for r in results)

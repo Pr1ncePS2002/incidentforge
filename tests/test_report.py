@@ -93,6 +93,16 @@ def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
     assert "Models left out" in out.read_text() and "empty &lt;completions&gt;" in out.read_text()
 
 
+def test_results_for_removed_tasks_are_ignored(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    gone = EvalResult(task_id="x/removed", family="f", agent="terminus-2", model="m", attempt=1, reward=1.0)
+    with (reports / "eval/results.jsonl").open("a") as f:
+        f.write(gone.model_dump_json() + "\n")
+    build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    summary = json.loads((reports / "summary.json").read_text())
+    assert all(m["model"] != "m" for m in summary["models"])
+
+
 def test_empty_inputs_still_render(tmp_path: Path) -> None:
     out = build(tmp_path / "r/index.html", tmp_path / "none", tmp_path / "r", Ledger(tmp_path / "l.jsonl"))
     assert "no results yet" in out.read_text()
