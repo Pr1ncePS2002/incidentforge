@@ -1,0 +1,80 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..3e4b774 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -56,6 +56,75 @@ class Settings(BaseSettings):
+ 
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
++    def reload_password_reset_settings(self, raw: dict[str, object]) -> None:
++        """Apply new password-reset values at runtime, without a restart.
++
++        Missing, None or blank keys fall back to their documented defaults.
++        Both values are validated first and then swapped in together; if any
++        value is invalid nothing changes and the ValueError names every bad key.
++        """
++        from urllib.parse import urlsplit
++
++        fields = type(self).model_fields
++        problems: list[str] = []
++
++        raw_hours = raw.get("EMAIL_RESET_TOKEN_EXPIRE_HOURS")
++        if isinstance(raw_hours, str):
++            raw_hours = raw_hours.strip() or None
++        hours: int = fields["EMAIL_RESET_TOKEN_EXPIRE_HOURS"].default
++        if raw_hours is not None:
++            parsed: int | None = None
++            if isinstance(raw_hours, int) and not isinstance(raw_hours, bool):
++                parsed = raw_hours
++            elif isinstance(raw_hours, str):
++                try:
++                    parsed = int(raw_hours)
++                except ValueError:
++                    parsed = None
++            if parsed is None or not 1 <= parsed <= 720:
++                problems.append(
++                    "EMAIL_RESET_TOKEN_EXPIRE_HOURS must be an integer between"
++                    f" 1 and 720, got {raw_hours!r}"
++                )
++            else:
++                hours = parsed
++
++        raw_host = raw.get("FRONTEND_HOST")
++        if isinstance(raw_host, str):
++            raw_host = raw_host.strip() or None
++        host: str = fields["FRONTEND_HOST"].default
++        if raw_host is not None:
++            valid_host = False
++            if isinstance(raw_host, str):
++                try:
++                    parts = urlsplit(raw_host)
++                    valid_host = parts.scheme in ("http", "https") and bool(
++                        parts.netloc
++                    )
++                except ValueError:
++                    valid_host = False
++            if valid_host:
++                host = str(raw_host)
++            else:
++                problems.append(
++                    "FRONTEND_HOST must be an http(s) URL with a host,"
++                    f" got {raw_host!r}"
++                )
++
++        if problems:
++            raise ValueError(
++                "invalid password reset settings: " + "; ".join(problems)
++            )
++        # a single dict update: readers see both new values or both old ones
++        self.__dict__.update(
++            {"EMAIL_RESET_TOKEN_EXPIRE_HOURS": hours, "FRONTEND_HOST": host}
++        )
++
++    def get_password_reset_settings(self) -> tuple[int, str]:
++        """Current (EMAIL_RESET_TOKEN_EXPIRE_HOURS, FRONTEND_HOST), read as one pair."""
++        current = self.__dict__.copy()
++        return current["EMAIL_RESET_TOKEN_EXPIRE_HOURS"], current["FRONTEND_HOST"]
++
+     @computed_field  # type: ignore[prop-decorator]
+     @property
+     def emails_enabled(self) -> bool:

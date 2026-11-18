@@ -1,0 +1,81 @@
+diff --git a/backend/app/user_drafts.py b/backend/app/user_drafts.py
+new file mode 100644
+index 0000000..e51389e
+--- /dev/null
++++ b/backend/app/user_drafts.py
+@@ -0,0 +1,75 @@
++"""Lossless read-modify-write for ``UserCreate`` draft files.
++
++A draft is a JSON object on disk holding the fields of a user that is about to
++be created, possibly alongside keys this backend does not know about (added by
++other tools). Editing a draft must never lose or reshape data it did not touch.
++"""
++
++import json
++import os
++import tempfile
++from collections.abc import Mapping
++from pathlib import Path
++from typing import Any
++
++from app.models import UserCreate
++
++
++def _read_record(path: Path) -> dict[str, Any]:
++    data = json.loads(path.read_text(encoding="utf-8"))
++    if not isinstance(data, dict):
++        raise ValueError(f"user draft {path} must contain a JSON object")
++    return data
++
++
++def _atomic_write(path: Path, text: str) -> None:
++    # write a sibling temp file and swap it in, so a failed save keeps the old draft
++    fd, tmp_name = tempfile.mkstemp(
++        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
++    )
++    try:
++        with os.fdopen(fd, "w", encoding="utf-8") as fh:
++            fh.write(text)
++            fh.flush()
++            os.fsync(fh.fileno())
++        os.replace(tmp_name, path)
++    except BaseException:
++        try:
++            os.unlink(tmp_name)
++        except FileNotFoundError:
++            pass
++        raise
++
++
++def edit_user_draft(
++    path: str | os.PathLike[str],
++    changes: Mapping[str, Any] | None = None,
++) -> UserCreate:
++    """Apply ``changes`` to the draft at ``path`` and save it losslessly.
++
++    Unknown keys, explicit defaults, explicit empty/null values and the JSON
++    types of untouched values are preserved. Keys absent from the draft stay
++    absent. The merged record is validated as ``UserCreate`` before anything is
++    written; on any failure the previous file is left untouched.
++    """
++    target = Path(path)
++    record = _read_record(target)
++    updates = dict(changes or {})
++    merged = {**record, **updates}
++    known = {k: v for k, v in merged.items() if k in UserCreate.model_fields}
++    user = UserCreate.model_validate(known)
++    validated = user.model_dump(mode="json", exclude_unset=True)
++
++    out: dict[str, Any] = {}
++    for key, value in merged.items():
++        if key in updates and key in validated:
++            # changed known field: store it with the field's own type
++            out[key] = validated[key]
++        else:
++            out[key] = value
++
++    if out == record:
++        return user
++    text = json.dumps(out, indent=2, ensure_ascii=False) + "\n"
++    _atomic_write(target, text)
++    return user
