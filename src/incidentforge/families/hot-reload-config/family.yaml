@@ -1,0 +1,27 @@
+slug: hot-reload-config
+title: dynamic settings take effect without a restart
+intent: >-
+  a setting that operators change at runtime is read through one accessor every time it is used, so a new
+  value takes effect without a restart; a copy captured at import or construction time is the bug.
+surface_kinds: [settings-class, env-read, pool-config, validator]
+fault_catalogue:
+  - id: stale-capture
+    description: a module-level or struct-level copy of the value is taken once at startup and never refreshed
+  - id: invalid-reload
+    description: a reload supplies an invalid value; the previous good value must stay active and the error must be reported
+  - id: partial-reload
+    description: a reload changes two related values; readers must never observe the new one paired with the old one
+  - id: reload-unset
+    description: a key is removed on reload; the value must fall back to its documented default, not keep the stale one
+acceptance:
+  - after a reload, the very next read returns the new value with no restart and no re-import
+  - an invalid reload is rejected with an error naming the key, and the last good value keeps serving
+  - startup behaviour with no reload is unchanged and the repository's existing test suite still passes
+difficulty_levers:
+  - several call sites that each captured their own copy
+  - related values that must swap atomically
+  - concurrent readers during a reload, race-free in go
+examples:
+  - a request timeout raised by an operator applies to the next request, not only after a redeploy
+  - a feature switch turned off at runtime stops the feature on the next call
+languages: [python, go]
