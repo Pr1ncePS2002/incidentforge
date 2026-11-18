@@ -363,11 +363,18 @@ def run_eval(
                     job_name=job_name,
                     jobs_dir=jobs_dir,
                     task_names=tuple(t.name for t in batch),
-                    extra_args=("-k", "1", "-n", str(concurrency), "-q", *limits.agent_args(agent)),
+                    extra_args=("-k", "1", "-n", str(concurrency), *limits.agent_args(agent)),
                     env=key_env(key, base_env),
                 )
-                job_dir = runner(req)
-                trials = read_trials(job_dir)
+                try:
+                    job_dir = runner(req)
+                except RuntimeError as exc:
+                    # harbor failed as a whole; keep whatever trials it wrote, and never retry a paid model blindly
+                    echo(f"job failed {job_name}: {str(exc)[:300]}")
+                    job_dir = jobs_dir / job_name
+                    if key == "paid":
+                        blocked.add(model)
+                trials = read_trials(job_dir) if job_dir.is_dir() else []
                 by_name = {t.name: t for t in batch}
                 batch_in = sum(tr.input_tokens for tr in trials)
                 batch_out = sum(tr.output_tokens for tr in trials)

@@ -233,3 +233,30 @@ def test_harbor_runner_forwards_env_and_filters(monkeypatch: pytest.MonkeyPatch,
     assert seen["extra_args"] == ["-k", "1", "-i", "a", "-i", "b"]
     assert seen["env"] == {"GEMINI_API_KEY": "sekret"} and seen["model"] == "gemini/x"
     assert "sekret" not in repr(req)
+
+
+class FailingHarbor(FakeHarbor):
+    """writes the trials, then fails like harbor exiting non-zero."""
+
+    def __init__(self, tmp: Path, write: bool) -> None:
+        super().__init__(tmp, passing={"ff-001", "ff-002", "cf-001", "hr-001"})
+        self.write = write
+
+    def __call__(self, req: RunRequest) -> Path:
+        if self.write:
+            super().__call__(req)
+        else:
+            self.requests.append(req)
+        raise RuntimeError("harbor run exited 1")
+
+
+def test_failed_free_job_keeps_written_trials_and_continues(tasks_root: Path, tmp_path: Path) -> None:
+    h = FailingHarbor(tmp_path, write=True)
+    new = run(tasks_root, tmp_path, h, ["gemini/gemini-3.8-flash"])
+    assert len(new) == 4 and len(h.requests) == 2
+
+
+def test_failed_paid_job_blocks_the_model(tasks_root: Path, tmp_path: Path) -> None:
+    h = FailingHarbor(tmp_path, write=False)
+    new = run(tasks_root, tmp_path, h, ["gemini/gemini-2.5-pro"], batch_size=1)
+    assert new == [] and len(h.requests) == 1
