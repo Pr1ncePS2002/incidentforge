@@ -97,6 +97,39 @@ def _bars(rows: list[tuple[str, float]], width: int = 760, bar_h: int = 30) -> s
     return "".join(out)
 
 
+def _short(model: Any) -> str:
+    return str(model).removeprefix("gemini/")
+
+
+def _pct(x: Any) -> str:
+    return TBD if x is None else f"{float(x):.0%}"
+
+
+def _family_table(by_family: list[dict[str, Any]]) -> str:
+    """families as rows, models as columns, cells shaded by pass rate."""
+    models = sorted({str(f.get("model")) for f in by_family})
+    cell = {(str(f.get("family")), str(f.get("model"))): f for f in by_family}
+    fams = sorted({str(f.get("family")) for f in by_family})
+    head = "".join(f"<th>{escape(_short(m))}</th>" for m in models)
+    rows = []
+    for fam in fams:
+        tds = []
+        for m in models:
+            f = cell.get((fam, m))
+            if f is None:
+                tds.append("<td></td>")
+                continue
+            r = float(f.get("pass_rate", 0))
+            # tint scales with pass rate so weak families stand out at a glance
+            shade = f"rgba(21,101,192,{0.08 + 0.6 * r:.2f})"
+            tds.append(f"<td style='background: {shade}'>{r:.0%} <span>({f.get('n')})</span></td>")
+        rows.append(f"<tr><td><code>{escape(fam)}</code></td>{''.join(tds)}</tr>")
+    return (
+        "<p class='label'>pass rate per family and model (runs)</p>"
+        f"<table class='grid heat'><tr><th>family</th>{head}</tr>{''.join(rows)}</table>"
+    )
+
+
 def _svg_file(name: str) -> str:
     path = ROOT / "docs" / "img" / f"{name}.svg"
     if not path.exists():
@@ -227,35 +260,70 @@ def build_html(d: dict[str, Any]) -> str:
         )
     )
     if models:
-        rows = [(f"{m.get('model')} ({m.get('agent', '')})", float(m.get("pass_rate", 0))) for m in models]
-        res = f"<p class='label'>pass rate per model (k={escape(str(models[0].get('k', 1)))})</p>{_bars(rows)}"
+        rows = [(f"{_short(m.get('model'))} · {m.get('agent', '')}", float(m.get("pass_rate", 0))) for m in models]
+        k = escape(str(max(int(m.get("k", 1)) for m in models)))
+        runs = escape(str(models[0].get("n", "")))
+        res = f"<p class='label'>pass rate per model · {runs} runs each (k=1 on all tasks, k={k} on a subset)</p>"
+        res += _bars(rows, width=1000)
+        if len({m.get("agent") for m in models}) > 1:
+            res += "<p class='note'>agents differ (claude-code vs terminus-2): compare models within one agent.</p>"
     else:
         res = f"<p>{TBD}: per-model pass rates from <code>reports/summary.json</code></p>"
     failures = s.get("failures") or {}
     if failures:
         frows = "".join(
-            f"<tr><td>{escape(m)}</td><td>{c.get('fault', 0)}</td><td>{c.get('happy', 0)}</td>"
+            f"<tr><td>{escape(_short(m))}</td><td><b>{c.get('fault', 0)}</b></td><td>{c.get('happy', 0)}</td>"
             f"<td>{c.get('regression', 0)}</td></tr>"
             for m, c in sorted(failures.items())
         )
         res += (
-            "<p class='label'>where failed runs break</p><table class='grid small'><tr><th>model</th>"
+            "<p class='label'>failed runs by kind of failing test</p><table class='grid small'><tr><th>model</th>"
             f"<th>fault-injection tests</th><th>happy-path tests</th><th>repo suite</th></tr>{frows}</table>"
         )
-    findings = s.get("findings") or []
-    if findings:
-        res += "<ul class='tight'>" + "".join(f"<li>{escape(str(f))}</li>" for f in findings[:4]) + "</ul>"
+        fault = sum(int(c.get("fault", 0)) for c in failures.values())
+        happy = sum(int(c.get("happy", 0)) for c in failures.values())
+        if fault > happy:
+            res += (
+                f"<p class='lead'>Failed runs broke on an injected fault <b>{fault}</b> times versus <b>{happy}</b> "
+                "on the happy path: models build the feature but miss the failure modes.</p>"
+            )
     slides.append(slide("Results", res))
     if by_family:
-        fam_rows = [(f"{f.get('family')} · {f.get('model')}", float(f.get("pass_rate", 0))) for f in by_family]
-        slides.append(slide("Results by family", _bars(fam_rows[:12], width=1100, bar_h=26)))
+        slides.append(slide("Results by family", _family_table(by_family)))
+    ablation = s.get("turn_ablation") or []
+    excluded = s.get("excluded_models") or []
+    if ablation or excluded:
+        body = ""
+        if ablation:
+            arows = "".join(
+                f"<tr><td>{escape(_short(a.get('model')))}</td><td>{_pct(a.get('base_pass_rate'))}</td>"
+                f"<td><b>{_pct(a.get('more_pass_rate'))}</b></td>"
+                f"<td>{a.get('failures_turn_exhausted', 0)} of {a.get('base_failures', 0)}</td></tr>"
+                for a in ablation
+            )
+            n_tasks = escape(str(ablation[0].get("tasks", "")))
+            body += (
+                f"<p class='label'>turn budget ablation · terminus-2 · {n_tasks}-task subset</p>"
+                "<table class='grid'><tr><th>model</th><th>30 turns</th><th>60 turns</th>"
+                f"<th>main-run failures that used every turn</th></tr>{arows}</table>"
+                "<p class='note'>part of the gap is the harness turn budget, not only the model: quote pass rates "
+                "with the budget they were measured at.</p>"
+            )
+        if excluded:
+            items = "".join(
+                f"<li><code>{escape(_short(e.get('model')))}</code>: {escape(str(e.get('reason', '')))}</li>"
+                for e in excluded
+            )
+            body += f"<p class='label'>left out of scoring</p><ul class='tight'>{items}</ul>"
+        slides.append(slide("What else the evaluation showed", body))
     slides.append(
         slide(
             "Tech stack",
             "<ul><li><b>Python 3.12</b>, uv, typer, pydantic, PyYAML</li>"
             "<li><b>Harbor</b> task format and runner; <b>Docker</b> images per target repo</li>"
-            "<li><b>Claude Code</b> (headless) and <b>Gemini</b> API as generation backends; Gemini models and the "
-            "Harbor Claude Code agent as evaluated systems</li>"
+            "<li><b>Claude Code</b> (headless) and <b>Gemini</b> API as generation backends</li>"
+            "<li>Evaluated: Harbor's Claude Code agent; gemini-2.5-flash and gemini-3.8-flash through Harbor's "
+            "terminus-2 agent</li>"
             "<li>pytest + mutation gate; go test for Go targets</li>"
             "<li>GitHub Actions: ruff, mypy strict, coverage ≥ 75%, secret scan, dependency audit, Docker "
             "integration nightly and before release</li></ul>",
@@ -267,7 +335,7 @@ def build_html(d: dict[str, Any]) -> str:
             "Cost",
             "<ul><li>Generation on a Claude Code subscription and the Gemini free tier: <b>$0</b> marginal.</li>"
             f"<li>Paid Gemini fallback only under a <b>$70 hard cap</b>, checked before every call; "
-            f"spent so far: <b>{_v(spend, '${:.2f}')}</b>.</li>"
+            f"total paid spend for generation and evaluation: <b>{_v(spend, '${:.2f}')}</b>.</li>"
             "<li>Everything else is open source and runs on one laptop.</li></ul>",
         )
     )

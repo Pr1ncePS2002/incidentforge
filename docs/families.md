@@ -24,7 +24,7 @@ Injected faults:
 
 Example: when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
 
-Accepted tasks (2): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md), [`miniflux/ff-001-create-admin-credentials`](../tasks/miniflux/ff-001-create-admin-credentials/instruction.md)
+Accepted tasks (7): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md), [`fastapi-template/ff-002-settings`](../tasks/fastapi-template/ff-002-settings/instruction.md), [`fastapi-template/ff-003-access-token-expire`](../tasks/fastapi-template/ff-003-access-token-expire/instruction.md)
 
 ## 2. tolerant-typed-config
 
@@ -43,7 +43,7 @@ Injected faults:
 
 Example: an allowed-origins list accepts "a.com,b.com", '["a.com","b.com"]' and "" alike
 
-Accepted tasks: none yet.
+Accepted tasks (4): [`fastapi-template/tt-001-settings`](../tasks/fastapi-template/tt-001-settings/instruction.md), [`fastapi-template/tt-002-access-token-expire`](../tasks/fastapi-template/tt-002-access-token-expire/instruction.md), [`fastapi-template/tt-003-email-reset-token`](../tasks/fastapi-template/tt-003-email-reset-token/instruction.md)
 
 ## 3. cross-field-validation
 
@@ -61,7 +61,7 @@ Injected faults:
 
 Example: a maintenance window with an end time before its start time is rejected
 
-Accepted tasks: none yet.
+Accepted tasks (3): [`fastapi-template/cf-001-settings`](../tasks/fastapi-template/cf-001-settings/instruction.md), [`fastapi-template/cf-002-userbase`](../tasks/fastapi-template/cf-002-userbase/instruction.md), [`fastapi-template/cf-003-usercreate`](../tasks/fastapi-template/cf-003-usercreate/instruction.md)
 
 ## 4. idempotent-consumer
 
@@ -78,7 +78,7 @@ Injected faults:
 
 Example: a "create item" request retried by a client with the same request id creates one item, not two
 
-Accepted tasks: none yet.
+Accepted tasks (3): [`fastapi-template/ic-001-create-user`](../tasks/fastapi-template/ic-001-create-user/instruction.md), [`fastapi-template/ic-002-update-user`](../tasks/fastapi-template/ic-002-update-user/instruction.md), [`fastapi-template/ic-003-create-item`](../tasks/fastapi-template/ic-003-create-item/instruction.md)
 
 ## 5. hot-reload-config
 
@@ -95,7 +95,7 @@ Injected faults:
 
 Example: a request timeout raised by an operator applies to the next request, not only after a redeploy
 
-Accepted tasks: none yet.
+Accepted tasks (4): [`fastapi-template/hr-001-settings`](../tasks/fastapi-template/hr-001-settings/instruction.md), [`fastapi-template/hr-002-access-token-expire`](../tasks/fastapi-template/hr-002-access-token-expire/instruction.md), [`fastapi-template/hr-003-email-reset-token`](../tasks/fastapi-template/hr-003-email-reset-token/instruction.md)
 
 ## 6. env-aware-naming
 
@@ -112,7 +112,7 @@ Injected faults:
 
 Example: a session cache key carries the environment so a staging login never resolves against production
 
-Accepted tasks: none yet.
+Accepted tasks (5): [`fastapi-template/en-001-create-user`](../tasks/fastapi-template/en-001-create-user/instruction.md), [`fastapi-template/en-002-update-user`](../tasks/fastapi-template/en-002-update-user/instruction.md), [`fastapi-template/en-003-create-item`](../tasks/fastapi-template/en-003-create-item/instruction.md)
 
 ## 7. resource-aware-defaults
 
@@ -130,7 +130,7 @@ Injected faults:
 
 Example: a database pool whose size is capped so workers times connections never exceeds the server's connection limit
 
-Accepted tasks: none yet.
+Accepted tasks (3): [`fastapi-template/rd-001-access-token-expire`](../tasks/fastapi-template/rd-001-access-token-expire/instruction.md), [`fastapi-template/rd-003-create-engine-7`](../tasks/fastapi-template/rd-003-create-engine-7/instruction.md), [`miniflux/rd-003-databasemaxconns`](../tasks/miniflux/rd-003-databasemaxconns/instruction.md)
 
 ## 8. config-round-trip
 
@@ -147,4 +147,4 @@ Injected faults:
 
 Example: toggling one user preference and saving keeps every other preference the user had set
 
-Accepted tasks: none yet.
+Accepted tasks (5): [`fastapi-template/rt-001-settings`](../tasks/fastapi-template/rt-001-settings/instruction.md), [`fastapi-template/rt-002-userbase`](../tasks/fastapi-template/rt-002-userbase/instruction.md), [`fastapi-template/rt-003-usercreate`](../tasks/fastapi-template/rt-003-usercreate/instruction.md)

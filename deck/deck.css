@@ -47,3 +47,6 @@ table.meta { font-size: 22px; color: #fff; border-collapse: collapse; max-width:
 table.meta td { padding: 8px 18px 8px 0; vertical-align: top; }
 table.meta td:first-child { color: #9fc3ee; white-space: nowrap; font-weight: 700; }
 .end .content { top: 2.4in; }
+p.note { font-size: 15px; color: var(--muted); margin: 6px 0 10px; }
+table.grid.heat td { font-size: 16px; padding: 7px 12px; }
+table.grid.heat td span { color: var(--muted); font-size: 13px; }
