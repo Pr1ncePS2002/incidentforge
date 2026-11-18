@@ -284,3 +284,18 @@ def test_stray_untracked_files_stay_out_of_patch(target: Target, tmp_path: Path)
     (task,) = (tmp_path / "tasks" / "fixture").iterdir()
     text = (task / "solution" / "reference.patch").read_text()
     assert "pre-commit" not in text and "STRICT" in text
+
+
+def test_family_titles_include_gold_and_skip_other_families(target: Target, tmp_path: Path) -> None:
+    from incidentforge.generate import family_titles
+
+    rows = [("ff-001-gold", "fail-fast-config", "gold title"), ("cf-001-x", "cross-field-validation", "other")]
+    for name, fam, title in rows:
+        d = tmp_path / "tasks" / "fixture" / name
+        d.mkdir(parents=True)
+        (d / "task.toml").write_text(f'[metadata]\nfamily = "{fam}"\ntitle = "{title}"\n')
+    assert family_titles(tmp_path / "tasks", "fixture", "fail-fast-config") == ["gold title"]
+    assert family_titles(tmp_path / "nowhere", "fixture", "fail-fast-config") == []
+    backend = FakeBackend(answer(good_patch(target)))
+    run(target, tmp_path, backend, FakeValidator(True))
+    assert "- gold title" in backend.prompts[0] and "- other" not in backend.prompts[0]
