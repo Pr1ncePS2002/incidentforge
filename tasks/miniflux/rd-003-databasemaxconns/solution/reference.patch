@@ -1,0 +1,58 @@
+diff --git a/internal/config/pool_sizing.go b/internal/config/pool_sizing.go
+new file mode 100644
+index 00000000..f7424387
+--- /dev/null
++++ b/internal/config/pool_sizing.go
+@@ -0,0 +1,52 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import "fmt"
++
++// PoolSizing describes the database connection pool and worker pool sizes
++// derived from the configured limits.
++//
++// Every feed refresh worker holds at most one database connection while it
++// stores entries, and at least one connection must remain available for the
++// web UI, the API and the scheduler. Therefore ReservedConns, computed as
++// DATABASE_MAX_CONNS minus WORKER_POOL_SIZE, must be at least 1.
++type PoolSizing struct {
++	Workers       int
++	MinConns      int
++	MaxConns      int
++	ReservedConns int
++}
++
++// DerivePoolSizing validates the worker pool size and the database pool
++// limits and returns the derived sizes. Impossible combinations return an
++// error naming every setting involved.
++func DerivePoolSizing(workers, minConns, maxConns int) (PoolSizing, error) {
++	if maxConns < 1 {
++		return PoolSizing{}, fmt.Errorf("DATABASE_MAX_CONNS must be at least 1, got %d", maxConns)
++	}
++	if workers < 1 {
++		return PoolSizing{}, fmt.Errorf("WORKER_POOL_SIZE must be at least 1, got %d", workers)
++	}
++	if minConns < 0 {
++		return PoolSizing{}, fmt.Errorf("DATABASE_MIN_CONNS must not be negative, got %d", minConns)
++	}
++	if minConns > maxConns {
++		return PoolSizing{}, fmt.Errorf("DATABASE_MIN_CONNS (%d) must not be greater than DATABASE_MAX_CONNS (%d)", minConns, maxConns)
++	}
++	if workers >= maxConns {
++		return PoolSizing{}, fmt.Errorf("WORKER_POOL_SIZE (%d) must be lower than DATABASE_MAX_CONNS (%d) so at least one connection remains for the web UI and API", workers, maxConns)
++	}
++	return PoolSizing{
++		Workers:       workers,
++		MinConns:      minConns,
++		MaxConns:      maxConns,
++		ReservedConns: maxConns - workers,
++	}, nil
++}
++
++// DatabasePoolSizing derives the pool sizes from the parsed options.
++func (c *configOptions) DatabasePoolSizing() (PoolSizing, error) {
++	return DerivePoolSizing(c.WorkerPoolSize(), c.DatabaseMinConns(), c.DatabaseMaxConns())
++}

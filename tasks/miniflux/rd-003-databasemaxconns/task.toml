@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "derive and validate database pool sizing from worker and connection limits"
+family = "resource-aware-defaults"
+difficulty = "hard"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["min-over-max: DATABASE_MIN_CONNS configured above DATABASE_MAX_CONNS", "exceeds-limit: WORKER_POOL_SIZE greater than or equal to DATABASE_MAX_CONNS leaves no connection for the web UI and API", "zero-or-negative: DATABASE_MAX_CONNS or WORKER_POOL_SIZE below 1, or DATABASE_MIN_CONNS negative", "hardcoded-size: derived pool sizes must follow the configured limits and the documented ReservedConns formula, not fixed numbers"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

@@ -1,0 +1,189 @@
+diff --git a/internal/config/config_file_writer.go b/internal/config/config_file_writer.go
+new file mode 100644
+index 00000000..9136fcf3
+--- /dev/null
++++ b/internal/config/config_file_writer.go
+@@ -0,0 +1,183 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import (
++	"errors"
++	"fmt"
++	"io/fs"
++	"os"
++	"path/filepath"
++	"sort"
++	"strings"
++)
++
++// UpdateConfigFile applies a set of changes to a Miniflux configuration file without losing data.
++//
++// Keys in set are written with the given value, an empty string being written as an explicit empty
++// value. Keys in unset are removed. Every other line (comments, blank lines, keys unknown to Miniflux)
++// is preserved byte for byte, and a line whose value already matches is left untouched. When nothing
++// changes the file is not rewritten. The new content is validated with the configuration parser and
++// written atomically: on any error the previous file is left as it was.
++func UpdateConfigFile(filename string, set map[string]string, unset []string) error {
++	for key, value := range set {
++		if err := validateConfigFileKey(key); err != nil {
++			return err
++		}
++		if strings.ContainsAny(value, "\r\n") {
++			return fmt.Errorf("config: the value of %s must not contain line breaks", key)
++		}
++		if strings.TrimSpace(value) != value {
++			return fmt.Errorf("config: the value of %s must not start or end with whitespace", key)
++		}
++	}
++
++	removals := make(map[string]bool, len(unset))
++	for _, key := range unset {
++		if err := validateConfigFileKey(key); err != nil {
++			return err
++		}
++		if _, found := set[key]; found {
++			return fmt.Errorf("config: %s cannot be both set and unset", key)
++		}
++		removals[key] = true
++	}
++
++	content := ""
++	mode := fs.FileMode(0o600)
++	data, err := os.ReadFile(filename)
++	switch {
++	case err == nil:
++		content = string(data)
++		if info, statErr := os.Stat(filename); statErr == nil {
++			mode = info.Mode().Perm()
++		}
++	case errors.Is(err, fs.ErrNotExist):
++	default:
++		return fmt.Errorf("config: unable to read %q: %w", filename, err)
++	}
++
++	var lines []string
++	if content != "" {
++		lines = strings.Split(strings.TrimSuffix(content, "\n"), "\n")
++	}
++
++	written := make(map[string]bool, len(set))
++	out := make([]string, 0, len(lines)+len(set))
++	for _, line := range lines {
++		key, value, ok := splitConfigFileLine(line)
++		if !ok {
++			out = append(out, line)
++			continue
++		}
++		if removals[key] {
++			continue
++		}
++		newValue, found := set[key]
++		if !found {
++			out = append(out, line)
++			continue
++		}
++		if written[key] {
++			continue
++		}
++		written[key] = true
++		if value == newValue {
++			out = append(out, line)
++		} else {
++			out = append(out, key+"="+newValue)
++		}
++	}
++
++	var appended []string
++	for key := range set {
++		if !written[key] {
++			appended = append(appended, key)
++		}
++	}
++	sort.Strings(appended)
++	for _, key := range appended {
++		out = append(out, key+"="+set[key])
++	}
++
++	newContent := strings.Join(out, "\n")
++	if len(out) > 0 && (content == "" || strings.HasSuffix(content, "\n")) {
++		newContent += "\n"
++	}
++	if newContent == content {
++		return nil
++	}
++
++	var parsable []string
++	for _, line := range out {
++		if _, _, ok := splitConfigFileLine(line); ok {
++			parsable = append(parsable, strings.TrimSpace(line))
++		}
++	}
++	if err := NewConfigParser().parseLines(parsable); err != nil {
++		return fmt.Errorf("config: refusing to write an invalid configuration: %w", err)
++	}
++
++	return writeConfigFileAtomically(filename, newContent, mode)
++}
++
++func writeConfigFileAtomically(filename, content string, mode fs.FileMode) error {
++	tmp, err := os.CreateTemp(filepath.Dir(filename), "."+filepath.Base(filename)+".tmp-*")
++	if err != nil {
++		return fmt.Errorf("config: unable to create a temporary file: %w", err)
++	}
++	tmpName := tmp.Name()
++	committed := false
++	defer func() {
++		if !committed {
++			os.Remove(tmpName)
++		}
++	}()
++
++	if _, err := tmp.WriteString(content); err != nil {
++		tmp.Close()
++		return fmt.Errorf("config: unable to write %q: %w", tmpName, err)
++	}
++	if err := tmp.Sync(); err != nil {
++		tmp.Close()
++		return fmt.Errorf("config: unable to sync %q: %w", tmpName, err)
++	}
++	if err := tmp.Close(); err != nil {
++		return fmt.Errorf("config: unable to close %q: %w", tmpName, err)
++	}
++	if err := os.Chmod(tmpName, mode); err != nil {
++		return fmt.Errorf("config: unable to set permissions on %q: %w", tmpName, err)
++	}
++	if err := os.Rename(tmpName, filename); err != nil {
++		return fmt.Errorf("config: unable to replace %q: %w", filename, err)
++	}
++	committed = true
++	return nil
++}
++
++// splitConfigFileLine returns the key and value of a configuration line, using the same rules as
++// the configuration file parser. Comments, blank lines and lines without a key are not settings.
++func splitConfigFileLine(line string) (string, string, bool) {
++	trimmed := strings.TrimSpace(line)
++	if trimmed == "" || strings.HasPrefix(trimmed, "#") {
++		return "", "", false
++	}
++	idx := strings.Index(trimmed, "=")
++	if idx <= 0 {
++		return "", "", false
++	}
++	return strings.TrimSpace(trimmed[:idx]), strings.TrimSpace(trimmed[idx+1:]), true
++}
++
++func validateConfigFileKey(key string) error {
++	if key == "" {
++		return errors.New("config: empty configuration key")
++	}
++	for _, r := range key {
++		if !(r == '_' || (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')) {
++			return fmt.Errorf("config: invalid configuration key %q", key)
++		}
++	}
++	return nil
++}

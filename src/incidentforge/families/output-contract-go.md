@@ -12,6 +12,9 @@ Reply with exactly one json object and nothing else (no prose, no code fences). 
   the pinned commit and implements the feature. Context lines must match the pinned code exactly (tabs, not
   spaces) and the result must be `gofmt`-clean and compile. Change only application code; do not add or
   edit `_test.go` files in the patch. Use only the standard library and modules already in `go.mod`.
+  The package's existing tests run together with yours and must keep passing: do not change shipped
+  defaults or reject combinations that existing tests build (check the package's `*_test.go` files for
+  the values they set), and do not duplicate a check the code already performs.
 - `feature_tests` (object): repository-relative path → file content. One or two Go test files named
   `*_test.go`, placed in the directory of the package under test (for example
   `internal/config/forge_feature_test.go`) and declaring that same package, so unexported identifiers are

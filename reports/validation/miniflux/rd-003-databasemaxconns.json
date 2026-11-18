@@ -1,0 +1,45 @@
+{
+  "task_id": "miniflux/rd-003-databasemaxconns",
+  "accepted": true,
+  "gates": [
+    {
+      "gate": "leak",
+      "passed": true,
+      "detail": "4% 8-gram overlap",
+      "seconds": 0.0
+    },
+    {
+      "gate": "fail_on_base",
+      "passed": true,
+      "detail": "reward=0.0 feature_tests=0.0 repo_suite=1.0",
+      "seconds": 13.0
+    },
+    {
+      "gate": "pass_on_reference",
+      "passed": true,
+      "detail": "reward=1.0",
+      "seconds": 12.5
+    },
+    {
+      "gate": "regression",
+      "passed": true,
+      "detail": "repo suite passed with the reference patch",
+      "seconds": 0.0
+    },
+    {
+      "gate": "mutation",
+      "passed": true,
+      "detail": "killed 6/6; survived: -",
+      "seconds": 33.6
+    },
+    {
+      "gate": "flakiness",
+      "passed": true,
+      "detail": "oracle rewards over 3 runs: [1.0, 1.0, 1.0]",
+      "seconds": 16.1
+    }
+  ],
+  "mutants_total": 6,
+  "mutants_killed": 6,
+  "log_path": "jobs/validation"
+}

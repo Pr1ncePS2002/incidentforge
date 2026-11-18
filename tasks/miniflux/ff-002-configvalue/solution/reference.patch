@@ -1,0 +1,52 @@
+diff --git a/internal/config/parser.go b/internal/config/parser.go
+index cb78f8b0..1bfa6fc4 100644
+--- a/internal/config/parser.go
++++ b/internal/config/parser.go
+@@ -50,8 +50,47 @@ func (cp *configParser) ParseFile(filename string) (*configOptions, error) {
+ 	return cp.options, nil
+ }
+ 
++// isTemplatePlaceholder reports whether value is a template placeholder that was never filled in.
++func isTemplatePlaceholder(value string) bool {
++	normalized := strings.ToLower(strings.TrimSpace(value))
++	if len(normalized) > 2 && strings.HasPrefix(normalized, "<") && strings.HasSuffix(normalized, ">") {
++		return true
++	}
++	switch normalized {
++	case "changethis", "changeme", "change-me", "change_me", "todo", "tbd", "fixme", "placeholder", "replaceme":
++		return true
++	}
++	return false
++}
++
+ // Validate checks for invalid or incomplete option combinations.
+ func (c *configOptions) Validate() error {
++	var problems []string
++	if c.CreateAdmin() {
++		var missing []string
++		if strings.TrimSpace(c.AdminUsername()) == "" {
++			missing = append(missing, "ADMIN_USERNAME")
++		}
++		if strings.TrimSpace(c.AdminPassword()) == "" {
++			missing = append(missing, "ADMIN_PASSWORD")
++		}
++		if len(missing) > 0 {
++			problems = append(problems, "CREATE_ADMIN is enabled but "+strings.Join(missing, " and ")+" must be set")
++		}
++		if isTemplatePlaceholder(c.AdminUsername()) {
++			problems = append(problems, "ADMIN_USERNAME still holds a template placeholder value")
++		}
++		if isTemplatePlaceholder(c.AdminPassword()) {
++			problems = append(problems, "ADMIN_PASSWORD still holds a template placeholder value")
++		}
++	}
++	if isTemplatePlaceholder(c.DatabaseURL()) {
++		problems = append(problems, "DATABASE_URL still holds a template placeholder value")
++	}
++	if len(problems) > 0 {
++		return fmt.Errorf("invalid configuration: %s", strings.Join(problems, "; "))
++	}
++
+ 	if c.OAuth2Provider() == "oidc" && c.OAuth2OIDCDiscoveryEndpoint() == "" {
+ 		return errors.New("OAUTH2_OIDC_DISCOVERY_ENDPOINT must be configured when using the OIDC provider")
+ 	}
