@@ -1,0 +1,290 @@
+{
+  "generated_at": "2026-11-18T18:59:17+0530",
+  "tasks_total": 34,
+  "tasks_by_family": {
+    "config-round-trip": 5,
+    "cross-field-validation": 3,
+    "env-aware-naming": 5,
+    "fail-fast-config": 7,
+    "hot-reload-config": 4,
+    "idempotent-consumer": 3,
+    "resource-aware-defaults": 3,
+    "tolerant-typed-config": 4
+  },
+  "validation": {
+    "candidates": 34,
+    "accepted": 34,
+    "mutants_total": 201,
+    "mutants_killed": 179
+  },
+  "models": [
+    {
+      "model": "claude-code",
+      "agent": "claude-code",
+      "k": 3,
+      "pass_rate": 0.9815,
+      "n": 54,
+      "tasks": 34,
+      "input_tokens": 5883658,
+      "output_tokens": 122370,
+      "billed_usd": 0.0
+    },
+    {
+      "model": "gemini/gemini-2.5-flash",
+      "agent": "terminus-2",
+      "k": 3,
+      "pass_rate": 0.3333,
+      "n": 54,
+      "tasks": 34,
+      "input_tokens": 19937970,
+      "output_tokens": 1636360,
+      "billed_usd": 6.1093
+    },
+    {
+      "model": "gemini/gemini-3.8-flash",
+      "agent": "terminus-2",
+      "k": 3,
+      "pass_rate": 0.2778,
+      "n": 54,
+      "tasks": 34,
+      "input_tokens": 28269016,
+      "output_tokens": 925624,
+      "billed_usd": 22.0659
+    }
+  ],
+  "by_family": [
+    {
+      "family": "config-round-trip",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 7
+    },
+    {
+      "family": "config-round-trip",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.0,
+      "n": 7
+    },
+    {
+      "family": "config-round-trip",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.0,
+      "n": 7
+    },
+    {
+      "family": "cross-field-validation",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 5
+    },
+    {
+      "family": "cross-field-validation",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.0,
+      "n": 5
+    },
+    {
+      "family": "cross-field-validation",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.8,
+      "n": 5
+    },
+    {
+      "family": "env-aware-naming",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 7
+    },
+    {
+      "family": "env-aware-naming",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.8571,
+      "n": 7
+    },
+    {
+      "family": "env-aware-naming",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.7143,
+      "n": 7
+    },
+    {
+      "family": "fail-fast-config",
+      "model": "claude-code",
+      "pass_rate": 0.9091,
+      "n": 11
+    },
+    {
+      "family": "fail-fast-config",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.3636,
+      "n": 11
+    },
+    {
+      "family": "fail-fast-config",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.0,
+      "n": 11
+    },
+    {
+      "family": "hot-reload-config",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 6
+    },
+    {
+      "family": "hot-reload-config",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.1667,
+      "n": 6
+    },
+    {
+      "family": "hot-reload-config",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.0,
+      "n": 6
+    },
+    {
+      "family": "idempotent-consumer",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 5
+    },
+    {
+      "family": "idempotent-consumer",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.6,
+      "n": 5
+    },
+    {
+      "family": "idempotent-consumer",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.6,
+      "n": 5
+    },
+    {
+      "family": "resource-aware-defaults",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 5
+    },
+    {
+      "family": "resource-aware-defaults",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.6,
+      "n": 5
+    },
+    {
+      "family": "resource-aware-defaults",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.6,
+      "n": 5
+    },
+    {
+      "family": "tolerant-typed-config",
+      "model": "claude-code",
+      "pass_rate": 1.0,
+      "n": 8
+    },
+    {
+      "family": "tolerant-typed-config",
+      "model": "gemini/gemini-2.5-flash",
+      "pass_rate": 0.125,
+      "n": 8
+    },
+    {
+      "family": "tolerant-typed-config",
+      "model": "gemini/gemini-3.8-flash",
+      "pass_rate": 0.0,
+      "n": 8
+    }
+  ],
+  "failures": {
+    "claude-code": {
+      "fault": 1,
+      "happy": 0,
+      "regression": 0,
+      "unknown": 0
+    },
+    "gemini/gemini-2.5-flash": {
+      "fault": 23,
+      "happy": 9,
+      "regression": 13,
+      "unknown": 12
+    },
+    "gemini/gemini-3.8-flash": {
+      "fault": 26,
+      "happy": 12,
+      "regression": 1,
+      "unknown": 12
+    }
+  },
+  "variance": [
+    {
+      "model": "claude-code",
+      "tasks": 10,
+      "k": 3,
+      "attempt_pass_rates": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "stdev": 0.0,
+      "unstable_tasks": 0
+    },
+    {
+      "model": "gemini/gemini-2.5-flash",
+      "tasks": 10,
+      "k": 3,
+      "attempt_pass_rates": [
+        0.3,
+        0.3,
+        0.4
+      ],
+      "stdev": 0.0471,
+      "unstable_tasks": 4
+    },
+    {
+      "model": "gemini/gemini-3.8-flash",
+      "tasks": 10,
+      "k": 3,
+      "attempt_pass_rates": [
+        0.3,
+        0.4,
+        0.4
+      ],
+      "stdev": 0.0471,
+      "unstable_tasks": 1
+    }
+  ],
+  "turn_ablation": [
+    {
+      "model": "gemini/gemini-3.8-flash",
+      "tasks": 10,
+      "base_turns": 30,
+      "more_turns": 60,
+      "base_pass_rate": 0.3,
+      "more_pass_rate": 0.8,
+      "base_failures": 39,
+      "failures_turn_exhausted": 35,
+      "failures_wrong_code": 4,
+      "failures_no_turn_data": 0
+    }
+  ],
+  "spend_usd": 41.2045,
+  "excluded_models": [
+    {
+      "model": "gemini/gemini-4-hydrogen",
+      "agent": "terminus-2",
+      "reason": "through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model",
+      "evidence": "3 gold-task trials on 2026-11-18: 72 of 84 turns got 'No valid JSON found in response', at most 1,376 completion tokens per trial; direct google-genai calls to the same model work"
+    }
+  ],
+  "findings": [
+    "34 of 34 tasks with a validation report passed every gate; accepted tasks' tests killed 179 of 201 injected mutants (89%).",
+    "pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).",
+    "hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).",
+    "of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.",
+    "gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.",
+    "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped with wrong code."
+  ]
+}
