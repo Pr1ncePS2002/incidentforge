@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-18T18:59:17+0530",
+  "generated_at": "2026-11-18T19:54:57+0530",
   "tasks_total": 34,
   "tasks_by_family": {
     "config-round-trip": 5,
@@ -258,6 +258,18 @@
   ],
   "turn_ablation": [
     {
+      "model": "gemini/gemini-2.5-flash",
+      "tasks": 10,
+      "base_turns": 30,
+      "more_turns": 60,
+      "base_pass_rate": 0.3,
+      "more_pass_rate": 0.4,
+      "base_failures": 36,
+      "failures_turn_exhausted": 17,
+      "failures_wrong_code": 19,
+      "failures_no_turn_data": 0
+    },
+    {
       "model": "gemini/gemini-3.8-flash",
       "tasks": 10,
       "base_turns": 30,
@@ -270,7 +282,7 @@
       "failures_no_turn_data": 0
     }
   ],
-  "spend_usd": 41.2045,
+  "spend_usd": 43.962,
   "excluded_models": [
     {
       "model": "gemini/gemini-4-hydrogen",
@@ -285,6 +297,7 @@
     "hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).",
     "of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.",
     "gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.",
+    "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped with wrong code.",
     "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped with wrong code."
   ]
 }
