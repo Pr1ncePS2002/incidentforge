@@ -171,6 +171,7 @@ class Trial:
     reward: float | None  # none = no verifier reward, i.e. an infra error worth retrying
     input_tokens: int = 0
     output_tokens: int = 0
+    cache_tokens: int = 0
     exception: str | None = None
     failed_tests: tuple[str, ...] = ()
     parts: tuple[tuple[str, float], ...] = ()  # reward.json sub-scores, e.g. feature_tests / repo_suite
@@ -239,6 +240,7 @@ def read_trials(job_dir: Path) -> list[Trial]:
                 reward=None if reward is None else float(reward),
                 input_tokens=int(agent_result.get("n_input_tokens") or 0),
                 output_tokens=int(agent_result.get("n_output_tokens") or 0),
+                cache_tokens=int(agent_result.get("n_cache_tokens") or 0),
                 exception=exc.get("exception_type"),
                 failed_tests=_failed_tests(result.parent),
                 parts=_parts(result.parent),
@@ -436,9 +438,12 @@ def run_eval(
                 by_name = {t.name: t for t in batch}
                 batch_in = sum(tr.input_tokens for tr in trials)
                 batch_out = sum(tr.output_tokens for tr in trials)
+                batch_cached = sum(tr.cache_tokens for tr in trials)
                 if key == "paid":
                     # errored trials burned tokens too, so the whole batch is metered
-                    prog.paid_usd += ledger.record(price_model, batch_in, batch_out, tag=f"eval:{job_name}")
+                    prog.paid_usd += ledger.record(
+                        price_model, batch_in, batch_out, tag=f"eval:{job_name}", cached_tokens=batch_cached
+                    )
                     prog.paid_runs += len(batch)
                     paid_left -= len(batch)
                 for tr in trials:
@@ -458,7 +463,7 @@ def run_eval(
                         reward=tr.reward,
                         input_tokens=tr.input_tokens,
                         output_tokens=tr.output_tokens,
-                        cost_usd=round(cost_usd(price_model, tr.input_tokens, tr.output_tokens), 6)
+                        cost_usd=round(cost_usd(price_model, tr.input_tokens, tr.output_tokens, tr.cache_tokens), 6)
                         if key == "paid"
                         else 0.0,
                         key=key,

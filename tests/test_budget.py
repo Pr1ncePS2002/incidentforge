@@ -109,3 +109,16 @@ def test_status_reports_whether_remaining_eval_fits(ledger):
     assert "short by" in text and "30 of 40" in text
     s2 = status(ledger, runs_left=20, per_run_usd=0.65)
     assert s2.fits is True
+
+
+def test_cached_input_is_billed_at_a_fraction(tmp_path):
+    full = cost_usd("gemini-3.8-flash", 1_000_000, 0)
+    assert cost_usd("gemini-3.8-flash", 1_000_000, 0, cached_tokens=1_000_000) == pytest.approx(full * 0.25)
+    # cached can't exceed input or go negative
+    assert cost_usd("gemini-3.8-flash", 100, 0, cached_tokens=10**9) == pytest.approx(
+        cost_usd("gemini-3.8-flash", 0, 0) + 100 * 1.5 * 0.25 / 1e6
+    )
+    led = Ledger(tmp_path / "l.jsonl")
+    led.record("gemini-3.8-flash", 1_000_000, 0, cached_tokens=800_000)
+    assert led.entries()[0]["cached_tokens"] == 800_000
+    assert led.spent() == pytest.approx((200_000 * 1.5 + 800_000 * 1.5 * 0.25) / 1e6)
