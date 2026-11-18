@@ -322,6 +322,17 @@ def next_number(tasks_root: Path, work_root: Path, target: str, prefix: str, tak
     return max(nums) + 1
 
 
+def family_titles(tasks_root: Path, target: str, family: str) -> list[str]:
+    """titles of every kept task of this family on the target, gold included, read from task.toml."""
+    base = tasks_root / target
+    titles: list[str] = []
+    for toml in sorted(base.glob("*/task.toml")) if base.exists() else []:
+        meta = tomllib.loads(toml.read_text()).get("metadata", {})
+        if meta.get("family") == family and meta.get("title"):
+            titles.append(str(meta["title"]))
+    return titles
+
+
 def plan_pairs(
     families: list[Family], surfaces: list[Surface], used: set[tuple[str, str]]
 ) -> Iterator[tuple[Family, Surface]]:
@@ -369,11 +380,6 @@ def generate(
     fams = [f for f in fams if target.language.value in f.languages]
     history = gen.history()
     used = {(r["family"], r["surface"]) for r in history}
-    # titles are shared per family and file, so a sibling surface in the same class does not repeat a task
-    existing: dict[tuple[str, str], list[str]] = {}
-    for r in history:
-        if r.get("accepted") and r.get("title"):
-            existing.setdefault((r["family"], r["surface"].split("::")[0]), []).append(r["title"])
     pairs = plan_pairs(fams, surfaces, used)
     limit = max_pairs if max_pairs is not None else max(3 * n, n + 4)
     log(f"{target.name}: {len(surfaces)} surfaces, families {[f.slug for f in fams]}, want {n} accepted")
@@ -395,14 +401,12 @@ def generate(
             if not batch:
                 break
             futures = [
-                pool.submit(gen.run_pair, p, list(existing.get((p.family.slug, p.surface.file), []))) for p in batch
+                pool.submit(gen.run_pair, p, family_titles(tasks_root, target.name, p.family.slug)) for p in batch
             ]
             for fut in futures:
                 o = fut.result()
                 outcomes.append(o)
                 accepted += o.report.accepted
-                if o.report.accepted and o.title:
-                    existing.setdefault((o.pair.family.slug, o.pair.surface.file), []).append(o.title)
                 verdict = "accepted" if o.report.accepted else "rejected"
                 log(f"  {o.pair.task_id}: {verdict} after {o.attempts} attempt(s) in {o.seconds:.0f}s {o.title}")
 
