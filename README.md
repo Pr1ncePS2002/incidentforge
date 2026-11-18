@@ -73,8 +73,8 @@ uv run forge run --target fastapi-template --family fail-fast-config --n 2
 uv run forge validate tasks
 
 # check the tasks in Harbor: the reference solution scores 1.0, doing nothing scores 0.0
-harbor run -p tasks -a oracle
-harbor run -p tasks -a nop
+harbor run -p tasks/fastapi-template -a oracle
+harbor run -p tasks/fastapi-template -a nop
 
 # evaluate models and build the report
 uv run forge eval --tasks tasks --model gemini/gemini-3.8-flash
