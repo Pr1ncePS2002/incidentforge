@@ -6,3 +6,10 @@ __pycache__/
 jobs/
 work/
 .DS_Store
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+reports/junit.xml
+htmlcov/
