@@ -27,7 +27,22 @@ def run(
     out: str = typer.Option("tasks", help="tasks root dir"),
 ) -> None:
     """generate, validate and keep tasks for a target. owner: phase 2."""
-    raise NotImplementedError
+    from pathlib import Path
+
+    from incidentforge.backends.base import get_backend
+    from incidentforge.families import list_families
+    from incidentforge.families.sampling import pick_families
+    from incidentforge.generate import generate
+    from incidentforge.targets import load_target
+
+    tgt = load_target(target)
+    # weighted mix decides the family order; generate round-robins so each family gets a turn
+    slugs = list(dict.fromkeys(family or pick_families(max(n, 8), available=list_families())))
+    reports = generate(tgt, slugs, n, get_backend(backend), tasks_root=Path(out), log=typer.echo)
+    kept = sum(r.accepted for r in reports)
+    if kept < n:
+        typer.echo(f"only {kept}/{n} tasks accepted")
+        raise typer.Exit(1)
 
 
 @app.command()
