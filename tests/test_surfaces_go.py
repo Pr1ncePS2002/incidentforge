@@ -123,8 +123,8 @@ def test_body_extraction_ignores_braces_in_literals(repo: Path) -> None:
 def test_kind_filter_and_dispatch(repo: Path) -> None:
     only = find_surfaces(repo, Language.go, {"validator", "nope"})
     assert {s.kind for s in only} == {"validator"}
-    with pytest.raises(NotImplementedError):
-        find_surfaces(repo, Language.python)
+    # python dispatch exists now and a go repo has no python surfaces
+    assert find_surfaces(repo, Language.python) == []
 
 
 def test_source_root_and_long_excerpt(tmp_path: Path) -> None:

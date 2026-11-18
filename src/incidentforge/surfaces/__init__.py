@@ -10,4 +10,8 @@ def find_surfaces(repo_dir: Path, language: Language, kinds: set[str] | None = N
         from incidentforge.surfaces.go import find_go_surfaces
 
         return find_go_surfaces(repo_dir, kinds)
+    if language is Language.python:
+        from incidentforge.surfaces.python import find_python_surfaces
+
+        return find_python_surfaces(repo_dir, kinds)
     raise NotImplementedError
