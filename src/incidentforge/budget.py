@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
+import socket
 import time
+import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -59,8 +64,20 @@ def configured_cap() -> float:
     return min(float(raw), HARD_CAP_USD)
 
 
+def _pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
 @dataclass
 class Ledger:
+    """append-only jsonl of spends plus open reservations; writers serialise on a sibling .lock file."""
+
     path: Path
     cap: float = HARD_CAP_USD
 
@@ -68,35 +85,121 @@ class Ledger:
     def default(cls) -> Ledger:
         return cls(default_ledger_path(), configured_cap())
 
-    def entries(self) -> list[dict[str, Any]]:
+    @property
+    def lock_path(self) -> Path:
+        return self.path.with_name(self.path.name + ".lock")
+
+    @contextmanager
+    def _locked(self) -> Iterator[None]:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.lock_path.open("a") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+    def _lines(self) -> list[dict[str, Any]]:
         if not self.path.exists():
             return []
         out: list[dict[str, Any]] = []
-        for line in self.path.read_text().splitlines():
-            if line.strip():
+        lines = self.path.read_text().splitlines()
+        for n, line in enumerate(lines):
+            if not line.strip():
+                continue
+            try:
                 out.append(json.loads(line))
+            except json.JSONDecodeError:
+                # an unlocked reader may catch a writer mid-line; only the last line can be torn
+                if n == len(lines) - 1:
+                    break
+                raise
         return out
+
+    def _append(self, *entries: dict[str, Any]) -> None:
+        with self.path.open("a") as f:
+            f.write("".join(json.dumps(e) + "\n" for e in entries))
+
+    @staticmethod
+    def _split(lines: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """(spend records, open reservations); reservations of dead local processes count as released."""
+        spends = [e for e in lines if e.get("kind", "spend") == "spend"]
+        closed = {e["releases"] for e in lines if e.get("releases")}
+        host = socket.gethostname()
+        open_ = [
+            e
+            for e in lines
+            if e.get("kind") == "reserve"
+            and e["id"] not in closed
+            and not (e.get("host") == host and not _pid_alive(int(e.get("pid", 0))))
+        ]
+        return spends, open_
+
+    def entries(self) -> list[dict[str, Any]]:
+        return self._split(self._lines())[0]
 
     def spent(self) -> float:
         return float(sum(e["cost_usd"] for e in self.entries()))
 
+    def reserved(self) -> float:
+        return float(sum(e["cost_usd"] for e in self._split(self._lines())[1]))
+
     def remaining(self) -> float:
-        return max(self.cap - self.spent(), 0.0)
+        return max(self.cap - self.spent() - self.reserved(), 0.0)
+
+    def _committed(self) -> tuple[float, float]:
+        spends, open_ = self._split(self._lines())
+        return float(sum(e["cost_usd"] for e in spends)), float(sum(e["cost_usd"] for e in open_))
+
+    def _refuse_unless_fits(self, worst: float) -> None:
+        spent, held = self._committed()
+        if spent + held >= self.cap or spent + held + worst > self.cap:
+            raise BudgetExhausted(
+                f"paid key blocked: spent ${spent:.2f} (+${held:.2f} reserved by running calls) of ${self.cap:.2f} "
+                f"cap, this call could cost up to ${worst:.2f}"
+            )
 
     def check(self, model: str, input_tokens: int, max_output_tokens: int) -> float:
-        """refuse the call unless its worst case still fits under the cap."""
+        """refuse unless the worst case fits next to spends and in-flight reservations; reserves nothing."""
         worst = cost_usd(model, input_tokens, max_output_tokens)
-        spent = self.spent()
-        if spent >= self.cap or spent + worst > self.cap:
-            raise BudgetExhausted(
-                f"paid key blocked: spent ${spent:.2f} of ${self.cap:.2f} cap, this call could cost up to ${worst:.2f}"
-            )
+        self._refuse_unless_fits(worst)
         return worst
 
-    def record(self, model: str, input_tokens: int, output_tokens: int, tag: str = "", cached_tokens: int = 0) -> float:
+    def reserve(self, model: str, input_tokens: int, max_output_tokens: int, tag: str = "") -> str:
+        """hold the worst case in the ledger so other processes see it; close it with record or release."""
+        worst = cost_usd(model, input_tokens, max_output_tokens)
+        rid = uuid.uuid4().hex
+        with self._locked():
+            self._refuse_unless_fits(worst)
+            self._append(
+                {
+                    "kind": "reserve",
+                    "id": rid,
+                    "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "model": model,
+                    "cost_usd": round(worst, 6),
+                    "pid": os.getpid(),
+                    "host": socket.gethostname(),
+                    "tag": tag,
+                }
+            )
+        return rid
+
+    def release(self, reservation: str) -> None:
+        with self._locked():
+            self._append({"kind": "release", "releases": reservation})
+
+    def record(
+        self,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        tag: str = "",
+        cached_tokens: int = 0,
+        reservation: str | None = None,
+    ) -> float:
         c = cost_usd(model, input_tokens, output_tokens, cached_tokens)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        entry = {
+        entry: dict[str, Any] = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "model": model,
             "input_tokens": input_tokens,
@@ -105,8 +208,11 @@ class Ledger:
             "cost_usd": round(c, 6),
             "tag": tag,
         }
-        with self.path.open("a") as f:
-            f.write(json.dumps(entry) + "\n")
+        if reservation:
+            # one line both bills the call and closes its hold, so no reader sees it twice
+            entry["releases"] = reservation
+        with self._locked():
+            self._append(entry)
         return c
 
 
