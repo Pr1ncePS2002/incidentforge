@@ -1,0 +1,29 @@
+slug: resource-aware-defaults
+title: pool and worker sizes derive from configured limits
+intent: >-
+  connection pool, worker, batch and buffer sizes are derived from the limits the service is given (cpu,
+  memory, max connections) instead of hardcoded numbers, and combinations that cannot work are rejected at startup.
+surface_kinds: [pool-config, settings-class, env-read]
+fault_catalogue:
+  - id: hardcoded-size
+    description: a size ignores the configured limit and uses a fixed number
+  - id: min-over-max
+    description: a minimum (pool min, workers) is configured above its maximum
+  - id: exceeds-limit
+    description: the derived total (workers x pool size, batch x item size) exceeds the configured hard limit
+  - id: zero-or-negative
+    description: a size or limit is zero or negative and would deadlock or crash later
+  - id: unset-limit
+    description: the limit is not configured; a documented safe default derived from the available resources must be used
+acceptance:
+  - with a limit configured, the derived size follows the documented formula, never a fixed constant
+  - impossible combinations raise at startup with an error naming both settings involved
+  - the defaults the repo ships with still load and the existing test suite still passes
+difficulty_levers:
+  - sizes that depend on two or more limits at once
+  - clamping versus rejecting, chosen per setting
+  - the derived value feeds a constructor that must receive it, not just a getter
+examples:
+  - a database pool whose size is capped so workers times connections never exceeds the server's connection limit
+  - a worker count defaulting to the number of available cpus instead of a fixed 16
+languages: [python, go]

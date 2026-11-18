@@ -1,0 +1,27 @@
+slug: config-round-trip
+title: config load, modify, save never drops a field
+intent: >-
+  reading a configuration or settings record, changing one field and writing it back preserves every other
+  field exactly, including ones that were explicitly set to a value equal to the default or to an empty value.
+surface_kinds: [config-writer, settings-class, validator]
+fault_catalogue:
+  - id: dropped-field
+    description: a field the writer does not know about, or did not change, disappears after save
+  - id: default-overwrite
+    description: an explicitly set value equal to the default, or an explicit empty or zero value, is replaced or omitted
+  - id: type-drift
+    description: a value changes type across the round trip (number to string, duration to integer, list to scalar)
+  - id: partial-write
+    description: a save that fails half-way leaves a truncated or mixed record instead of the previous one
+acceptance:
+  - load then save with no change produces a semantically identical record
+  - changing one field changes only that field after the round trip
+  - existing behaviour of the writer is unchanged otherwise and the repository's existing test suite still passes
+difficulty_levers:
+  - nested or list fields
+  - distinguishing unset from explicitly empty or zero
+  - atomic replace of the stored record on failure
+examples:
+  - toggling one user preference and saving keeps every other preference the user had set
+  - exporting settings and importing them again yields the same effective configuration
+languages: [python, go]
