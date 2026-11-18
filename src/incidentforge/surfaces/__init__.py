@@ -1,0 +1,9 @@
+"""find code surfaces in a checked-out repo. owner: phase 2 (python), phase 3 (go)."""
+
+from pathlib import Path
+
+from incidentforge.models import Language, Surface
+
+
+def find_surfaces(repo_dir: Path, language: Language, kinds: set[str] | None = None) -> list[Surface]:
+    raise NotImplementedError

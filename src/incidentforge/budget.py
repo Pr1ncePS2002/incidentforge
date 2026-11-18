@@ -83,8 +83,7 @@ class Ledger:
         spent = self.spent()
         if spent >= self.cap or spent + worst > self.cap:
             raise BudgetExhausted(
-                f"paid key blocked: spent ${spent:.2f} of ${self.cap:.2f} cap, "
-                f"this call could cost up to ${worst:.2f}"
+                f"paid key blocked: spent ${spent:.2f} of ${self.cap:.2f} cap, this call could cost up to ${worst:.2f}"
             )
         return worst
 
@@ -137,16 +136,12 @@ def bar(frac: float, width: int = 30) -> str:
 
 def render(s: BudgetStatus) -> str:
     lines = [
-        (
-            f"paid key   {bar(s.spent / s.cap if s.cap else 1)}  ${s.spent:.2f} / ${s.cap:.2f}  "
-            f"(${s.remaining:.2f} left)"
-        )
+        (f"paid key   {bar(s.spent / s.cap if s.cap else 1)}  ${s.spent:.2f} / ${s.cap:.2f}  (${s.remaining:.2f} left)")
     ]
     if s.runs_left is not None and s.per_run is not None:
         need = s.runs_left * s.per_run
         lines.append(
-            f"eval left  {s.runs_left} runs x ~${s.per_run:.2f} = ~${need:.2f}  "
-            f"-> affordable runs: {s.runs_affordable}"
+            f"eval left  {s.runs_left} runs x ~${s.per_run:.2f} = ~${need:.2f}  -> affordable runs: {s.runs_affordable}"
         )
         if s.fits:
             lines.append("verdict    remaining evaluation fits in the paid budget")
