@@ -33,7 +33,26 @@ def run(
 @app.command()
 def validate(task_dirs: list[str] = typer.Argument(..., help="task dirs or a tasks root")) -> None:
     """run all validation gates and write reports/validation/<task>.json. owner: phase 1."""
-    raise NotImplementedError
+    from pathlib import Path
+
+    from incidentforge.validate import find_task_dirs, validate_task
+
+    dirs = find_task_dirs([Path(d) for d in task_dirs])
+    if not dirs:
+        typer.echo("no task dirs found")
+        raise typer.Exit(1)
+    rejected = 0
+    typer.echo(f"{'task':<50} {'result':<9} {'mutants':<8} detail")
+    for d in dirs:
+        r = validate_task(d)
+        last = r.gates[-1] if r.gates else None
+        detail = "" if r.accepted or last is None else f"{last.gate}: {last.detail}"
+        rejected += not r.accepted
+        verdict = "accepted" if r.accepted else "rejected"
+        typer.echo(f"{r.task_id:<50} {verdict:<9} {f'{r.mutants_killed}/{r.mutants_total}':<8} {detail[:120]}")
+    typer.echo(f"{len(dirs) - rejected}/{len(dirs)} accepted")
+    if rejected:
+        raise typer.Exit(1)
 
 
 @app.command(name="eval")
