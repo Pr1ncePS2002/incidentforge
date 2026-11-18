@@ -24,7 +24,7 @@ Injected faults:
 
 Example: when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
 
-Accepted tasks (1): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md)
+Accepted tasks (2): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md), [`miniflux/ff-001-create-admin-credentials`](../tasks/miniflux/ff-001-create-admin-credentials/instruction.md)
 
 ## 2. tolerant-typed-config
 
@@ -82,16 +82,69 @@ Accepted tasks: none yet.
 
 ## 5. hot-reload-config
 
-_definition not landed yet._
+**dynamic settings take effect without a restart.** a setting that operators change at runtime is read through one accessor every time it is used, so a new value takes effect without a restart; a copy captured at import or construction time is the bug.
+
+Attaches to: `settings-class`, `env-read`, `pool-config`, `validator` · languages: python, go · sampling weight: 8%
+
+Injected faults:
+
+- `stale-capture`: a module-level or struct-level copy of the value is taken once at startup and never refreshed
+- `invalid-reload`: a reload supplies an invalid value; the previous good value must stay active and the error must be reported
+- `partial-reload`: a reload changes two related values; readers must never observe the new one paired with the old one
+- `reload-unset`: a key is removed on reload; the value must fall back to its documented default, not keep the stale one
+
+Example: a request timeout raised by an operator applies to the next request, not only after a redeploy
+
+Accepted tasks: none yet.
 
 ## 6. env-aware-naming
 
-_definition not landed yet._
+**environment-scoped cache, queue and topic names.** every cache key, queue, topic or bucket name is derived from the configured deployment environment or namespace, so two environments sharing infrastructure never read or overwrite each other's data.
+
+Attaches to: `cache-key`, `consumer`, `settings-class`, `env-read` · languages: python, go · sampling weight: 10%
+
+Injected faults:
+
+- `unscoped-key`: a key or name is built without the environment prefix, so staging and production collide
+- `wrong-env-source`: the name uses a hardcoded or default environment instead of the configured one
+- `unknown-env`: the configured environment is empty or not one of the allowed values; building a name must fail fast
+- `separator-injection`: an environment or id containing the separator character produces an ambiguous key that collides with another
+
+Example: a session cache key carries the environment so a staging login never resolves against production
+
+Accepted tasks: none yet.
 
 ## 7. resource-aware-defaults
 
-_definition not landed yet._
+**pool and worker sizes derive from configured limits.** connection pool, worker, batch and buffer sizes are derived from the limits the service is given (cpu, memory, max connections) instead of hardcoded numbers, and combinations that cannot work are rejected at startup.
+
+Attaches to: `pool-config`, `settings-class`, `env-read` · languages: python, go · sampling weight: 14%
+
+Injected faults:
+
+- `hardcoded-size`: a size ignores the configured limit and uses a fixed number
+- `min-over-max`: a minimum (pool min, workers) is configured above its maximum
+- `exceeds-limit`: the derived total (workers x pool size, batch x item size) exceeds the configured hard limit
+- `zero-or-negative`: a size or limit is zero or negative and would deadlock or crash later
+- `unset-limit`: the limit is not configured; a documented safe default derived from the available resources must be used
+
+Example: a database pool whose size is capped so workers times connections never exceeds the server's connection limit
+
+Accepted tasks: none yet.
 
 ## 8. config-round-trip
 
-_definition not landed yet._
+**config load, modify, save never drops a field.** reading a configuration or settings record, changing one field and writing it back preserves every other field exactly, including ones that were explicitly set to a value equal to the default or to an empty value.
+
+Attaches to: `config-writer`, `settings-class`, `validator` · languages: python, go · sampling weight: 20%
+
+Injected faults:
+
+- `dropped-field`: a field the writer does not know about, or did not change, disappears after save
+- `default-overwrite`: an explicitly set value equal to the default, or an explicit empty or zero value, is replaced or omitted
+- `type-drift`: a value changes type across the round trip (number to string, duration to integer, list to scalar)
+- `partial-write`: a save that fails half-way leaves a truncated or mixed record instead of the previous one
+
+Example: toggling one user preference and saving keeps every other preference the user had set
+
+Accepted tasks: none yet.
