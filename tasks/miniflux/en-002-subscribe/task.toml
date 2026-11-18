@@ -1,0 +1,20 @@
+schema_version = "1.4"
+
+[metadata]
+title = "scope google reader subscription names to the deployment environment"
+family = "env-aware-naming"
+difficulty = "hard"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["unscoped-key: subscription name built without the environment prefix, so staging and production produce the same name", "wrong-env-source: name built from a hardcoded/default environment instead of the MINIFLUX_ENVIRONMENT setting", "unknown-env: MINIFLUX_ENVIRONMENT empty, whitespace or not one of production/staging/development/test must fail with an error naming the setting", "separator-injection: a feed URL or part containing ':' must be escaped so it cannot collide with a name built from separate parts"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

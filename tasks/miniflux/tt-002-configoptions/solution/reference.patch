@@ -1,0 +1,94 @@
+diff --git a/internal/config/list_json.go b/internal/config/list_json.go
+new file mode 100644
+index 00000000..e0e05239
+--- /dev/null
++++ b/internal/config/list_json.go
+@@ -0,0 +1,73 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import (
++	"encoding/json"
++	"fmt"
++	"sort"
++	"strings"
++)
++
++// normalizeListValues lets every list setting be written either as a
++// comma-separated string or as a JSON array of strings. Both spellings end up
++// as the same parsed list. A value that looks like a JSON array but cannot be
++// decoded is rejected with an error naming the setting and the offending value.
++func (c *configOptions) normalizeListValues() error {
++	keys := make([]string, 0, len(c.options))
++	for key := range c.options {
++		keys = append(keys, key)
++	}
++	sort.Strings(keys)
++
++	for _, key := range keys {
++		option := c.options[key]
++		if option == nil || option.valueType != stringListType {
++			continue
++		}
++
++		rawValue := strings.TrimSpace(option.rawValue)
++		if !strings.HasPrefix(rawValue, "[") {
++			continue
++		}
++
++		items, err := decodeJSONStringList(rawValue)
++		if err != nil {
++			return fmt.Errorf(`config: invalid list value for %s: %s (%v); use a JSON array of strings such as ["a","b"] or a comma-separated list such as a,b`, key, rawValue, err)
++		}
++
++		if option.validator != nil {
++			if err := option.validator(strings.Join(items, ",")); err != nil {
++				return fmt.Errorf("config: invalid list value for %s: %s: %v", key, rawValue, err)
++			}
++		}
++
++		option.parsedStringList = items
++	}
++
++	return nil
++}
++
++// decodeJSONStringList decodes a JSON array of strings and normalizes its
++// items the same way as the comma-separated form: surrounding whitespace is
++// trimmed, empty items are dropped and duplicates are removed.
++func decodeJSONStringList(rawValue string) ([]string, error) {
++	var decoded []string
++	if err := json.Unmarshal([]byte(rawValue), &decoded); err != nil {
++		return nil, err
++	}
++
++	items := make([]string, 0, len(decoded))
++	seen := make(map[string]bool, len(decoded))
++	for _, item := range decoded {
++		item = strings.TrimSpace(item)
++		if item == "" || seen[item] {
++			continue
++		}
++		seen[item] = true
++		items = append(items, item)
++	}
++
++	return items, nil
++}
+diff --git a/internal/config/parser.go b/internal/config/parser.go
+index cb78f8b0..96c2d2f1 100644
+--- a/internal/config/parser.go
++++ b/internal/config/parser.go
+@@ -52,6 +52,10 @@ func (cp *configParser) ParseFile(filename string) (*configOptions, error) {
+ 
+ // Validate checks for invalid or incomplete option combinations.
+ func (c *configOptions) Validate() error {
++	if err := c.normalizeListValues(); err != nil {
++		return err
++	}
++
+ 	if c.OAuth2Provider() == "oidc" && c.OAuth2OIDCDiscoveryEndpoint() == "" {
+ 		return errors.New("OAUTH2_OIDC_DISCOVERY_ENDPOINT must be configured when using the OIDC provider")
+ 	}
