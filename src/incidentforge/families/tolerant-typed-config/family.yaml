@@ -29,5 +29,4 @@ difficulty_levers:
 examples:
   - an allowed-origins list accepts "a.com,b.com", '["a.com","b.com"]' and "" alike
   - a token lifetime in minutes accepts "90", "90m" and "1h30m"
-weight: 2.0
 languages: [python, go]
