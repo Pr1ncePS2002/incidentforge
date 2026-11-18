@@ -105,10 +105,14 @@ jobs:
       - name: every committed task solves with the oracle and fails without it
         run: |
           if ! ls -d tasks/*/*/ >/dev/null 2>&1; then echo "no tasks committed yet"; exit 0; fi
-          harbor run -p tasks -a oracle -o jobs --job-name ci-oracle -n 2
-          harbor run -p tasks -a nop -o jobs --job-name ci-nop -n 2
-          uv run python -m incidentforge.ci_checks jobs/ci-oracle 1.0
-          uv run python -m incidentforge.ci_checks jobs/ci-nop 0.0
+          # harbor -p takes one dataset dir, and tasks are grouped per target repo
+          for dir in tasks/*/; do
+            t=$(basename "$dir")
+            harbor run -p "$dir" -a oracle -o jobs --job-name "ci-oracle-$t" -n 2 -y
+            harbor run -p "$dir" -a nop -o jobs --job-name "ci-nop-$t" -n 2 -y
+            uv run python -m incidentforge.ci_checks "jobs/ci-oracle-$t" 1.0
+            uv run python -m incidentforge.ci_checks "jobs/ci-nop-$t" 0.0
+          done
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

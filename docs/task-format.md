@@ -44,8 +44,8 @@ handles it.
 ## Harbor checks
 
 ```bash
-harbor run -p tasks -a oracle    # every task must score 1.0
-harbor run -p tasks -a nop       # every task must score 0.0
+harbor run -p tasks/<target> -a oracle    # every task must score 1.0
+harbor run -p tasks/<target> -a nop       # every task must score 0.0
 ```
 
 CI runs both on every committed task before `main` and nightly on `develop`.
