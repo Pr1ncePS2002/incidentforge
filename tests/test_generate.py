@@ -177,6 +177,8 @@ def test_dedupe_across_runs_and_existing_titles(target: Target, tmp_path: Path) 
     run(target, tmp_path, backend, FakeValidator(True))
     # second run must pick a different surface for the same family and number the task 002
     assert "Settings (settings-class)" not in backend.prompts[0]
+    # the sibling surface in the same file is told what the first task already covers
+    assert "- first" in backend.prompts[0]
     names = sorted(p.name for p in (tmp_path / "tasks" / "fixture").iterdir())
     assert names[0].startswith("ff-001-") and names[1].startswith("ff-002-")
 
