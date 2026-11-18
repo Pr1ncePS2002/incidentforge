@@ -22,6 +22,7 @@ FREE_MODELS = frozenset({"gemini-3.8-flash", "gemini-3.7-flash", "gemini-4-hydro
 # agents that bill a subscription login, never a gemini key
 SUBSCRIPTION_AGENTS = frozenset({"claude-code"})
 GEMINI_KEY_VARS = ("GEMINI_API_KEY", "GEMINI_API_KEY2", "GOOGLE_API_KEY")
+CLAUDE_TOKEN_VARS = ("CLAUDE_CODE_OAUTH_TOKEN",)
 
 DEFAULT_RESULTS = Path("reports/eval/results.jsonl")
 TRIALS_NAME = "trials.jsonl"
@@ -110,20 +111,46 @@ def pick_subset(tasks: list[TaskInfo], n: int = 10, seed: int = 2026) -> list[st
     return sorted(chosen)
 
 
+PAID_SUFFIX = "@paid"
+# provider-side failures that say nothing about the model's code; such trials are retried, not scored
+INFRA_ERRORS = frozenset(
+    {
+        "RateLimitError",
+        "APIConnectionError",
+        "APIError",
+        "InternalServerError",
+        "ServiceUnavailableError",
+        "Timeout",
+        "AuthenticationError",
+        "AgentAuthenticationError",
+        "BudgetExceededError",
+    }
+)
+
+
+def harbor_model(model: str) -> str:
+    """model id as harbor/litellm expects it, without the routing suffix."""
+    return model.removesuffix(PAID_SUFFIX)
+
+
 def bare_model(model: str) -> str:
-    return model.split("/")[-1]
+    return harbor_model(model).split("/")[-1]
 
 
 def route(model: str, agent: str) -> str:
-    """which key pays for this (model, agent): free | paid | subscription."""
+    """which key pays for this (model, agent): free | paid | subscription; `model@paid` forces key2."""
     if agent in SUBSCRIPTION_AGENTS:
         return "subscription"
+    if model.endswith(PAID_SUFFIX):
+        return "paid"
     return "free" if bare_model(model) in FREE_MODELS else "paid"
 
 
 def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
     """process env for one harbor job: exactly one gemini key, never both."""
-    env = {k: v for k, v in base.items() if k not in GEMINI_KEY_VARS}
+    env = {k: v for k, v in base.items() if k not in GEMINI_KEY_VARS and k not in CLAUDE_TOKEN_VARS}
+    if key == "subscription":
+        env.update({k: base[k] for k in CLAUDE_TOKEN_VARS if base.get(k)})
     if key == "free":
         if not base.get("GEMINI_API_KEY"):
             raise RuntimeError("free gemini key (GEMINI_API_KEY) is not set")
@@ -132,6 +159,9 @@ def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
         if not base.get("GEMINI_API_KEY2"):
             raise RuntimeError("paid gemini key (GEMINI_API_KEY2) is not set")
         env["GEMINI_API_KEY"] = base["GEMINI_API_KEY2"]
+    elif base.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        # harbor's claude-code agent only uses the subscription token when forced (p1 spike)
+        env["CLAUDE_FORCE_OAUTH"] = "1"
     return env
 
 
@@ -147,8 +177,29 @@ class Trial:
     trial_dir: str = ""
 
 
+def _log_failures(log: Path) -> list[str]:
+    """failing test ids from pytest -rA (`FAILED id`) or go test (`--- FAIL: TestX`) output."""
+    try:
+        text = log.read_text(errors="replace")
+    except OSError:
+        return []
+    out: list[str] = []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line.startswith(("FAILED ", "ERROR ")) and "::" in line:
+            out.append(line.split()[1])
+        elif line.startswith("--- FAIL: "):
+            out.append(line.split()[2])
+    return list(dict.fromkeys(out))
+
+
 def _failed_tests(trial_dir: Path) -> tuple[str, ...]:
-    failed: list[str] = []
+    """per-test failures from the verifier logs, prefixed feature:: or repo::; ctrf as a fallback."""
+    vdir = trial_dir / "verifier"
+    failed = [f"feature::{t}" for t in _log_failures(vdir / "feature_tests.log")]
+    failed += [f"repo::{t}" for t in _log_failures(vdir / "repo_suite.log")]
+    if failed:
+        return tuple(failed)
     for ctrf in sorted((trial_dir / "verifier").glob("ctrf*.json")):
         try:
             data = json.loads(ctrf.read_text())
@@ -180,6 +231,8 @@ def read_trials(job_dir: Path) -> list[Trial]:
         reward = rewards.get("reward")
         agent_result = data.get("agent_result") or {}
         exc = data.get("exception_info") or {}
+        if exc.get("exception_type") in INFRA_ERRORS:
+            reward = None
         out.append(
             Trial(
                 task_name=str(data.get("task_name") or result.parent.name.split("__")[0]),
@@ -261,9 +314,14 @@ class ResultsStore:
             f.write(json.dumps(side) + "\n")
 
 
-def _chunks(items: list[TaskInfo], size: int) -> Iterable[list[TaskInfo]]:
-    for i in range(0, len(items), size):
-        yield items[i : i + size]
+def _fit_batch(batch: list[TaskInfo], price_model: str, limits: Limits, ledger: Ledger) -> list[TaskInfo]:
+    for n in range(len(batch), 0, -1):
+        try:
+            ledger.check(price_model, *limits.worst_tokens(n))
+        except BudgetExhausted:
+            continue
+        return batch[:n]
+    return []
 
 
 def pass_rates(results: Iterable[EvalResult]) -> dict[str, tuple[int, int]]:
@@ -324,7 +382,7 @@ def run_eval(
     plan: list[tuple[str, int, list[TaskInfo]]] = []
     for model in models:
         for attempt in range(1, k + 1):
-            pending = [t for t in tasks if (t.task_id, agent, model, attempt) not in done]
+            pending = [t for t in tasks if (t.task_id, agent, harbor_model(model), attempt) not in done]
             if pending:
                 plan.append((model, attempt, pending))
     prog = _Progress(total=sum(len(p) for _, _, p in plan))
@@ -343,23 +401,23 @@ def run_eval(
         for t in pending:
             by_dataset[t.dataset].append(t)
         for dataset, items in sorted(by_dataset.items()):
-            for batch in _chunks(items, batch_size):
-                if model in blocked:
-                    break
+            queue = list(items)
+            while queue and model not in blocked:
+                batch = queue[:batch_size]
                 if key == "paid":
-                    worst_in, worst_out = limits.worst_tokens(len(batch))
-                    try:
-                        ledger.check(price_model, worst_in, worst_out)
-                    except BudgetExhausted as exc:
-                        echo(f"stopped    {model}: {exc}")
+                    # shrink the batch until its worst case fits; stop the model when even one run doesn't
+                    batch = _fit_batch(batch, price_model, limits, ledger)
+                    if not batch:
+                        echo(f"stopped    {model}: worst case of one more run no longer fits the paid cap")
                         blocked.add(model)
                         break
+                queue = queue[len(batch) :]
                 stamp = time.strftime("%Y%m%d-%H%M%S")
                 job_name = f"eval-{agent}-{price_model}-a{attempt}-{stamp}-{uuid.uuid4().hex[:6]}"
                 req = RunRequest(
                     dataset=dataset,
                     agent=agent,
-                    model=model,
+                    model=harbor_model(model),
                     job_name=job_name,
                     jobs_dir=jobs_dir,
                     task_names=tuple(t.name for t in batch),
@@ -395,7 +453,7 @@ def run_eval(
                         task_id=info.task_id,
                         family=info.family,
                         agent=agent,
-                        model=model,
+                        model=harbor_model(model),
                         attempt=attempt,
                         reward=tr.reward,
                         input_tokens=tr.input_tokens,

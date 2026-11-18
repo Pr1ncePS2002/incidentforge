@@ -110,6 +110,7 @@ def test_route_picks_the_right_key() -> None:
     assert route("gemini/gemini-4-hydrogen", "terminus-2") == "free"
     assert route("gemini/gemini-2.5-pro", "terminus-2") == "paid"
     assert route("anything", "claude-code") == "subscription"
+    assert route("gemini/gemini-3.8-flash@paid", "terminus-2") == "paid"
 
 
 def test_key_env_exposes_exactly_one_gemini_key() -> None:
@@ -119,6 +120,9 @@ def test_key_env_exposes_exactly_one_gemini_key() -> None:
     assert paid["GEMINI_API_KEY"] == "paid-k" and "GEMINI_API_KEY2" not in paid
     sub = key_env("subscription", ENV)
     assert not any(k.startswith("GEMINI") for k in sub) and sub["PATH"] == "/bin"
+    assert "CLAUDE_FORCE_OAUTH" not in sub
+    oauth = key_env("subscription", {**ENV, "CLAUDE_CODE_OAUTH_TOKEN": "t"})
+    assert oauth["CLAUDE_FORCE_OAUTH"] == "1" and oauth["CLAUDE_CODE_OAUTH_TOKEN"] == "t"
     with pytest.raises(RuntimeError):
         key_env("paid", {"GEMINI_API_KEY": "x"})
     with pytest.raises(RuntimeError):
@@ -164,11 +168,12 @@ def test_paid_model_is_metered_and_cap_stops_scheduling(tasks_root: Path, tmp_pa
     ledger = Ledger(tmp_path / "ledger.jsonl", cap=70.0)
     limits = Limits(max_turns=10, max_input_per_turn=100_000, max_output_per_turn=8_000)
     # worst case per trial for 2.5-pro: 1M in * 2.5 + 80k out * 15 = $3.70; batch of 2 = $7.40
-    ledger.record("gemini-2.5-pro", 0, 4_200_000)  # $63 spent, $7 left
+    ledger.record("gemini-2.5-pro", 0, 4_400_000)  # $66 spent, $4 left: a batch of 2 shrinks to 1, then stops
     h = FakeHarbor(tmp_path, tokens=(1_000_000, 80_000))
     new = run(tasks_root, tmp_path, h, ["gemini/gemini-2.5-pro"], ledger=ledger, limits=limits, batch_size=2)
-    assert new == [] and h.requests == []
-    # the first batch spends its full worst case, so the second no longer fits
+    assert len(new) == 1 and [len(r.task_names) for r in h.requests] == [1]
+    # the first batch spends its full worst case, so the next no longer fits
+    h = FakeHarbor(tmp_path, tokens=(1_000_000, 80_000))
     ledger2 = Ledger(tmp_path / "ledger2.jsonl", cap=10.0)
     new = run(tasks_root, tmp_path, h, ["gemini/gemini-2.5-pro"], ledger=ledger2, limits=limits, batch_size=2)
     assert len(h.requests) == 1 and len(new) == 2
@@ -260,3 +265,51 @@ def test_failed_paid_job_blocks_the_model(tasks_root: Path, tmp_path: Path) -> N
     h = FailingHarbor(tmp_path, write=False)
     new = run(tasks_root, tmp_path, h, ["gemini/gemini-2.5-pro"], batch_size=1)
     assert new == [] and len(h.requests) == 1
+
+
+def test_claude_token_only_reaches_the_subscription_agent() -> None:
+    base = {**ENV, "CLAUDE_CODE_OAUTH_TOKEN": "tok"}
+    assert "CLAUDE_CODE_OAUTH_TOKEN" not in key_env("free", base)
+    assert "CLAUDE_CODE_OAUTH_TOKEN" not in key_env("paid", base)
+
+
+def test_paid_suffix_uses_key2_but_records_the_plain_model(tasks_root: Path, tmp_path: Path) -> None:
+    h = FakeHarbor(tmp_path, tokens=(1000, 100))
+    new = run(tasks_root, tmp_path, h, ["gemini/gemini-3.8-flash@paid"], subset=["go-svc/hr-001"])
+    assert new[0].model == "gemini/gemini-3.8-flash" and new[0].key == "paid" and new[0].cost_usd > 0
+    assert h.requests[0].model == "gemini/gemini-3.8-flash" and h.requests[0].env["GEMINI_API_KEY"] == "paid-k"
+    # a later free run of the same model treats it as done
+    assert run(tasks_root, tmp_path, h, ["gemini/gemini-3.8-flash"], subset=["go-svc/hr-001"]) == []
+
+
+def test_infra_errors_are_not_scored_even_with_a_reward(tmp_path: Path) -> None:
+    trial = tmp_path / "job" / "t__1"
+    (trial / "verifier").mkdir(parents=True)
+    data: dict[str, object] = {
+        "task_name": "t",
+        "verifier_result": {"rewards": {"reward": 0}},
+        "exception_info": {"exception_type": "RateLimitError"},
+    }
+    (trial / "result.json").write_text(json.dumps(data))
+    assert read_trials(tmp_path / "job")[0].reward is None
+    data["exception_info"] = {"exception_type": "AgentTimeoutError"}
+    (trial / "result.json").write_text(json.dumps(data))
+    assert read_trials(tmp_path / "job")[0].reward == 0.0
+
+
+def test_failed_tests_come_from_verifier_logs(tmp_path: Path) -> None:
+    trial = tmp_path / "job" / "t__1"
+    (trial / "verifier").mkdir(parents=True)
+    (trial / "result.json").write_text(json.dumps({"task_name": "t"}))
+    (trial / "verifier" / "feature_tests.log").write_text(
+        "FAILED tests/test_x.py::test_fault_a - boom\n"
+        "FAILED tests/test_x.py::test_fault_a\n"
+        "ERROR tests/test_x.py::test_b\n"
+    )
+    (trial / "verifier" / "repo_suite.log").write_text("--- FAIL: TestUsers (0.01s)\nok pkg\n")
+    [tr] = read_trials(tmp_path / "job")
+    assert tr.failed_tests == (
+        "feature::tests/test_x.py::test_fault_a",
+        "feature::tests/test_x.py::test_b",
+        "repo::TestUsers",
+    )

@@ -89,6 +89,10 @@ def test_classify_failure() -> None:
     assert classify_failure("TestFaultMissingEnv", ()) == "fault"
     assert classify_failure("tests/test_email_config.py::test_no_smtp_unchanged", feat) == "happy"
     assert classify_failure("app/tests/api/test_users.py::test_create", feat) == "regression"
+    assert classify_failure("feature::tests/x.py::test_fault_a", ()) == "fault"
+    assert classify_failure("feature::tests/x.py::test_default_kept", ()) == "happy"
+    assert classify_failure("repo::tests/test_fault_tolerance.py::test_x", ()) == "regression"
+    assert classify_failure("feature_tests", ()) == "unknown"
 
 
 def test_cli_report_and_eval(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
