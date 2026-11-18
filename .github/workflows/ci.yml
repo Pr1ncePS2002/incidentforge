@@ -84,6 +84,38 @@ jobs:
         run: |
           if git ls-files | grep -E '(^|/)\.env$'; then echo "::error::.env must never be committed"; exit 1; fi
 
+  mutation:
+    # mutmut over our own gate and spend code; nightly and on demand only, not a pr check
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: run mutmut (targets and tests in pyproject [tool.mutmut])
+        run: uv run mutmut run --max-children 4
+      - name: export results
+        if: always()
+        run: |
+          mkdir -p reports
+          uv run mutmut results --all true > reports/mutmut-results.txt
+          uv run mutmut export-cicd-stats
+      - name: no surviving mutant outside tests/mutation-allowlist.txt
+        run: uv run python scripts/mutation_gate.py reports/mutmut-results.txt
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-results
+          path: |
+            reports/mutmut-results.txt
+            mutants/mutmut-cicd-stats.json
+          retention-days: 14
+          if-no-files-found: ignore
+
   integration:
     # docker + harbor; required before anything reaches main, nightly and on demand for develop
     if: >-
@@ -100,7 +132,8 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: uv sync --frozen
       - run: uv tool install harbor==0.26.0
-      - name: target images build and repo suites pass (docker-marked tests)
+      # includes the e2e factory test: generate() with a recorded llm answer through all six gates
+      - name: target images build, repo suites pass, e2e generate+validate (docker-marked tests)
         run: uv run pytest -q -m docker -o addopts=""
       - name: every committed task solves with the oracle and fails without it
         run: |
