@@ -75,3 +75,13 @@ def test_backfill_is_idempotent(layout: tuple[Path, Path]) -> None:
     before = (tasks / "demo" / "ic-001-create-user" / "task.toml").read_text()
     assert [apply(tasks / b.task_id, b) for b in first] == [False] * len(first)
     assert (tasks / "demo" / "ic-001-create-user" / "task.toml").read_text() == before
+
+
+def test_backfill_without_map_keeps_existing_map_keys(layout: tuple[Path, Path]) -> None:
+    tasks, work = layout
+    backfill(tasks, work)
+    toml = tasks / "demo" / "ic-001-create-user" / "task.toml"
+    before = toml.read_text()
+    (work / "demo" / "map.sqlite").unlink()
+    [b] = [b for b in backfill(tasks, work) if b.task_id == "demo/ic-001-create-user"]
+    assert not b.mapped and toml.read_text() == before

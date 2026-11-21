@@ -22,6 +22,7 @@ class Backfill:
     map_node: str | None
     blast_radius: int | None
     fix_scope: str | None
+    mapped: bool = True  # false when the target had no map, so map keys were not recomputed
 
 
 def _norm(s: str) -> str:
@@ -57,7 +58,9 @@ def plan(task_dir: Path, graph: Graph | None, tags: dict[str, list[str]]) -> Bac
     task_id = f"{task_dir.parent.name}/{task_dir.name}"
     level = difficulty_from_faults(len(meta.get("fault_cases") or []))
     patch_file = task_dir / "solution" / "reference.patch"
-    if graph is None or not patch_file.exists():
+    if graph is None:
+        return Backfill(task_id, level, None, None, None, mapped=False)
+    if not patch_file.exists():
         return Backfill(task_id, level, None, None, None)
     seeds, files = graph.seeds_for_patch(patch_file.read_text())
     if not seeds:
@@ -70,13 +73,15 @@ def plan(task_dir: Path, graph: Graph | None, tags: dict[str, list[str]]) -> Bac
 def apply(task_dir: Path, b: Backfill) -> bool:
     """rewrites only [metadata] lines so the rest of task.toml stays byte-identical; true if it changed."""
     text = (task_dir / "task.toml").read_text()
-    lines = [ln for ln in text.splitlines() if not re.match(rf"^({'|'.join(MAP_KEYS)}) = ", ln)]
+    # never drop map keys that could not be recomputed (F-60)
+    strip = b.mapped
+    lines = [ln for ln in text.splitlines() if not (strip and re.match(rf"^({'|'.join(MAP_KEYS)}) = ", ln))]
     out: list[str] = []
     for ln in lines:
         if ln.startswith("difficulty = "):
             ln = f"difficulty = {json.dumps(b.difficulty)}"
         out.append(ln)
-        if ln.startswith("fault_cases = "):
+        if ln.startswith("fault_cases = ") and b.mapped:
             extra = {"map_node": b.map_node, "blast_radius": b.blast_radius, "fix_scope": b.fix_scope}
             out += [f"{k} = {json.dumps(v)}" for k, v in extra.items() if v is not None]
     new = "\n".join(out) + ("\n" if text.endswith("\n") else "")
