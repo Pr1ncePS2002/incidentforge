@@ -94,6 +94,63 @@ def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
     return "regression"
 
 
+# order matters: the first cause that fits a failed run wins, so every failed run lands in exactly one bucket
+CAUSES = ("turn_budget", "regression", "fault_path_missed", "wrong_code")
+CAUSE_LABELS = {
+    "turn_budget": "used every turn",
+    "regression": "broke the repo's own tests",
+    "fault_path_missed": "missed an injected fault",
+    "wrong_code": "wrong code",
+}
+
+
+def failure_cause(trial: dict[str, Any] | None, max_turns: int | None, feature_files: tuple[str, ...]) -> str:
+    """one cause per failed run, checked in CAUSES order; a run with no trial data falls through to wrong_code."""
+    t = trial or {}
+    turns = t.get("turns")
+    if max_turns and turns is not None and int(turns) >= max_turns:
+        return "turn_budget"
+    kinds = {classify_failure(str(n), feature_files) for n in t.get("failed_tests") or []}
+    parts = t.get("parts") or {}
+    if "regression" in kinds or float(parts.get("repo_suite", 1.0)) < 1.0:
+        return "regression"
+    if kinds == {"fault"}:
+        return "fault_path_missed"
+    return "wrong_code"
+
+
+def _has_detail(trial: dict[str, Any] | None, feature_files: tuple[str, ...]) -> bool:
+    tests = (trial or {}).get("failed_tests") or []
+    return any(classify_failure(str(n), feature_files) in {"fault", "happy"} for n in tests)
+
+
+def failure_causes(data: Data) -> dict[str, Any]:
+    """failed runs per cause, by model and by family; no_detail counts wrong_code runs we could not look inside."""
+    feature = {t.task_id: t.feature_tests for t in data.tasks}
+    family = _family_of(data)
+    # same join as failure_breakdown: older trial rows carry no agent
+    trials = {(t.get("task_id"), t.get("model"), t.get("attempt")): t for t in data.trials}
+    by_model: dict[str, dict[str, int]] = defaultdict(lambda: dict.fromkeys(CAUSES, 0))
+    by_family: dict[str, dict[str, int]] = defaultdict(lambda: dict.fromkeys(CAUSES, 0))
+    no_detail: dict[str, int] = defaultdict(int)
+    for r in data.results:
+        if r.reward >= 1.0:
+            continue
+        tr = trials.get((r.task_id, r.model, r.attempt))
+        files = feature.get(r.task_id, ())
+        cause = failure_cause(tr, r.max_turns, files)
+        by_model[r.model][cause] += 1
+        by_family[family.get(r.task_id, r.family)][cause] += 1
+        if cause == "wrong_code" and not _has_detail(tr, files):
+            no_detail[r.model] += 1
+    return {
+        "causes": list(CAUSES),
+        "by_model": {m: by_model[m] for m in sorted(by_model)},
+        "by_family": {f: by_family[f] for f in sorted(by_family)},
+        "no_detail": {m: no_detail[m] for m in sorted(no_detail)},
+    }
+
+
 def _rate(rs: list[EvalResult]) -> float:
     return sum(r.reward >= 1.0 for r in rs) / len(rs) if rs else 0.0
 
@@ -151,6 +208,7 @@ def summarize(data: Data) -> dict[str, Any]:
             for (f, m), rs in sorted(by_fam.items())
         ],
         "failures": failure_breakdown(data),
+        "failure_causes": failure_causes(data),
         "variance": variance(data),
         "turn_ablation": turn_ablation(data),
         "spend_usd": round(data.spend_usd, 4),
@@ -211,7 +269,7 @@ def variance(data: Data) -> list[dict[str, Any]]:
 
 def turn_ablation(data: Data) -> list[dict[str, Any]]:
     """per model and larger cap: pass rate at the default cap vs the larger one on the same tasks, attempt 1,
-    plus how many default-cap failures used up every turn versus stopped with wrong code."""
+    plus how many default-cap failures used up every turn versus stopped before the cap."""
     turns = {
         (t.get("task_id"), t.get("model"), t.get("attempt")): int(t.get("turns") or 0)
         for t in data.trials
@@ -283,6 +341,11 @@ def findings(data: Data) -> list[str]:
             f"of failed runs with per-test detail, {fault} failed at least one injected fault-case test and "
             f"{happy} at least one happy-path test."
         )
+    fc = failure_causes(data)
+    totals = {c: sum(v[c] for v in fc["by_model"].values()) for c in CAUSES}
+    if any(totals.values()):
+        split = ", ".join(f"{totals[c]} {CAUSE_LABELS[c]}" for c in CAUSES)
+        out.append(f"each of the {sum(totals.values())} failed runs has one cause: {split}.")
     for x in data.excluded:
         out.append(f"{x.get('model', '?')} was left out of scoring: {x.get('reason', 'no reason given')}.")
     for a in turn_ablation(data):
@@ -290,7 +353,7 @@ def findings(data: Data) -> list[str]:
             f"{a['model']} with {a['more_turns']} turns instead of {a['base_turns']}: "
             f"{a['base_pass_rate']:.0%} -> {a['more_pass_rate']:.0%} on {a['tasks']} tasks; of its "
             f"{a['base_failures']} main-run failures, {a['failures_turn_exhausted']} used every turn and "
-            f"{a['failures_wrong_code']} stopped with wrong code."
+            f"{a['failures_wrong_code']} stopped before the cap."
         )
     return out
 
@@ -311,6 +374,7 @@ CSS = """
 font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
 main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}h1{font-size:26px;margin:0 0 4px}
 h2{font-size:19px;margin:36px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+h3{font-size:16px;margin:24px 0 8px}
 .muted{color:var(--muted)}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
 .card b{display:block;font-size:22px}.scroll{overflow-x:auto}
@@ -321,6 +385,12 @@ vertical-align:middle}.bar span{display:block;height:100%;background:var(--accen
 .ok{color:var(--ok)}.bad{color:var(--bad)}details{background:var(--card);border:1px solid var(--line);
 border-radius:8px;margin:6px 0;padding:6px 10px}summary{cursor:pointer}
 pre{white-space:pre-wrap;font-size:13px;background:var(--bg);padding:8px;border-radius:6px}
+.stack{display:flex;width:100%;max-width:520px;height:14px;border-radius:4px;overflow:hidden;background:var(--line)}
+.stack span{display:block;height:100%}.key{display:inline-block;width:10px;height:10px;border-radius:2px;
+margin:0 4px 0 10px;vertical-align:middle}.c-turn_budget{background:#d08b16}.c-regression{background:#c2410c}
+.c-fault_path_missed{background:#7c4dce}.c-wrong_code{background:#8a8a90}
+@media (prefers-color-scheme:dark){.c-turn_budget{background:#e9a93c}.c-regression{background:#f0875a}
+.c-fault_path_missed{background:#a98be8}.c-wrong_code{background:#6c6c74}}
 input{padding:6px 8px;width:100%;max-width:360px;margin:6px 0;background:var(--card);color:var(--fg);
 border:1px solid var(--line);border-radius:6px}
 """
@@ -336,6 +406,38 @@ def _table(head: list[str], rows: list[list[str]]) -> str:
     th = "".join(f"<th>{_esc(h)}</th>" for h in head)
     body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
     return f'<div class="scroll"><table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>'
+
+
+def _stack(counts: dict[str, int]) -> str:
+    total = sum(counts.values()) or 1
+    segs = "".join(
+        f'<span class="c-{c}" style="width:{counts[c] / total * 100:.1f}%" title="{_esc(CAUSE_LABELS[c])}: '
+        f'{counts[c]}"></span>'
+        for c in CAUSES
+        if counts.get(c)
+    )
+    return f'<div class="stack" role="img" aria-label="failure causes">{segs}</div>'
+
+
+def _causes_html(fc: dict[str, Any]) -> str:
+    if not fc["by_model"]:
+        return ""
+    legend = "".join(f'<span class="key c-{c}"></span>{_esc(CAUSE_LABELS[c])}' for c in CAUSES)
+    head = ["model", "failed runs", "causes", *(CAUSE_LABELS[c] for c in CAUSES)]
+    rows = [[_esc(m), str(sum(c.values())), _stack(c), *(str(c[k]) for k in CAUSES)] for m, c in fc["by_model"].items()]
+    fam_rows = [[_esc(f), str(sum(c.values())), *(str(c[k]) for k in CAUSES)] for f, c in fc["by_family"].items()]
+    out = [
+        "<h3 id='causes'>Why failed runs failed</h3>",
+        "<p>every failed run gets exactly one cause, checked in this order: used every turn, broke the repo's own "
+        "tests, missed an injected fault (normal-case tests passed), otherwise wrong code.</p>",
+        f'<p class="muted">{legend}</p>',
+        _table(head, rows),
+    ]
+    if fc["no_detail"]:
+        n = ", ".join(f"{_esc(m)} {k}" for m, k in fc["no_detail"].items())
+        out.append(f'<p class="muted">wrong code without per-test detail in the verifier logs: {n}.</p>')
+    out += ["<p>failure causes per family (all models):</p>", _table(["family", "failed runs", *head[3:]], fam_rows)]
+    return "\n".join(out)
 
 
 def render_html(data: Data, summary: dict[str, Any]) -> str:
@@ -438,19 +540,7 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
             rows.append(row)
         s.append("<p>pass rate per model and family:</p>")
         s.append(_table(["family", *mnames], rows))
-        if summary["failures"]:
-            s.append("<p>which path the failing tests were on (a failed run can count on more than one path):</p>")
-            rows = [
-                [
-                    _esc(m),
-                    str(c.get("fault", 0)),
-                    str(c.get("happy", 0)),
-                    str(c.get("regression", 0)),
-                    str(c.get("unknown", 0)),
-                ]
-                for m, c in summary["failures"].items()
-            ]
-            s.append(_table(["model", "fault path", "happy path", "repo regression", "no detail"], rows))
+        s.append(_causes_html(summary["failure_causes"]))
         if summary["turn_ablation"]:
             s.append("<p>turn budget ablation (same tasks, first attempt):</p>")
             rows = [
@@ -459,7 +549,7 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
                     str(x["tasks"]),
                     f"{x['base_pass_rate']:.0%} at {x['base_turns']}",
                     f"{x['more_pass_rate']:.0%} at {x['more_turns']}",
-                    f"{x['failures_turn_exhausted']} hit the cap / {x['failures_wrong_code']} stopped with wrong code"
+                    f"{x['failures_turn_exhausted']} hit the cap / {x['failures_wrong_code']} stopped before the cap"
                     + (f" / {x['failures_no_turn_data']} no data" if x["failures_no_turn_data"] else ""),
                 ]
                 for x in summary["turn_ablation"]

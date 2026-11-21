@@ -129,11 +129,12 @@ Findings:
 - pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).
 - hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).
 - of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.
+- each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo's own tests, 13 missed an injected fault, 10 wrong code.
 - gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.
-- gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped with wrong code.
-- gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped with wrong code.
+- gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.
+- gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap.
 
-Generated 2026-11-18T19:54:57+0530. Full per-family breakdown: `reports/index.html`.
+Generated 2026-11-21T18:39:17+0530. Full per-family breakdown: `reports/index.html`.
 <!-- results:end -->
 
 Refresh this block with `uv run python scripts/readme_results.py` after `forge report`.

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-18T19:54:57+0530",
+  "generated_at": "2026-11-21T18:39:17+0530",
   "tasks_total": 34,
   "tasks_by_family": {
     "config-round-trip": 5,
@@ -218,6 +218,88 @@
       "unknown": 12
     }
   },
+  "failure_causes": {
+    "causes": [
+      "turn_budget",
+      "regression",
+      "fault_path_missed",
+      "wrong_code"
+    ],
+    "by_model": {
+      "claude-code": {
+        "turn_budget": 0,
+        "regression": 0,
+        "fault_path_missed": 1,
+        "wrong_code": 0
+      },
+      "gemini/gemini-2.5-flash": {
+        "turn_budget": 17,
+        "regression": 1,
+        "fault_path_missed": 11,
+        "wrong_code": 7
+      },
+      "gemini/gemini-3.8-flash": {
+        "turn_budget": 35,
+        "regression": 0,
+        "fault_path_missed": 1,
+        "wrong_code": 3
+      }
+    },
+    "by_family": {
+      "config-round-trip": {
+        "turn_budget": 8,
+        "regression": 1,
+        "fault_path_missed": 0,
+        "wrong_code": 5
+      },
+      "cross-field-validation": {
+        "turn_budget": 1,
+        "regression": 0,
+        "fault_path_missed": 5,
+        "wrong_code": 0
+      },
+      "env-aware-naming": {
+        "turn_budget": 2,
+        "regression": 0,
+        "fault_path_missed": 0,
+        "wrong_code": 1
+      },
+      "fail-fast-config": {
+        "turn_budget": 17,
+        "regression": 0,
+        "fault_path_missed": 2,
+        "wrong_code": 0
+      },
+      "hot-reload-config": {
+        "turn_budget": 6,
+        "regression": 0,
+        "fault_path_missed": 3,
+        "wrong_code": 2
+      },
+      "idempotent-consumer": {
+        "turn_budget": 3,
+        "regression": 0,
+        "fault_path_missed": 0,
+        "wrong_code": 1
+      },
+      "resource-aware-defaults": {
+        "turn_budget": 3,
+        "regression": 0,
+        "fault_path_missed": 1,
+        "wrong_code": 0
+      },
+      "tolerant-typed-config": {
+        "turn_budget": 12,
+        "regression": 0,
+        "fault_path_missed": 2,
+        "wrong_code": 1
+      }
+    },
+    "no_detail": {
+      "gemini/gemini-2.5-flash": 1,
+      "gemini/gemini-3.8-flash": 3
+    }
+  },
   "variance": [
     {
       "model": "claude-code",
@@ -296,8 +378,9 @@
     "pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).",
     "hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).",
     "of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.",
+    "each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo's own tests, 13 missed an injected fault, 10 wrong code.",
     "gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.",
-    "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped with wrong code.",
-    "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped with wrong code."
+    "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.",
+    "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap."
   ]
 }
