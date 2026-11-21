@@ -287,6 +287,13 @@ def build_html(d: dict[str, Any]) -> str:
                 f"<p class='lead'>Failed runs broke on an injected fault <b>{fault}</b> times versus <b>{happy}</b> "
                 "on the happy path: models build the feature but miss the failure modes.</p>"
             )
+    causes = (s.get("failure_causes") or {}).get("by_model") or {}
+    if causes:
+        tot = {c: sum(int(v.get(c, 0)) for v in causes.values()) for c in ("turn_budget", "fault_path_missed")}
+        res += (
+            f"<p class='note'>one cause per failed run: <b>{tot['turn_budget']}</b> used every turn, "
+            f"<b>{tot['fault_path_missed']}</b> passed the normal cases but missed an injected fault.</p>"
+        )
     slides.append(slide("Results", res))
     if by_family:
         slides.append(slide("Results by family", _family_table(by_family)))

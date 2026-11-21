@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 from incidentforge.budget import Ledger
 from incidentforge.cli import app
 from incidentforge.models import EvalResult, GateResult, ValidationReport
-from incidentforge.report import build, classify_failure
+from incidentforge.report import CAUSES, build, classify_failure, failure_cause
 
 
 def seed(tmp: Path) -> tuple[Path, Path]:
@@ -173,3 +173,75 @@ def test_cli_report_and_eval(tmp_path: Path, monkeypatch) -> None:  # type: igno
     assert r.exit_code == 0, r.output
     assert calls["k"] == 3 and len(calls["subset"]) == 1  # type: ignore[arg-type]
     assert calls["models"] == ["gemini/gemini-3.8-flash"]
+
+
+FEAT = ("test_ff_001.py",)
+
+
+def test_failure_cause_each_bucket() -> None:
+    assert failure_cause({"turns": 30, "failed_tests": ["feature::t.py::test_x"]}, 30, FEAT) == "turn_budget"
+    assert failure_cause({"failed_tests": ["repo::app/test_users.py::test_create"]}, 30, FEAT) == "regression"
+    assert failure_cause({"failed_tests": [], "parts": {"repo_suite": 0.0}}, None, FEAT) == "regression"
+    assert failure_cause({"failed_tests": ["repo_suite"]}, None, FEAT) == "regression"
+    fault = ["feature::t.py::test_fault_a", "feature::t.py::TestFaultB"]
+    assert failure_cause({"turns": 12, "failed_tests": fault}, 30, FEAT) == "fault_path_missed"
+    assert failure_cause({"failed_tests": [*fault, "feature::t.py::test_ok"]}, 30, FEAT) == "wrong_code"
+    assert failure_cause({"failed_tests": ["feature_tests"]}, 30, FEAT) == "wrong_code"
+
+
+def test_failure_cause_order_and_missing_data() -> None:
+    # turn budget beats a repo break, which beats a missed fault
+    both = {"turns": 31, "failed_tests": ["repo::x.py::test_y", "feature::t.py::test_fault_a"]}
+    assert failure_cause(both, 30, FEAT) == "turn_budget"
+    both["turns"] = 5
+    assert failure_cause(both, 30, FEAT) == "regression"
+    # no cap (subscription agent), no turns recorded, or no trial row at all
+    assert failure_cause({"turns": 99, "failed_tests": ["feature::t.py::test_fault_a"]}, None, FEAT) == (
+        "fault_path_missed"
+    )
+    assert failure_cause({"failed_tests": ["feature::t.py::test_fault_a"]}, 30, FEAT) == "fault_path_missed"
+    assert failure_cause(None, 30, FEAT) == "wrong_code"
+    assert failure_cause({}, None, ()) == "wrong_code"
+
+
+def test_failure_causes_cover_every_failed_run(tmp_path: Path) -> None:
+    tasks, reports = seed(tmp_path)
+    flash = "gemini/gemini-3.8-flash"
+    side = [json.loads(x) for x in (reports / "eval/trials.jsonl").read_text().splitlines()]
+    for s in side:
+        if s["model"] == flash and s["task_id"].endswith("cf-001"):
+            s["turns"], s["max_turns"] = (30, 30) if s["attempt"] == 1 else (3, 30)
+            s["failed_tests"] = [] if s["attempt"] == 1 else ["repo::tests/test_api.py::test_login"]
+    # one failed run has no trial row at all
+    side = [s for s in side if not (s["model"] == flash and s["task_id"].endswith("ff-001") and s["attempt"] == 2)]
+    (reports / "eval/trials.jsonl").write_text("".join(json.dumps(s) + "\n" for s in side))
+    out = build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    summary = json.loads((reports / "summary.json").read_text())
+    fc = summary["failure_causes"]
+    assert fc["causes"] == list(CAUSES)
+    assert fc["by_model"][flash] == {"turn_budget": 1, "regression": 1, "fault_path_missed": 1, "wrong_code": 1}
+    assert fc["by_model"]["gemini/gemini-4-hydrogen"] == dict.fromkeys(CAUSES, 0) | {"fault_path_missed": 1}
+    failed = sum(1 for r in (reports / "eval/results.jsonl").read_text().splitlines() if '"reward":0.0' in r)
+    assert sum(sum(c.values()) for c in fc["by_model"].values()) == failed
+    assert sum(sum(c.values()) for c in fc["by_family"].values()) == failed
+    assert fc["by_family"]["cross-field-validation"]["turn_budget"] == 1
+    assert fc["no_detail"] == {flash: 1}
+    page = out.read_text()
+    assert "Why failed runs failed" in page and 'class="stack"' in page and "c-turn_budget" in page
+    assert "without per-test detail" in page
+    assert any(f.startswith("each of the 5 failed runs has one cause") for f in summary["findings"])
+
+
+def test_deck_mentions_failure_causes() -> None:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("build_deck", Path(__file__).parent.parent / "deck/build_deck.py")
+    assert spec and spec.loader
+    deck = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(deck)
+    d = deck.load_data(Path(__file__).parent.parent)
+    d["summary"] = {
+        "models": [{"model": "m", "agent": "terminus-2", "pass_rate": 0.5, "n": 2}],
+        "failure_causes": {"by_model": {"m": {"turn_budget": 2, "fault_path_missed": 3}}},
+    }
+    assert "<b>2</b> used every turn, <b>3</b> passed the normal cases" in deck.build_html(d)
