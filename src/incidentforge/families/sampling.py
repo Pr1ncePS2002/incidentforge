@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import math
 import random
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+
+from incidentforge.models import Surface
 
 TAXONOMY_PATH = Path(__file__).parent / "taxonomy.json"
 
@@ -45,3 +47,14 @@ def pick_families(
     picks = [k for k in sorted(quotas) for _ in range(quotas[k])]
     random.Random(seed).shuffle(picks)
     return picks
+
+
+def rank_surfaces(surfaces: Sequence[Surface], seed: int = 0) -> list[Surface]:
+    """seeded weighted order by risk_score (D-65): uncovered surfaces tend to come first, none are dropped."""
+    rng = random.Random(seed)
+    keyed: list[tuple[float, int, Surface]] = []
+    for i, s in enumerate(surfaces):
+        weight = s.risk_score if s.risk_score and s.risk_score > 0 else 1.0
+        # efraimidis-spirakis key u^(1/w): one draw per item gives a weighted permutation
+        keyed.append((rng.random() ** (1.0 / weight), -i, s))
+    return [s for _, _, s in sorted(keyed, key=lambda k: (k[0], k[1]), reverse=True)]

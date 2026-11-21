@@ -25,3 +25,10 @@ examples:
   - toggling one user preference and saving keeps every other preference the user had set
   - exporting settings and importing them again yields the same effective configuration
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: config-writer
+    surface_kinds: [config-writer]
+  - id: settings-holder
+    node_kinds: [Class]
+    surface_kinds: [settings-class]

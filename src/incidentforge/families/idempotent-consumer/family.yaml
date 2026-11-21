@@ -26,3 +26,8 @@ examples:
   - a "create item" request retried by a client with the same request id creates one item, not two
   - a user sign-up event replayed by a queue sends exactly one welcome email
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: handler-without-dedupe
+    node_kinds: [handler]
+    where: {dedupe: false}

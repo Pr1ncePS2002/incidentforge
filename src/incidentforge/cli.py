@@ -114,5 +114,54 @@ def budget(
     typer.echo(render(status(Ledger.default(), runs_left, per_run_usd)))
 
 
+map_app = typer.Typer(help="failure map of a target repo", no_args_is_help=True)
+app.add_typer(map_app, name="map")
+
+
+@map_app.command("build")
+def map_build(
+    target: str = typer.Option(..., help="target name under incidentforge/targets, or a new name with --repo-url"),
+    repo_url: str = typer.Option(None, help="unseen repo: clone url (target yaml not needed)"),
+    commit: str = typer.Option(None, help="unseen repo: commit to pin"),
+    language: str = typer.Option(None, help="unseen repo: python | go"),
+    source_root: str = typer.Option(".", help="unseen repo: package dir inside the repo"),
+    coverage: bool = typer.Option(False, help="run the suite once with coverage in the target image if not cached"),
+    image: str = typer.Option(None, help="docker image for the coverage run"),
+    work: str = typer.Option("work", help="work root; outputs go to <work>/<target>/"),
+) -> None:
+    """build work/<target>/map.sqlite and map.json. owner: v2-map."""
+    from pathlib import Path
+
+    from incidentforge.failmap.pipeline import build_map
+    from incidentforge.generate import checkout
+    from incidentforge.models import Language, Target
+    from incidentforge.targets import TARGETS_DIR, load_target
+
+    if repo_url:
+        if not commit or not language:
+            typer.echo("--repo-url needs --commit and --language")
+            raise typer.Exit(2)
+        tgt = Target(
+            name=target,
+            repo_url=repo_url,
+            commit=commit,
+            language=Language(language),
+            env_template=Path("."),
+            test_command="",
+            source_root=source_root,
+        )
+    elif (TARGETS_DIR / f"{target}.yaml").exists():
+        tgt = load_target(target)
+    else:
+        typer.echo(f"unknown target {target}; pass --repo-url/--commit/--language for an unseen repo")
+        raise typer.Exit(2)
+    root = Path(work)
+    s = build_map(tgt, checkout(tgt, root), root, run_coverage=coverage, image=image)
+    typer.echo(f"map {s.map_path} json {s.json_path}")
+    typer.echo(f"graph_hash {s.graph_hash}")
+    typer.echo(f"nodes {s.nodes} edges {s.edges} tagged {s.tagged} clusters {s.clusters} coverage {s.coverage}")
+    typer.echo("timings " + " ".join(f"{k}={v}s" for k, v in s.timings.items()))
+
+
 if __name__ == "__main__":
     app()

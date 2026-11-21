@@ -25,3 +25,10 @@ examples:
   - a session cache key carries the environment so a staging login never resolves against production
   - a retry queue name is suffixed with the namespace so two deployments never consume each other's jobs
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: key-builder
+    surface_kinds: [cache-key]
+  - id: naming-setting
+    node_kinds: [config_read, env_read]
+    name_matches: "(?i)(name|prefix|topic|queue|bucket|database|namespace|project|domain|_db$|^db_)"
