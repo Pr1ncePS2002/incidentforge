@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-11-21T20:36:59+0530",
-  "tasks_total": 37,
+  "generated_at": "2026-11-21T21:04:01+0530",
+  "tasks_total": 43,
   "tasks_by_family": {
     "config-round-trip": 5,
-    "cross-field-validation": 3,
+    "cross-field-validation": 5,
     "env-aware-naming": 6,
-    "fail-fast-config": 8,
+    "fail-fast-config": 9,
     "hot-reload-config": 4,
-    "idempotent-consumer": 3,
+    "idempotent-consumer": 6,
     "resource-aware-defaults": 4,
     "tolerant-typed-config": 4
   },
   "validation": {
-    "candidates": 37,
-    "accepted": 37,
-    "mutants_total": 219,
-    "mutants_killed": 196
+    "candidates": 43,
+    "accepted": 43,
+    "mutants_total": 255,
+    "mutants_killed": 230
   },
   "models": [
     {
@@ -374,7 +374,7 @@
     }
   ],
   "findings": [
-    "37 of 37 tasks with a validation report passed every gate; accepted tasks' tests killed 196 of 219 injected mutants (89%).",
+    "43 of 43 tasks with a validation report passed every gate; accepted tasks' tests killed 230 of 255 injected mutants (90%).",
     "pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).",
     "hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).",
     "of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.",
@@ -388,8 +388,8 @@
       "nodes": 135,
       "total": {
         "surfaces": 40,
-        "with_task": 10,
-        "tasks": 23,
+        "with_task": 15,
+        "tasks": 29,
         "covered": 39,
         "uncovered": 1
       },
@@ -404,8 +404,8 @@
         },
         "cross-field-validation": {
           "surfaces": 12,
-          "with_task": 3,
-          "tasks": 3,
+          "with_task": 5,
+          "tasks": 5,
           "covered": 12,
           "uncovered": 0
         },
@@ -419,7 +419,7 @@
         "fail-fast-config": {
           "surfaces": 2,
           "with_task": 1,
-          "tasks": 5,
+          "tasks": 6,
           "covered": 2,
           "uncovered": 0
         },
@@ -432,8 +432,8 @@
         },
         "idempotent-consumer": {
           "surfaces": 13,
-          "with_task": 3,
-          "tasks": 3,
+          "with_task": 6,
+          "tasks": 6,
           "covered": 13,
           "uncovered": 0
         },
@@ -455,22 +455,22 @@
       "by_module": {
         "app": {
           "surfaces": 13,
-          "with_task": 5,
-          "tasks": 8,
+          "with_task": 6,
+          "tasks": 9,
           "covered": 13,
           "uncovered": 0
         },
         "app/api": {
           "surfaces": 11,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 4,
+          "tasks": 4,
           "covered": 11,
           "uncovered": 0
         },
         "app/core": {
           "surfaces": 15,
           "with_task": 5,
-          "tasks": 15,
+          "tasks": 16,
           "covered": 15,
           "uncovered": 0
         },

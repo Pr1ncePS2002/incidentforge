@@ -3,13 +3,14 @@ schema_version = "1.4"
 [metadata]
 title = "reject impossible order-quantity limits on item creation"
 family = "cross-field-validation"
-difficulty = "medium"
+difficulty = "easy"
 origin = "llm"
 target = "fastapi-template"
 base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
 fault_cases = ["inverted-range: min_order_quantity greater than max_order_quantity (5 > 3, 5 > 4, and 9 > 2 through the API)", "boundary-equal: min_order_quantity == max_order_quantity must be accepted (equal values allowed)", "negative-or-zero: min_order_quantity or max_order_quantity set to 0 or a negative value"]
 map_node = "backend/app/models.py::ItemCreate"
 blast_radius = 1
+fix_scope = "1 file"
 
 [verifier]
 timeout_sec = 900.0
