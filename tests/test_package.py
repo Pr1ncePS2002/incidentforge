@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from incidentforge.models import Language, Target, TaskSpec
+from incidentforge.models import Language, Surface, Target, TaskSpec
 from incidentforge.package import feature_command, feature_test_paths, pin_dockerfile, write_task
 
 
@@ -75,6 +75,25 @@ def test_task_toml(tmp_path):
     assert meta["origin"] == "hand-written"
     assert meta["target"] == "demo" and meta["base_commit"] == "abc123"
     assert meta["fault_cases"] == ["smtp host without from", "port out of range"]
+    # v0.2 map keys stay out of v0.1-style specs
+    assert not {"source_url", "map_node", "blast_radius"} & meta.keys()
+
+
+def test_task_toml_map_metadata(tmp_path):
+    surface = Surface(
+        file="core/config.py",
+        symbol="Settings",
+        kind="settings-class",
+        node_id="core/config.py::Settings",
+        blast_radius=3,
+    )
+    spec = _spec(tmp_path).model_copy(
+        update={"surface": surface, "source_url": "https://example.com/pm", "difficulty": "hard"}
+    )
+    meta = tomllib.loads((write_task(spec, tmp_path) / "task.toml").read_text())["metadata"]
+    assert meta["source_url"] == "https://example.com/pm"
+    assert meta["map_node"] == "core/config.py::Settings" and meta["blast_radius"] == 3
+    assert meta["difficulty"] == "hard"
 
 
 def test_test_sh_runs_feature_then_suite(tmp_path):
