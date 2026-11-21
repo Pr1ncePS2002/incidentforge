@@ -18,6 +18,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from incidentforge.backends.base import Backend
+from incidentforge.failmap.difficulty import difficulty_from_faults
 from incidentforge.families import Family, load_family, render_prompt
 from incidentforge.models import GateResult, Language, Surface, Target, TaskSpec, ValidationReport
 
@@ -195,7 +196,7 @@ class Generator:
             raise PatchError("feature tests must include test_fault_<id> tests for the injected faults")
         keys = ("title", "instruction", "feature_tests", "fault_cases")
         fields: dict[str, Any] = {k: data[k] for k in keys if k in data}
-        fields["difficulty"] = difficulty(patch, len(data.get("fault_cases") or []))
+        fields["difficulty"] = difficulty(len(data.get("fault_cases") or []))
         return TaskSpec(
             task_id=pair.task_id,
             family=pair.family.slug,
@@ -272,14 +273,9 @@ def _failed(task_id: str, gate: str, detail: str) -> ValidationReport:
     return ValidationReport(task_id=task_id, accepted=False, gates=[GateResult(gate=gate, passed=False, detail=detail)])
 
 
-def difficulty(patch: str, faults: int) -> str:
-    """measured, not the model's guess: files touched and fault count (agreed with p3)."""
-    files = len(re.findall(r"(?m)^diff --git ", patch))
-    if files >= 3 or faults >= 4:
-        return "hard"
-    if files <= 1 and faults <= 2:
-        return "easy"
-    return "medium"
+def difficulty(faults: int) -> str:
+    """measured from the fault cases the tests cover, not the model's guess (D-95)."""
+    return difficulty_from_faults(faults)
 
 
 EXCERPT_LINES = 60

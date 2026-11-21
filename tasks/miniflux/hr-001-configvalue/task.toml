@@ -3,11 +3,13 @@ schema_version = "1.4"
 [metadata]
 title = "reload configuration options at runtime through one live accessor"
 family = "hot-reload-config"
-difficulty = "hard"
+difficulty = "medium"
 origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
 fault_cases = ["stale-capture: options are copied once at startup; after Reload, the next Current() read must return the new ADMIN_USERNAME/CREATE_ADMIN, and snapshots taken earlier must not be changed in place", "invalid-reload: a reload sets OAUTH2_PROVIDER=oidc with no OAUTH2_OIDC_DISCOVERY_ENDPOINT, or contains a malformed line; it must be rejected with an error naming the key or line, and the last good options keep serving", "partial-reload: ADMIN_USERNAME and ADMIN_PASSWORD change together while readers run concurrently; no reader may see the new username paired with the old password", "reload-unset: ADMIN_USERNAME and CREATE_ADMIN are dropped on reload and must fall back to their defaults instead of keeping the stale values"]
+blast_radius = 1
+fix_scope = "1 file"
 
 [verifier]
 timeout_sec = 900.0

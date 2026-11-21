@@ -3,11 +3,14 @@ schema_version = "1.4"
 [metadata]
 title = "accept comma-separated and json-array spellings for allowed cors origins"
 family = "tolerant-typed-config"
-difficulty = "hard"
+difficulty = "medium"
 origin = "llm"
 target = "fastapi-template"
 base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
 fault_cases = ["csv-list: BACKEND_CORS_ORIGINS written as \"http://localhost:3000, https://app.example.com,https://admin.example.com\" (keyword argument and env var), including blank entries and trailing slashes", "json-list: BACKEND_CORS_ORIGINS written as a JSON array string, e.g. '[\"http://localhost:3000\",\"https://app.example.com\"]' (keyword argument and env var)", "empty-list: BACKEND_CORS_ORIGINS set to \"\", whitespace, \" , \" or \"[]\" must become []", "garbage: BACKEND_CORS_ORIGINS set to malformed JSON, a non-string JSON array, or an entry without an http(s) scheme must raise naming the key and the bad value"]
+map_node = "backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES"
+blast_radius = 1
+fix_scope = "1 file"
 
 [verifier]
 timeout_sec = 900.0

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T19:36:16+0530",
+  "generated_at": "2026-11-21T20:20:32+0530",
   "tasks_total": 34,
   "tasks_by_family": {
     "config-round-trip": 5,
@@ -388,8 +388,8 @@
       "nodes": 135,
       "total": {
         "surfaces": 40,
-        "with_task": 0,
-        "tasks": 0,
+        "with_task": 9,
+        "tasks": 20,
         "covered": 39,
         "uncovered": 1
       },
@@ -404,50 +404,50 @@
         },
         "cross-field-validation": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 3,
+          "tasks": 3,
           "covered": 12,
           "uncovered": 0
         },
         "env-aware-naming": {
           "surfaces": 3,
           "with_task": 0,
-          "tasks": 0,
+          "tasks": 3,
           "covered": 3,
           "uncovered": 0
         },
         "fail-fast-config": {
           "surfaces": 2,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 4,
           "covered": 2,
           "uncovered": 0
         },
         "hot-reload-config": {
           "surfaces": 1,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 2,
           "covered": 1,
           "uncovered": 0
         },
         "idempotent-consumer": {
           "surfaces": 13,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 3,
+          "tasks": 3,
           "covered": 13,
           "uncovered": 0
         },
         "resource-aware-defaults": {
           "surfaces": 3,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 2,
+          "tasks": 2,
           "covered": 3,
           "uncovered": 0
         },
         "tolerant-typed-config": {
           "surfaces": 11,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 2,
+          "tasks": 3,
           "covered": 11,
           "uncovered": 0
         }
@@ -455,8 +455,8 @@
       "by_module": {
         "app": {
           "surfaces": 13,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 5,
+          "tasks": 8,
           "covered": 13,
           "uncovered": 0
         },
@@ -469,8 +469,8 @@
         },
         "app/core": {
           "surfaces": 15,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 4,
+          "tasks": 12,
           "covered": 15,
           "uncovered": 0
         },
@@ -487,8 +487,8 @@
       "nodes": 1935,
       "total": {
         "surfaces": 157,
-        "with_task": 0,
-        "tasks": 0,
+        "with_task": 2,
+        "tasks": 5,
         "covered": 128,
         "uncovered": 29
       },
@@ -511,14 +511,14 @@
         "env-aware-naming": {
           "surfaces": 12,
           "with_task": 0,
-          "tasks": 0,
+          "tasks": 1,
           "covered": 12,
           "uncovered": 0
         },
         "fail-fast-config": {
           "surfaces": 40,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 3,
           "covered": 29,
           "uncovered": 11
         },
@@ -546,7 +546,7 @@
         "tolerant-typed-config": {
           "surfaces": 57,
           "with_task": 0,
-          "tasks": 0,
+          "tasks": 1,
           "covered": 56,
           "uncovered": 1
         }
@@ -568,15 +568,15 @@
         },
         "internal/config": {
           "surfaces": 90,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 2,
+          "tasks": 4,
           "covered": 87,
           "uncovered": 3
         },
         "internal/googlereader": {
           "surfaces": 4,
           "with_task": 0,
-          "tasks": 0,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 3
         },

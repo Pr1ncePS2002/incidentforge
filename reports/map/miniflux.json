@@ -5451,6 +5451,10 @@
 {"blast_radius":0,"covered":null,"difficulty":"","families":[],"file":"main.go","id":"main.go::main","kind":"Function","line":10,"module":".","name":"main","surface_kinds":[]}
 ],
 "tasks":[
-
+{"difficulty":"medium","family":"env-aware-naming","node_id":"internal/googlereader/handler.go::subscribe","task_id":"miniflux/en-002-subscribe"},
+{"difficulty":"medium","family":"fail-fast-config","node_id":"internal/config/parser.go::configParser","task_id":"miniflux/ff-001-create-admin-credentials"},
+{"difficulty":"medium","family":"fail-fast-config","node_id":"internal/config/parser.go::configParser","task_id":"miniflux/ff-002-configvalue"},
+{"difficulty":"medium","family":"fail-fast-config","node_id":"internal/config/parser.go::configParser","task_id":"miniflux/ff-003-configoptions"},
+{"difficulty":"easy","family":"tolerant-typed-config","node_id":"internal/config/parser.go::configOptions.Validate","task_id":"miniflux/tt-002-configoptions"}
 ]
 }
