@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from incidentforge import map_render
 from incidentforge.budget import Ledger, cost_usd
 from incidentforge.evaluate import (
     DEFAULT_MAX_TURNS,
@@ -34,6 +35,7 @@ class Data:
     excluded: list[dict[str, Any]] = field(default_factory=list)  # models dropped for harness reasons, with why
     ablation: list[EvalResult] = field(default_factory=list)  # runs at a non-default turn cap, kept off the main table
     ablation_trials: list[dict[str, Any]] = field(default_factory=list)
+    maps: list[dict[str, Any]] = field(default_factory=list)  # failure map snapshots under reports/map/
 
 
 def _jsonl(path: Path) -> list[dict[str, Any]]:
@@ -72,7 +74,8 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
     results = [r for r in results if r.max_turns in main_caps]
     ablation_trials = [t for t in trials if t.get("max_turns") not in main_caps]
     trials = [t for t in trials if t.get("max_turns") in main_caps]
-    return Data(tasks, validation, results, trials, instructions, spend, excluded, ablation, ablation_trials)
+    maps = map_render.load_snapshots(reports_root)
+    return Data(tasks, validation, results, trials, instructions, spend, excluded, ablation, ablation_trials, maps)
 
 
 def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
@@ -214,6 +217,7 @@ def summarize(data: Data) -> dict[str, Any]:
         "spend_usd": round(data.spend_usd, 4),
         "excluded_models": data.excluded,
         "findings": findings(data),
+        "map_coverage": map_render.by_target(data.maps),
     }
 
 
@@ -572,6 +576,14 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
     else:
         s.append('<p class="muted">no eval results yet; run <code>forge eval</code>.</p>')
 
+    if data.maps:
+        s.append("<h2 id='map'>Failure map</h2>")
+        s.append(
+            f'<p><a href="{map_render.PAGE}">open the failure map</a>: repo, modules and functions coloured by '
+            "failure family, with generated tasks pinned to the code they change.</p>"
+        )
+        s += [map_render.coverage_html(m, map_render.coverage(m)) for m in data.maps]
+
     s.append("<h2>Task browser</h2>")
     s.append('<input id="q" placeholder="filter tasks" aria-label="filter tasks">')
     s.append('<div id="tasks">')
@@ -625,4 +637,5 @@ def build(
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render_html(data, summary))
     (out.parent / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    map_render.render_all(reports_root)
     return out

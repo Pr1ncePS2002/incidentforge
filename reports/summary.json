@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T18:39:17+0530",
+  "generated_at": "2026-11-21T18:46:45+0530",
   "tasks_total": 34,
   "tasks_by_family": {
     "config-round-trip": 5,
@@ -382,5 +382,6 @@
     "gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.",
     "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.",
     "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap."
-  ]
+  ],
+  "map_coverage": {}
 }

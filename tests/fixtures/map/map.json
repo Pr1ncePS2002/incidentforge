@@ -1,0 +1,28 @@
+{
+  "target": "demo",
+  "commit": "77e550a73bb49dd2967622c5ed11bf7a49603c93",
+  "graph_hash": "sha256:0f3c9a",
+  "nodes": [
+    {"id": "app.core.config.Settings", "kind": "settings-class", "name": "Settings", "file": "app/core/config.py", "module": "app.core.config", "families": ["fail-fast-config", "cross-field-validation"], "blast_radius": 5, "difficulty": "hard", "covered": true, "cluster": 0},
+    {"id": "app.core.config.parse_cors", "kind": "validator", "name": "parse_cors", "file": "app/core/config.py", "module": "app.core.config", "families": ["tolerant-typed-config"], "blast_radius": 2, "difficulty": "medium", "covered": false, "cluster": 0},
+    {"id": "app.core.db.init_db", "kind": "function", "name": "init_db", "file": "app/core/db.py", "module": "app.core.db", "families": [], "blast_radius": 3, "difficulty": "medium", "covered": true, "cluster": 1},
+    {"id": "app.core.db.create_engine", "kind": "pool-config", "name": "create_engine", "file": "app/core/db.py", "module": "app.core.db", "families": ["resource-aware-defaults"], "blast_radius": 1, "difficulty": "easy", "covered": false, "cluster": 1},
+    {"id": "app.crud.create_user", "kind": "consumer", "name": "create_user", "file": "app/crud.py", "module": "app.crud", "families": ["idempotent-consumer"], "blast_radius": 4, "difficulty": "hard", "covered": true, "cluster": 2},
+    {"id": "app.crud.update_user", "kind": "function", "name": "update_user", "file": "app/crud.py", "module": "app.crud", "families": [], "blast_radius": 1, "difficulty": "easy", "covered": null, "cluster": 2},
+    {"id": "app.utils.generate_reset_token", "kind": "env-read", "name": "generate_reset_token", "file": "app/utils.py", "module": "app.utils", "families": ["hot-reload-config"], "blast_radius": 2, "difficulty": "medium", "covered": false, "cluster": 3}
+  ],
+  "edges": [
+    {"source": "app.core.db.init_db", "target": "app.core.config.Settings", "kind": "CALLS"},
+    {"source": "app.core.db.create_engine", "target": "app.core.config.Settings", "kind": "CALLS"},
+    {"source": "app.crud.create_user", "target": "app.core.db.init_db", "kind": "CALLS"},
+    {"source": "app.crud.update_user", "target": "app.crud.create_user", "kind": "CALLS"},
+    {"source": "app.utils.generate_reset_token", "target": "app.core.config.Settings", "kind": "IMPORTS_FROM"},
+    {"source": "app.core.config.Settings", "target": "app.missing.node", "kind": "CALLS"}
+  ],
+  "tasks": [
+    {"task_id": "demo/ff-001-settings", "node_id": "app.core.config.Settings", "family": "fail-fast-config", "difficulty": "hard"},
+    {"task_id": "demo/cf-001-settings", "node_id": "app.core.config.Settings", "family": "cross-field-validation", "difficulty": "hard"},
+    {"task_id": "demo/ic-001-create-user", "node_id": "app.crud.create_user", "family": "idempotent-consumer", "difficulty": "hard"},
+    {"task_id": "demo/zz-001-gone", "node_id": "app.gone", "family": "fail-fast-config", "difficulty": "easy"}
+  ]
+}
