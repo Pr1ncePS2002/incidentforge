@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from incidentforge import map_render
-from incidentforge.budget import Ledger, cost_usd
+from incidentforge.budget import cost_usd
 from incidentforge.evaluate import (
     DEFAULT_MAX_TURNS,
     TRIALS_NAME,
@@ -31,7 +31,6 @@ class Data:
     results: list[EvalResult]
     trials: list[dict[str, Any]]
     instructions: dict[str, str] = field(default_factory=dict)
-    spend_usd: float = 0.0
     excluded: list[dict[str, Any]] = field(default_factory=list)  # models dropped for harness reasons, with why
     ablation: list[EvalResult] = field(default_factory=list)  # runs at a non-default turn cap, kept off the main table
     ablation_trials: list[dict[str, Any]] = field(default_factory=list)
@@ -44,7 +43,7 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> Data:
+def load(tasks_root: Path, reports_root: Path) -> Data:
     tasks = discover_tasks(tasks_root) if tasks_root.exists() else []
     instructions: dict[str, str] = {}
     for t in tasks:
@@ -62,11 +61,6 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
         known = {t.task_id for t in tasks}
         results = [r for r in results if r.task_id in known]
         trials = [t for t in trials if t.get("task_id") in known]
-    # a ledger snapshot committed next to the results keeps clean-clone reports identical
-    snapshot = eval_dir / "spend-ledger.jsonl"
-    led = ledger or (Ledger(snapshot) if snapshot.exists() else Ledger.default())
-    # a clean clone has no ledger, so fall back to what the committed results say was billed
-    spend = led.spent() if led.entries() else sum(r.cost_usd for r in results)
     excluded_path = eval_dir / "excluded.json"
     excluded = json.loads(excluded_path.read_text()) if excluded_path.exists() else []
     main_caps = {None, DEFAULT_MAX_TURNS}
@@ -75,7 +69,7 @@ def load(tasks_root: Path, reports_root: Path, ledger: Ledger | None = None) -> 
     ablation_trials = [t for t in trials if t.get("max_turns") not in main_caps]
     trials = [t for t in trials if t.get("max_turns") in main_caps]
     maps = map_render.load_snapshots(reports_root)
-    return Data(tasks, validation, results, trials, instructions, spend, excluded, ablation, ablation_trials, maps)
+    return Data(tasks, validation, results, trials, instructions, excluded, ablation, ablation_trials, maps)
 
 
 def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
@@ -191,7 +185,6 @@ def summarize(data: Data) -> dict[str, Any]:
                 "tasks": len({r.task_id for r in rs}),
                 "input_tokens": sum(r.input_tokens for r in rs),
                 "output_tokens": sum(r.output_tokens for r in rs),
-                "billed_usd": round(sum(r.cost_usd for r in rs), 4),
             }
         )
     accepted = sum(v.accepted for v in data.validation)
@@ -214,7 +207,6 @@ def summarize(data: Data) -> dict[str, Any]:
         "failure_causes": failure_causes(data),
         "variance": variance(data),
         "turn_ablation": turn_ablation(data),
-        "spend_usd": round(data.spend_usd, 4),
         "excluded_models": data.excluded,
         "findings": findings(data),
         "map_coverage": map_render.by_target(data.maps),
@@ -457,7 +449,6 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
         ("acceptance", acc_rate),
         ("mutants killed", mut),
         ("eval runs", runs),
-        ("paid spend", f"${summary['spend_usd']:.2f} / $70"),
     ]:
         s.append(f'<div class="card"><span class="muted">{_esc(label)}</span><b>{_esc(val)}</b></div>')
     s.append("</div>")
@@ -525,13 +516,10 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
                     str(m["n"]),
                     _bar(m["pass_rate"]),
                     f"{m['input_tokens']:,} / {m['output_tokens']:,}",
-                    f"${m['billed_usd']:.2f}",
                     f"${listed:.2f}",
                 ]
             )
-        s.append(
-            _table(["model", "agent", "tasks", "runs", "pass rate", "tokens in / out", "billed", "at list price"], rows)
-        )
+        s.append(_table(["model", "agent", "tasks", "runs", "pass rate", "tokens in / out", "at list price"], rows))
         fams = sorted({r["family"] for r in summary["by_family"]})
         mnames = sorted({r["model"] for r in summary["by_family"]})
         cell = {(r["family"], r["model"]): r for r in summary["by_family"]}
@@ -629,10 +617,9 @@ def build(
     out: Path = Path("reports/index.html"),
     tasks_root: Path = Path("tasks"),
     reports_root: Path = Path("reports"),
-    ledger: Ledger | None = None,
 ) -> Path:
     """regenerate index.html and summary.json from files only."""
-    data = load(tasks_root, reports_root, ledger)
+    data = load(tasks_root, reports_root)
     summary = summarize(data)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(render_html(data, summary))

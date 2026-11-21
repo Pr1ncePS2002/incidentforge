@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-22T01:14:53+0530",
+  "generated_at": "2026-11-22T01:45:58+0530",
   "tasks_total": 52,
   "tasks_by_family": {
     "config-round-trip": 7,
@@ -26,8 +26,7 @@
       "n": 70,
       "tasks": 50,
       "input_tokens": 7594460,
-      "output_tokens": 157964,
-      "billed_usd": 0.0
+      "output_tokens": 157964
     },
     {
       "model": "gemini/gemini-2.5-flash",
@@ -37,8 +36,7 @@
       "n": 72,
       "tasks": 52,
       "input_tokens": 27851970,
-      "output_tokens": 2173190,
-      "billed_usd": 8.2287
+      "output_tokens": 2173190
     },
     {
       "model": "gemini/gemini-3.8-flash",
@@ -48,8 +46,7 @@
       "n": 72,
       "tasks": 52,
       "input_tokens": 38469900,
-      "output_tokens": 1268533,
-      "billed_usd": 30.0703
+      "output_tokens": 1268533
     }
   ],
   "by_family": [
@@ -364,7 +361,6 @@
       "failures_no_turn_data": 0
     }
   ],
-  "spend_usd": 43.962,
   "excluded_models": [
     {
       "model": "gemini/gemini-4-hydrogen",

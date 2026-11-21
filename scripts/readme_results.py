@@ -27,8 +27,6 @@ def render(summary: dict[str, Any]) -> str:
     if v.get("mutants_total"):
         killed, total = v.get("mutants_killed", 0), v["mutants_total"]
         rows.append(("Mutants killed by accepted tasks' tests", f"{killed} of {total} ({_pct(killed / total)})"))
-    if "spend_usd" in summary:
-        rows.append(("Paid API spend", f"${float(summary['spend_usd']):.2f} (hard cap $70)"))
     out = [START, "", "| | Value |", "|---|---|"]
     out += [f"| {k} | {val} |" for k, val in rows]
     models = summary.get("models") or []

@@ -14,6 +14,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 DECK = ROOT / "deck"
 REPO_URL = "https://github.com/Pr1ncePS2002/incidentforge"
+PAGES_URL = "https://pr1nceps2002.github.io/incidentforge/"
+CAUSES = [
+    ("turn_budget", "used every turn", "#9aa5b1"),
+    ("regression", "broke the repo's own tests", "#c62828"),
+    ("fault_path_missed", "passed normal cases, missed an injected fault", "#e07b24"),
+    ("wrong_code", "wrong code", "#1565c0"),
+]
 MAX_PDF_BYTES = 5 * 1024 * 1024
 CHROME_CANDIDATES = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -57,6 +64,12 @@ def load_data(root: Path = ROOT) -> dict[str, Any]:
     validations = [_load_json(p) for p in sorted((root / "reports" / "validation").rglob("*.json"))]
     validations = [v for v in validations if isinstance(v, dict)]
     accepted = [v for v in validations if v.get("accepted")]
+    difficulty: dict[str, int] = {}
+    for toml in (root / "tasks").glob("*/*/task.toml"):
+        for line in toml.read_text().splitlines():
+            if line.startswith("difficulty"):
+                level = line.split("=", 1)[1].strip().strip('"')
+                difficulty[level] = difficulty.get(level, 0) + 1
     gold = sorted((root / "tasks" / "fastapi-template").glob("ff-001-*/instruction.md"))
     task_dirs = [p.parent for p in (root / "tasks").glob("*/*/instruction.md")]
     # report.summarize is the source of truth once it exists; raw logs are the fallback
@@ -70,6 +83,8 @@ def load_data(root: Path = ROOT) -> dict[str, Any]:
         "tasks_total": _pick(summary, "tasks_total", len(task_dirs)),
         "targets": sorted({p.parent.name for p in task_dirs}) or None,
         "gold_instruction": gold[0].read_text() if gold else None,
+        "difficulty": difficulty,
+        "map_png": (root / "deck" / "failure-map.png").exists(),
     }
 
 
@@ -95,6 +110,67 @@ def _bars(rows: list[tuple[str, float]], width: int = 760, bar_h: int = 30) -> s
         )
     out.append("</svg>")
     return "".join(out)
+
+
+def _cause_bars(by_model: dict[str, dict[str, int]], width: int = 1000, bar_h: int = 34) -> str:
+    """one stacked bar per model: each failed run counted once under its single cause."""
+    label_w, gap = 220, 16
+    rows = sorted(by_model.items())
+    most = max((sum(int(c.get(k, 0)) for k, _, _ in CAUSES) for _, c in rows), default=0) or 1
+    h = len(rows) * (bar_h + gap) + 10
+    out = [f'<svg viewBox="0 0 {width} {h}" width="{width}" height="{h}" font-family="inherit">']
+    for i, (model, counts) in enumerate(rows):
+        y = i * (bar_h + gap) + 5
+        out.append(
+            f'<text x="{label_w - 10}" y="{y + bar_h * 0.68}" text-anchor="end" font-size="16" '
+            f'fill="#1f2933">{escape(_short(model))}</text>'
+        )
+        x = float(label_w)
+        for key, _, colour in CAUSES:
+            n = int(counts.get(key, 0))
+            if not n:
+                continue
+            w = (width - label_w - 60) * n / most
+            out.append(f'<rect x="{x:.1f}" y="{y}" width="{w:.1f}" height="{bar_h}" fill="{colour}"/>')
+            if w > 22:
+                out.append(
+                    f'<text x="{x + w / 2:.1f}" y="{y + bar_h * 0.68}" text-anchor="middle" font-size="15" '
+                    f'fill="#fff">{n}</text>'
+                )
+            x += w
+        total = sum(int(counts.get(k, 0)) for k, _, _ in CAUSES)
+        out.append(f'<text x="{x + 8:.1f}" y="{y + bar_h * 0.68}" font-size="16" fill="#1f2933">{total}</text>')
+    out.append("</svg>")
+    legend = "".join(f"<span><i style='background:{c}'></i>{escape(label)}</span>" for _, label, c in CAUSES)
+    return "".join(out) + f"<p class='legend'>{legend}</p>"
+
+
+def _map_slide(d: dict[str, Any]) -> str:
+    """failure map picture plus surfaces vs tasks per target."""
+    cov = d["summary"].get("map_coverage") or {}
+    rows = "".join(
+        f"<tr><td><code>{escape(t)}</code></td><td>{c.get('nodes', 0)}</td>"
+        f"<td>{c.get('total', {}).get('surfaces', 0)}</td><td>{c.get('total', {}).get('with_task', 0)}</td>"
+        f"<td>{c.get('total', {}).get('uncovered', 0)}</td></tr>"
+        for t, c in sorted(cov.items())
+    )
+    table = (
+        "<table class='grid small'><tr><th>target</th><th>nodes</th><th>surfaces</th><th>with a task</th>"
+        f"<th>untested</th></tr>{rows}</table>"
+        if rows
+        else f"<p>{TBD}: map coverage from <code>reports/summary.json</code></p>"
+    )
+    img = "<img class='shot' src='failure-map.png' alt='failure map'>" if d["map_png"] else f"<p>{TBD}</p>"
+    return (
+        f"<div class='cols map'><div>{img}</div><div>"
+        "<ul class='tight'><li>code graph from code-review-graph, plus config-read, env-read and handler nodes</li>"
+        "<li>each node tagged with the families that fit it, sized by blast radius</li>"
+        "<li>one real test run per commit marks untested code; it is ranked first</li>"
+        "<li>clusters share no file, so workers generate in parallel</li></ul>"
+        f"<p class='label'>coverage of the map</p>{table}"
+        f"<p class='note'>interactive, offline: <code>reports/map.html</code> · {escape(PAGES_URL)}map.html</p>"
+        "</div></div>"
+    )
 
 
 def _short(model: Any) -> str:
@@ -184,6 +260,8 @@ def build_html(d: dict[str, Any]) -> str:
             "<li><b>Fault-injection tests:</b> every task recreates the failure, not only the happy path.</li>"
             "<li><b>Validated, not trusted:</b> 6 automatic gates incl. mutation testing; rejected tasks retried "
             "once with the reason.</li>"
+            "<li><b>Failure Map:</b> a code graph tagged by failure family decides where tasks go, untested "
+            "risky code first, generated in parallel.</li>"
             "<li><b>Repo-agnostic:</b> one command per target; shown on Python and Go.</li></ul>",
         )
     )
@@ -207,17 +285,20 @@ def build_html(d: dict[str, Any]) -> str:
         slide(
             "Features",
             "<div class='cols'><div><ul>"
-            "<li>Surface finder for Python and Go code</li>"
+            "<li>Failure Map: code graph, family tags, blast radius, real coverage</li>"
+            "<li>Parallel generation, one worker per map cluster</li>"
+            "<li>Tasks from public postmortems, source URL kept</li>"
             "<li>Pluggable generators: Claude Code headless, Gemini</li>"
             "<li>6 validation gates, JSON log per task</li>"
             "<li>Harbor packaging; oracle 1.0 / no-op 0.0 checked in CI</li>"
-            "<li>Model evaluation + static HTML report</li>"
-            "<li>Hard spend cap on paid API usage</li></ul></div>"
+            "<li>Evaluation report with one failure cause per run</li>"
+            "</ul></div>"
             f"<div><table class='grid small'><tr><th>Family</th><th>The model must…</th></tr>{fam}</table></div></div>",
         )
     )
     slides.append(slide("Process flow", _svg_file("pipeline"), "fig"))
     slides.append(slide("Architecture", _svg_file("architecture"), "fig"))
+    slides.append(slide("Failure Map", _map_slide(d)))
     gold = d["gold_instruction"]
     if gold:
         excerpt = escape(gold.strip()[:900])
@@ -256,7 +337,14 @@ def build_html(d: dict[str, Any]) -> str:
             "<tr><td>regression</td><td>the repo's own suite stays green</td></tr>"
             "<tr><td>mutation</td><td>tests catch plausible wrong solutions</td></tr>"
             "<tr><td>leak</td><td>instruction does not give away the code</td></tr>"
-            "<tr><td>flakiness</td><td>3 reruns agree</td></tr></table>",
+            "<tr><td>flakiness</td><td>3 reruns agree</td></tr></table>"
+            + (
+                "<p class='note'>difficulty by injected fault cases: "
+                + escape(", ".join(f"{d['difficulty'].get(k, 0)} {k}" for k in ("easy", "medium", "hard")))
+                + "</p>"
+                if d["difficulty"]
+                else ""
+            ),
         )
     )
     if models:
@@ -287,14 +375,21 @@ def build_html(d: dict[str, Any]) -> str:
                 f"<p class='lead'>Failed runs broke on an injected fault <b>{fault}</b> times versus <b>{happy}</b> "
                 "on the happy path: models build the feature but miss the failure modes.</p>"
             )
+    slides.append(slide("Results", res))
     causes = (s.get("failure_causes") or {}).get("by_model") or {}
     if causes:
-        tot = {c: sum(int(v.get(c, 0)) for v in causes.values()) for c in ("turn_budget", "fault_path_missed")}
-        res += (
-            f"<p class='note'>one cause per failed run: <b>{tot['turn_budget']}</b> used every turn, "
-            f"<b>{tot['fault_path_missed']}</b> passed the normal cases but missed an injected fault.</p>"
+        tot = {c: sum(int(v.get(c, 0)) for v in causes.values()) for c, _, _ in CAUSES}
+        slides.append(
+            slide(
+                "Why models fail",
+                "<p class='label'>every failed run, counted once under one cause</p>"
+                + _cause_bars(causes)
+                + f"<p class='lead'><b>{tot['turn_budget']}</b> failed runs used every turn and "
+                f"<b>{tot['fault_path_missed']}</b> passed the normal cases but missed an injected fault; "
+                f"<b>{tot['wrong_code']}</b> were wrong code and <b>{tot['regression']}</b> broke the repo's "
+                "own tests.</p>",
+            )
         )
-    slides.append(slide("Results", res))
     if by_family:
         slides.append(slide("Results by family", _family_table(by_family)))
     ablation = s.get("turn_ablation") or []
@@ -331,19 +426,11 @@ def build_html(d: dict[str, Any]) -> str:
             "<li><b>Claude Code</b> (headless) and <b>Gemini</b> API as generation backends</li>"
             "<li>Evaluated: Harbor's Claude Code agent; gemini-2.5-flash and gemini-3.8-flash through Harbor's "
             "terminus-2 agent</li>"
+            "<li><b>code-review-graph</b> 2.3.9 and tree-sitter for the Failure Map; D3 inlined for the map page"
+            "</li>"
             "<li>pytest + mutation gate; go test for Go targets</li>"
-            "<li>GitHub Actions: ruff, mypy strict, coverage ≥ 75%, secret scan, dependency audit, Docker "
-            "integration nightly and before release</li></ul>",
-        )
-    )
-    spend = s.get("spend_usd")
-    slides.append(
-        slide(
-            "Cost",
-            "<ul><li>Generation on a Claude Code subscription and the Gemini free tier: <b>$0</b> marginal.</li>"
-            f"<li>Paid Gemini fallback only under a <b>$70 hard cap</b>, checked before every call; "
-            f"total paid spend for generation and evaluation: <b>{_v(spend, '${:.2f}')}</b>.</li>"
-            "<li>Everything else is open source and runs on one laptop.</li></ul>",
+            "<li>GitHub Actions: ruff, mypy strict, coverage ≥ 90%, secret scan, dependency audit, Docker "
+            "integration before release; GitHub Pages for the report; Codespaces devcontainer</li></ul>",
         )
     )
     slides.append(
@@ -353,7 +440,9 @@ def build_html(d: dict[str, Any]) -> str:
             f"<li>Dataset: {_v(d['tasks_total'])} validated Harbor tasks across "
             f"8 families and {_v(len(d['targets']) if d['targets'] else None)} target repos</li>"
             "<li>Validation log per task (<code>reports/validation/</code>)</li>"
-            "<li>Evaluation report (<code>reports/index.html</code>)</li>"
+            "<li>Evaluation report and Failure Map, live at "
+            f"<code>{escape(PAGES_URL)}</code></li>"
+            "<li>Codespaces devcontainer: oracle 1.0 on a task with no install</li>"
             "<li>Docs: architecture, task format, families, finale playbook</li>"
             "<li>Demo video</li></ul>",
         )

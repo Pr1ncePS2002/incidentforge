@@ -21,7 +21,6 @@ SUMMARY = {
         {"model": "m-high", "agent": "claude-code", "k": 1, "pass_rate": 0.6, "n": 40},
     ],
     "failures": {"m-low": {"fault": 18, "happy": 4, "regression": 1}},
-    "spend_usd": 0.0,
     "findings": ["models miss the failure modes."],
 }
 
@@ -46,7 +45,7 @@ def test_block_is_replaced_and_surroundings_kept(tmp_path: Path) -> None:
     assert "| Tasks in the dataset | 40 across 2 families |" in text
     assert "| Candidates passing every gate | 40 of 70 |" in text
     assert "180 of 200 (90%)" in text
-    assert "$0.00 (hard cap $70)" in text
+    assert "spend" not in text.lower() and "$70" not in text
     # best model first
     assert text.index("m-high") < text.index("| m-low | terminus-2")
     assert "| m-low | 18 | 4 | 1 |" in text

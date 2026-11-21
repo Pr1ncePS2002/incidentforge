@@ -10,7 +10,6 @@ import pytest
 from typer.testing import CliRunner
 
 from incidentforge import map_render as mr
-from incidentforge.budget import Ledger
 from incidentforge.cli import app
 from incidentforge.report import build as build_report
 
@@ -190,7 +189,7 @@ def test_cli_map_render(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 def test_report_links_the_map_and_shows_coverage(tmp_path: Path) -> None:
     reports = tmp_path / "reports"
     mr.snapshot(FIXTURE, reports)
-    out = build_report(reports / "index.html", tmp_path / "tasks", reports, Ledger(tmp_path / "l.jsonl"))
+    out = build_report(reports / "index.html", tmp_path / "tasks", reports)
     page = out.read_text()
     assert 'href="map.html"' in page and "tagged surfaces" in page and "app/core" in page
     assert (reports / "map.html").exists()
