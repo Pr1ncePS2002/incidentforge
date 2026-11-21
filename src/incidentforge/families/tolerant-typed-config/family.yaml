@@ -30,3 +30,11 @@ examples:
   - an allowed-origins list accepts "a.com,b.com", '["a.com","b.com"]' and "" alike
   - a token lifetime in minutes accepts "90", "90m" and "1h30m"
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: typed-setting
+    node_kinds: [config_read]
+    where: {typed: true}
+  - id: env-value-parsed
+    node_kinds: [env_read]
+    where: {parsed: true}

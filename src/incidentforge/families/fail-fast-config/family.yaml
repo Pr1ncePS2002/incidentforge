@@ -28,3 +28,17 @@ examples:
   - when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
   - a signing secret left as a documented placeholder refuses to load in every environment
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: required-setting-unchecked
+    node_kinds: [config_read]
+    where: {has_default: false, validated: false}
+  - id: placeholder-default
+    node_kinds: [config_read]
+    where: {placeholder_default: true}
+  - id: env-read-without-default
+    node_kinds: [env_read]
+    where: {has_default: false}
+  - id: settings-holder
+    node_kinds: [Class]
+    surface_kinds: [settings-class]

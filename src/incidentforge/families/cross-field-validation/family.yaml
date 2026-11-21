@@ -28,3 +28,10 @@ examples:
   - a maintenance window with an end time before its start time is rejected
   - enabling both implicit tls and starttls for the same connection is rejected
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: input-model-or-validator
+    surface_kinds: [validator]
+  - id: settings-holder
+    node_kinds: [Class]
+    surface_kinds: [settings-class]

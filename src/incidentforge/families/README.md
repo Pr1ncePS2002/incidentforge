@@ -27,6 +27,7 @@ family returns the same `TaskSpec` json shape. Family weights for sampling live 
 | `difficulty_levers` | list[str] | yes | what makes a task in this family harder |
 | `examples` | list[str] | yes, 1–2 | short, generic, not tied to any repo |
 | `languages` | list[str] | no (`[python, go]`) | languages the family applies to |
+| `map_rules` | list[rule] | yes for the failure map | which map nodes are exposed to this family (below) |
 
 Surface kinds (`Surface.kind`): `settings-class`, `env-read`, `validator`, `consumer`, `cache-key`,
 `config-writer`, `pool-config`. A language surface finder may add kinds; document them here when you do.
@@ -50,6 +51,21 @@ difficulty_levers:
 examples:
   - an smtp host is required whenever email sending is enabled
 ```
+
+## `map_rules` (failure map, `failmap/tag.py`)
+
+A map node is exposed to a family when any of its rules matches; every condition in a rule must hold.
+Parsed strictly by `failmap/tag.py` (unknown keys, kinds or non-scalar values are errors), not by `Family`.
+
+| key | meaning |
+|---|---|
+| `id` | kebab-case, unique in the family |
+| `node_kinds` | map node kinds: crg `File`, `Class`, `Function`, `Test`, `Type` or overlay `config_read`, `env_read`, `handler` |
+| `surface_kinds` | the flat-scan `Surface.kind`s stamped on the node (any overlap matches) |
+| `where` | `{attr: value}` equality on node attributes, e.g. `has_default`, `validated`, `typed`, `pool`, `parsed`, `dedupe`, `placeholder_default` |
+| `name_matches` | optional regex searched in the node name |
+
+A rule needs `node_kinds` or `surface_kinds`. Test nodes are never tagged.
 
 ## `prompt.md` placeholders
 

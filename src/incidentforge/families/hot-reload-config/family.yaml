@@ -25,3 +25,10 @@ examples:
   - a request timeout raised by an operator applies to the next request, not only after a redeploy
   - a feature switch turned off at runtime stops the feature on the next call
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: settings-holder
+    node_kinds: [Class]
+    surface_kinds: [settings-class]
+  - id: env-read-at-call-time
+    node_kinds: [env_read]

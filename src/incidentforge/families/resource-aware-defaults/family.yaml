@@ -27,3 +27,10 @@ examples:
   - a database pool whose size is capped so workers times connections never exceeds the server's connection limit
   - a worker count defaulting to the number of available cpus instead of a fixed 16
 languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: pool-setting
+    node_kinds: [config_read]
+    where: {pool: true}
+  - id: pool-construction
+    surface_kinds: [pool-config]
