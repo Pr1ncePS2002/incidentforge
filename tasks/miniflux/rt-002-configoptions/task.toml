@@ -8,6 +8,7 @@ origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
 fault_cases = ["dropped-field: comments, blank lines, unknown keys and settings not in the environment disappear when the environment is merged into the config file", "default-overwrite: a setting equal to its default or explicitly empty (OAUTH2_CLIENT_ID=) is omitted or keeps the old value instead of being written as KEY=", "type-drift: values are normalised on write (RUN_MIGRATIONS=yes rewritten as true/1) instead of kept verbatim", "partial-write: an export with an unwritable value (line break) truncates or mixes the previous file or leaves temporary files behind"]
+map_node = "internal/config/options.go::configOptions"
 blast_radius = 1
 fix_scope = "1 file"
 

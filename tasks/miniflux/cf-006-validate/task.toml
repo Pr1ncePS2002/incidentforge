@@ -8,6 +8,7 @@ origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
 fault_cases = ["inverted-range: MinUsernameLength or MinPasswordLength set greater than its matching Max, rejected with both field names", "negative-or-zero: any of the four length limits set to 0 or -1, rejected naming that field", "boundary-equal: Min == Max is allowed and enforces an exact length counted in characters"]
+map_node = "internal/ui/form/auth.go::authForm.Validate"
 blast_radius = 1
 fix_scope = "1 file"
 
