@@ -1,0 +1,48 @@
+diff --git a/backend/app/api/routes/private.py b/backend/app/api/routes/private.py
+index 9f33ef1..64ec4e0 100644
+--- a/backend/app/api/routes/private.py
++++ b/backend/app/api/routes/private.py
+@@ -1,7 +1,9 @@
++from datetime import datetime, timezone
+ from typing import Any
+ 
+ from fastapi import APIRouter
+-from pydantic import BaseModel
++from pydantic import BaseModel, model_validator
++from typing_extensions import Self
+ 
+ from app.api.deps import SessionDep
+ from app.core.security import get_password_hash
+@@ -18,6 +20,32 @@ class PrivateUserCreate(BaseModel):
+     password: str
+     full_name: str
+     is_verified: bool = False
++    valid_from: datetime | None = None
++    valid_until: datetime | None = None
++    send_verification_email: bool = False
++
++    @staticmethod
++    def _as_utc(value: datetime) -> datetime:
++        # naive timestamps are interpreted as UTC so they compare with aware ones
++        return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
++
++    @model_validator(mode="after")
++    def _reject_contradictory_options(self) -> Self:
++        problems: list[str] = []
++        if self.valid_from is not None and self.valid_until is not None:
++            if self._as_utc(self.valid_from) >= self._as_utc(self.valid_until):
++                problems.append(
++                    "valid_from must be strictly earlier than valid_until "
++                    f"(got valid_from={self.valid_from.isoformat()}, "
++                    f"valid_until={self.valid_until.isoformat()})"
++                )
++        if self.is_verified and self.send_verification_email:
++            problems.append(
++                "is_verified and send_verification_email cannot both be true"
++            )
++        if problems:
++            raise ValueError("invalid user options: " + "; ".join(problems))
++        return self
+ 
+ 
+ @router.post("/users/", response_model=UserPublic)

@@ -1,0 +1,100 @@
+diff --git a/backend/app/api/routes/login.py b/backend/app/api/routes/login.py
+index 58441e3..2f84dae 100644
+--- a/backend/app/api/routes/login.py
++++ b/backend/app/api/routes/login.py
+@@ -1,10 +1,11 @@
+ from datetime import timedelta
+ from typing import Annotated, Any
+ 
+-from fastapi import APIRouter, Depends, HTTPException
++from fastapi import APIRouter, Depends, Header, HTTPException, Response
+ from fastapi.responses import HTMLResponse
+ from fastapi.security import OAuth2PasswordRequestForm
+ 
++from app.core import token_audit
+ from app import crud
+ from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+ from app.core import security
+@@ -43,10 +44,19 @@ def login_access_token(
+ 
+ 
+ @router.post("/login/test-token", response_model=UserPublic)
+-def test_token(current_user: CurrentUser) -> Any:
++def test_token(
++    current_user: CurrentUser,
++    response: Response,
++    idempotency_key: Annotated[str | None, Header(min_length=1, max_length=255)] = None,
++) -> Any:
+     """
+     Test access token
+     """
++    # clients retry on timeout; one Idempotency-Key per user is recorded once
++    event, replayed = token_audit.record_token_check(current_user.id, idempotency_key)
++    response.headers["X-Token-Check-Id"] = str(event.id)
++    if replayed:
++        response.headers["Idempotency-Replayed"] = "true"
+     return current_user
+ 
+ 
+diff --git a/backend/app/core/token_audit.py b/backend/app/core/token_audit.py
+new file mode 100644
+index 0000000..32deda3
+--- /dev/null
++++ b/backend/app/core/token_audit.py
+@@ -0,0 +1,56 @@
++"""In-process audit log of access-token checks (POST /login/test-token).
++
++Clients retry the check on timeouts, so a check carrying an Idempotency-Key is
++recorded once per (user, key); repeats get the original event back.
++"""
++
++import threading
++import uuid
++from dataclasses import dataclass
++from datetime import datetime, timezone
++
++
++@dataclass(frozen=True)
++class TokenCheckEvent:
++    id: uuid.UUID
++    user_id: uuid.UUID
++    idempotency_key: str | None
++    created_at: datetime
++
++
++_lock = threading.Lock()
++_events: list[TokenCheckEvent] = []
++_by_key: dict[tuple[uuid.UUID, str], TokenCheckEvent] = {}
++
++
++def record_token_check(
++    user_id: uuid.UUID, idempotency_key: str | None
++) -> tuple[TokenCheckEvent, bool]:
++    """Record a check; return (event, replayed). Keyed repeats are not re-recorded."""
++    # check-and-insert under one lock so concurrent duplicates cannot both apply
++    with _lock:
++        if idempotency_key is not None:
++            existing = _by_key.get((user_id, idempotency_key))
++            if existing is not None:
++                return existing, True
++        event = TokenCheckEvent(
++            id=uuid.uuid4(),
++            user_id=user_id,
++            idempotency_key=idempotency_key,
++            created_at=datetime.now(timezone.utc),
++        )
++        _events.append(event)
++        if idempotency_key is not None:
++            _by_key[(user_id, idempotency_key)] = event
++        return event, False
++
++
++def list_token_checks(user_id: uuid.UUID | None = None) -> list[TokenCheckEvent]:
++    with _lock:
++        return [e for e in _events if user_id is None or e.user_id == user_id]
++
++
++def reset_token_checks() -> None:
++    with _lock:
++        _events.clear()
++        _by_key.clear()

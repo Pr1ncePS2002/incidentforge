@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject inverted access windows and contradictory verification flags on private user creation"
+family = "cross-field-validation"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["inverted-range: valid_from set later than valid_until (including a naive valid_from compared against an aware valid_until)", "boundary-equal: valid_from equal to valid_until (including the same instant in different timezones) must be rejected as a zero-length window", "mutually-exclusive: is_verified=True together with send_verification_email=True"]
+map_node = "backend/app/api/routes/private.py::PrivateUserCreate"
+blast_radius = 1
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

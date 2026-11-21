@@ -1,0 +1,43 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..aba38a5 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,38 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    @model_validator(mode="after")
++    def _enforce_usable_routing_settings(self) -> Self:
++        # a bad prefix or frontend link used to surface only at router mount or in emails
++        from urllib.parse import urlsplit
++
++        placeholders = {"changethis", "changeme", "change-me", "todo", "tbd", "fixme", "xxx"}
++
++        def _is_placeholder(value: str) -> bool:
++            v = value.strip().lower()
++            return v in placeholders or (v.startswith("<") and v.endswith(">"))
++
++        problems: list[str] = []
++        prefix = self.API_V1_STR
++        if not prefix.strip():
++            problems.append("API_V1_STR must not be empty")
++        elif _is_placeholder(prefix):
++            problems.append(f"API_V1_STR still holds a placeholder value ({prefix!r})")
++        elif not prefix.startswith("/") or prefix.endswith("/") or prefix != prefix.strip():
++            problems.append(f"API_V1_STR must start with '/' and not end with '/' (got {prefix!r})")
++        host = self.FRONTEND_HOST
++        if not host.strip():
++            problems.append("FRONTEND_HOST must not be empty")
++        elif _is_placeholder(host):
++            problems.append(f"FRONTEND_HOST still holds a placeholder value ({host!r})")
++        else:
++            parts = urlsplit(host.strip())
++            if parts.scheme not in ("http", "https") or not parts.netloc:
++                problems.append(f"FRONTEND_HOST must be an absolute http(s) URL (got {host!r})")
++        if problems:
++            raise ValueError("invalid routing configuration: " + "; ".join(problems))
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

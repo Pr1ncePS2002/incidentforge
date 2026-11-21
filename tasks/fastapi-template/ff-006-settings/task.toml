@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject unusable api prefix and frontend host settings at startup"
+family = "fail-fast-config"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["empty: FRONTEND_HOST or API_V1_STR set to an empty or whitespace-only string", "placeholder: FRONTEND_HOST or API_V1_STR left as changethis / TODO / <fill-me>", "several-bad: API_V1_STR malformed and FRONTEND_HOST a placeholder at once; one error names both"]
+map_node = "backend/app/core/config.py::Settings"
+blast_radius = 1
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

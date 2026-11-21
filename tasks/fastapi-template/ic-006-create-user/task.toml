@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "key user signup on the normalized email so retried and redelivered creates apply once"
+family = "idempotent-consumer"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["duplicate-delivery: the same signup payload is delivered twice, once with the email in different letter case and once with a conflicting password or changed full_name; exactly one row, original user returned, conflicting password raises ValueError", "retry-after-partial: the first create commits the row and then crashes in session.refresh; the retry returns that user instead of raising an integrity error or adding a row", "distinct-events: two different emails are created with a redelivery of the first in between; both users exist exactly once and are not merged"]
+map_node = "backend/app/crud.py::create_user"
+blast_radius = 4
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

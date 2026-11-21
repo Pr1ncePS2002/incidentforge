@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "make user deletion idempotent on redelivery and retry"
+family = "idempotent-consumer"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["duplicate-delivery: the same DELETE /users/{id} is sent again (several times) with the same Idempotency-Key after the first one succeeded; it must replay 200 with the original body and leave the state as if it had been applied once", "retry-after-partial: the first attempt deletes the user's items, then crashes before the user is deleted; the transaction must roll back, the retry with the same key must delete exactly once, and later repeats must replay success", "distinct-events: two different users are deleted with two different keys; both deletions must apply and neither key may be deduplicated against the other"]
+map_node = "backend/app/api/routes/users.py::delete_user"
+blast_radius = 1
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

@@ -1,0 +1,49 @@
+diff --git a/backend/app/crud.py b/backend/app/crud.py
+index a8ceba6..202b770 100644
+--- a/backend/app/crud.py
++++ b/backend/app/crud.py
+@@ -8,8 +8,26 @@ from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+ 
+ 
+ def create_user(*, session: Session, user_create: UserCreate) -> User:
++    # the normalized email is the idempotency key: a redelivered or retried
++    # signup returns the account it already created instead of a second row
++    from app.core.security import verify_password
++
++    email_key = user_create.email.strip().lower()
++    existing = get_user_by_email(session=session, email=user_create.email)
++    if existing is not None:
++        result = verify_password(user_create.password, existing.hashed_password)
++        verified = result[0] if isinstance(result, tuple) else result
++        if not verified:
++            raise ValueError(
++                "a different user already exists for this email address"
++            )
++        return existing
+     db_obj = User.model_validate(
+-        user_create, update={"hashed_password": get_password_hash(user_create.password)}
++        user_create,
++        update={
++            "email": email_key,
++            "hashed_password": get_password_hash(user_create.password),
++        },
+     )
+     session.add(db_obj)
+     session.commit()
+@@ -32,9 +50,13 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
+ 
+ 
+ def get_user_by_email(*, session: Session, email: str) -> User | None:
+-    statement = select(User).where(User.email == email)
+-    session_user = session.exec(statement).first()
+-    return session_user
++    # exact match first, then the normalized form that create_user stores
++    for candidate in dict.fromkeys([email, email.strip().lower()]):
++        statement = select(User).where(User.email == candidate)
++        session_user = session.exec(statement).first()
++        if session_user is not None:
++            return session_user
++    return None
+ 
+ 
+ # Dummy hash to use for timing attack prevention when user is not found
