@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,7 @@ from incidentforge.postmortem import (
     load_postmortem,
     rank_for_incident,
     sentences,
+    stamp_metadata,
     used_surfaces,
 )
 
@@ -348,6 +350,7 @@ def test_end_to_end_with_real_map(target: Target, tmp_path: Path) -> None:
     (task,) = (tmp_path / "tasks" / "fixture").iterdir()
     toml = (task / "task.toml").read_text()
     assert f'source_url = "{URL}"' in toml and 'origin = "postmortem"' in toml
+    assert 'classifier_family = "fail-fast-config"\n\n[verifier]' in toml
     instruction = (task / "instruction.md").read_text()
     assert "## background" in instruction and TRIGGER in instruction and URL in instruction
     assert "credentials rotation" not in instruction
@@ -410,9 +413,19 @@ def test_family_override_keeps_classifier_verdict(
     )
     assert res.classification.family == "resource-aware-defaults" and res.classifier_family == "none"
     assert res.accepted.task_id.startswith("rd-001-")
+    (task,) = (tmp_path / "tasks" / "fixture").iterdir()
+    meta = tomllib.loads((task / "task.toml").read_text())["metadata"]
+    assert meta["family"] == "resource-aware-defaults" and meta["classifier_family"] == "none"
     assert "classifier picked none, using --family resource-aware-defaults as asked" in logs
     record = json.loads((tmp_path / "work" / "postmortems" / "example-org-blog-incident-2025.json").read_text())
     assert record["family"] == "resource-aware-defaults" and record["classifier_family"] == "none"
+
+
+def test_stamp_metadata_without_trailing_section(tmp_path: Path) -> None:
+    f = tmp_path / "task.toml"
+    f.write_text('[metadata]\ntitle = "x"\n')
+    stamp_metadata(f, "classifier_family", "none")
+    assert tomllib.loads(f.read_text())["metadata"] == {"title": "x", "classifier_family": "none"}
 
 
 def test_family_override_must_exist(tmp_path: Path) -> None:

@@ -363,6 +363,26 @@ class PostmortemGenerator(Generator):
         )
 
 
+def stamp_metadata(task_toml: Path, key: str, value: str) -> None:
+    """add one key at the end of [metadata]; keeps the task.toml contract in package.py untouched."""
+    text = task_toml.read_text()
+    head = text.index("[metadata]\n")
+    end = text.find("\n\n", head)
+    end = len(text.rstrip("\n")) if end < 0 else end
+    task_toml.write_text(f"{text[:end]}\n{key} = {json.dumps(value)}{text[end:]}")
+
+
+def with_verdict(write: Writer, classifier_family: str) -> Writer:
+    """records the classifier's own family on every task, so a --family override stays visible."""
+
+    def writer(spec: TaskSpec, tasks_root: Path) -> Path:
+        task_dir = write(spec, tasks_root)
+        stamp_metadata(task_dir / "task.toml", "classifier_family", classifier_family)
+        return task_dir
+
+    return writer
+
+
 @dataclass
 class PostmortemResult:
     classification: Classification
@@ -423,7 +443,7 @@ def from_postmortem(
         repo,
         tasks_root,
         work_root,
-        writer or write_task,
+        with_verdict(writer or write_task, verdict.family),
         validator or validate_task,
         gold_example(tasks_root, target),
         log,
