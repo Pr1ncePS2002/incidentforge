@@ -25,22 +25,22 @@ margin:0 4px 0 10px;vertical-align:middle}.c-turn_budget{background:#d08b16}.c-r
 .c-fault_path_missed{background:#a98be8}.c-wrong_code{background:#6c6c74}}
 input{padding:6px 8px;width:100%;max-width:360px;margin:6px 0;background:var(--card);color:var(--fg);
 border:1px solid var(--line);border-radius:6px}
-</style></head><body><main><h1>IncidentForge report</h1><p class="muted">generated 2026-11-21T20:20:32+0530 from files under reports/ and tasks/</p><div class="cards">
-<div class="card"><span class="muted">tasks</span><b>34</b></div>
+</style></head><body><main><h1>IncidentForge report</h1><p class="muted">generated 2026-11-21T20:36:59+0530 from files under reports/ and tasks/</p><div class="cards">
+<div class="card"><span class="muted">tasks</span><b>37</b></div>
 <div class="card"><span class="muted">families</span><b>8</b></div>
 <div class="card"><span class="muted">acceptance</span><b>100%</b></div>
-<div class="card"><span class="muted">mutants killed</span><b>179/201</b></div>
+<div class="card"><span class="muted">mutants killed</span><b>196/219</b></div>
 <div class="card"><span class="muted">eval runs</span><b>162</b></div>
 <div class="card"><span class="muted">paid spend</span><b>$43.96 / $70</b></div>
 </div>
 <h2>Headline findings</h2>
-<ul><li>34 of 34 tasks with a validation report passed every gate; accepted tasks&#x27; tests killed 179 of 201 injected mutants (89%).</li><li>pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).</li><li>hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).</li><li>of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.</li><li>each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo&#x27;s own tests, 13 missed an injected fault, 10 wrong code.</li><li>gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.</li><li>gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -&gt; 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.</li><li>gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -&gt; 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap.</li></ul>
+<ul><li>37 of 37 tasks with a validation report passed every gate; accepted tasks&#x27; tests killed 196 of 219 injected mutants (89%).</li><li>pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).</li><li>hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).</li><li>of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.</li><li>each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo&#x27;s own tests, 13 missed an injected fault, 10 wrong code.</li><li>gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.</li><li>gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -&gt; 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.</li><li>gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -&gt; 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap.</li></ul>
 <h2>Models left out</h2>
 <div class="scroll"><table><thead><tr><th>model</th><th>agent</th><th>why</th><th>evidence</th></tr></thead><tbody><tr><td>gemini/gemini-4-hydrogen</td><td>terminus-2</td><td>through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model</td><td>3 gold-task trials on 2026-11-18: 72 of 84 turns got &#x27;No valid JSON found in response&#x27;, at most 1,376 completion tokens per trial; direct google-genai calls to the same model work</td></tr></tbody></table></div>
 <h2>Dataset</h2>
-<div class="scroll"><table><thead><tr><th>dimension</th><th>tasks</th></tr></thead><tbody><tr><td>family</td><td>config-round-trip: 5, cross-field-validation: 3, env-aware-naming: 5, fail-fast-config: 7, hot-reload-config: 4, idempotent-consumer: 3, resource-aware-defaults: 3, tolerant-typed-config: 4</td></tr><tr><td>language/target</td><td>fastapi-template: 24, miniflux: 10</td></tr><tr><td>difficulty</td><td>easy: 6, hard: 2, medium: 26</td></tr><tr><td>origin</td><td>hand-written: 2, llm: 32</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>dimension</th><th>tasks</th></tr></thead><tbody><tr><td>family</td><td>config-round-trip: 5, cross-field-validation: 3, env-aware-naming: 6, fail-fast-config: 8, hot-reload-config: 4, idempotent-consumer: 3, resource-aware-defaults: 4, tolerant-typed-config: 4</td></tr><tr><td>language/target</td><td>fastapi-template: 27, miniflux: 10</td></tr><tr><td>difficulty</td><td>easy: 6, hard: 2, medium: 29</td></tr><tr><td>origin</td><td>hand-written: 2, llm: 32, postmortem: 3</td></tr></tbody></table></div>
 <p>validation gates over all task candidates:</p>
-<div class="scroll"><table><thead><tr><th>gate</th><th>passed</th><th>rate</th></tr></thead><tbody><tr><td>fail_on_base</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>flakiness</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>leak</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>mutation</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>pass_on_reference</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>regression</td><td>34/34</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>gate</th><th>passed</th><th>rate</th></tr></thead><tbody><tr><td>fail_on_base</td><td>37/37</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>flakiness</td><td>37/37</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>leak</td><td>37/37</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>mutation</td><td>37/37</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>pass_on_reference</td><td>37/37</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>regression</td><td>37/37</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr></tbody></table></div>
 <h2>Results</h2>
 <div class="scroll"><table><thead><tr><th>model</th><th>agent</th><th>tasks</th><th>runs</th><th>pass rate</th><th>tokens in / out</th><th>billed</th><th>at list price</th></tr></thead><tbody><tr><td>claude-code</td><td>claude-code</td><td>34</td><td>54</td><td><span class="bar"><span style="width:98.2%"></span></span> 98%</td><td>5,883,658 / 122,370</td><td>$0.00</td><td>$32.48</td></tr><tr><td>gemini/gemini-2.5-flash</td><td>terminus-2</td><td>34</td><td>54</td><td><span class="bar"><span style="width:33.3%"></span></span> 33%</td><td>19,937,970 / 1,636,360</td><td>$6.11</td><td>$10.07</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>terminus-2</td><td>34</td><td>54</td><td><span class="bar"><span style="width:27.8%"></span></span> 28%</td><td>28,269,016 / 925,624</td><td>$22.07</td><td>$49.35</td></tr></tbody></table></div>
 <p>pass rate per model and family:</p>
@@ -58,9 +58,9 @@ border:1px solid var(--line);border-radius:6px}
 <div class="scroll"><table><thead><tr><th>model</th><th>tasks</th><th>k</th><th>pass rate per attempt</th><th>stdev</th><th>tasks that flip</th></tr></thead><tbody><tr><td>claude-code</td><td>10</td><td>3</td><td>100%, 100%, 100%</td><td>0.000</td><td>0</td></tr><tr><td>gemini/gemini-2.5-flash</td><td>10</td><td>3</td><td>30%, 30%, 40%</td><td>0.047</td><td>4</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>10</td><td>3</td><td>30%, 40%, 40%</td><td>0.047</td><td>1</td></tr></tbody></table></div>
 <h2 id='map'>Failure map</h2>
 <p><a href="map.html">open the failure map</a>: repo, modules and functions coloured by failure family, with generated tasks pinned to the code they change.</p>
-<p><b>fastapi-template</b> <span class='muted'>@ 77e550a · graph c07e1bf9704fcb05d99</span>: 135 nodes, 40 tagged with a failure family, 9 of them have a task (20 tasks); 39 test-covered, 1 uncovered.</p>
-<div class="scroll"><table><thead><tr><th>family</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>config-round-trip</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>cross-field-validation</td><td>12</td><td>3</td><td>3</td><td>12</td><td>0</td></tr><tr><td>env-aware-naming</td><td>3</td><td>0</td><td>3</td><td>3</td><td>0</td></tr><tr><td>fail-fast-config</td><td>2</td><td>1</td><td>4</td><td>2</td><td>0</td></tr><tr><td>hot-reload-config</td><td>1</td><td>1</td><td>2</td><td>1</td><td>0</td></tr><tr><td>idempotent-consumer</td><td>13</td><td>3</td><td>3</td><td>13</td><td>0</td></tr><tr><td>resource-aware-defaults</td><td>3</td><td>2</td><td>2</td><td>3</td><td>0</td></tr><tr><td>tolerant-typed-config</td><td>11</td><td>2</td><td>3</td><td>11</td><td>0</td></tr></tbody></table></div>
-<div class="scroll"><table><thead><tr><th>module</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>app</td><td>13</td><td>5</td><td>8</td><td>13</td><td>0</td></tr><tr><td>app/api</td><td>11</td><td>0</td><td>0</td><td>11</td><td>0</td></tr><tr><td>app/core</td><td>15</td><td>4</td><td>12</td><td>15</td><td>0</td></tr><tr><td>scripts</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr></tbody></table></div>
+<p><b>fastapi-template</b> <span class='muted'>@ 77e550a · graph c07e1bf9704fcb05d99</span>: 135 nodes, 40 tagged with a failure family, 10 of them have a task (23 tasks); 39 test-covered, 1 uncovered.</p>
+<div class="scroll"><table><thead><tr><th>family</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>config-round-trip</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>cross-field-validation</td><td>12</td><td>3</td><td>3</td><td>12</td><td>0</td></tr><tr><td>env-aware-naming</td><td>3</td><td>1</td><td>4</td><td>3</td><td>0</td></tr><tr><td>fail-fast-config</td><td>2</td><td>1</td><td>5</td><td>2</td><td>0</td></tr><tr><td>hot-reload-config</td><td>1</td><td>1</td><td>2</td><td>1</td><td>0</td></tr><tr><td>idempotent-consumer</td><td>13</td><td>3</td><td>3</td><td>13</td><td>0</td></tr><tr><td>resource-aware-defaults</td><td>3</td><td>3</td><td>3</td><td>3</td><td>0</td></tr><tr><td>tolerant-typed-config</td><td>11</td><td>2</td><td>3</td><td>11</td><td>0</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>module</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>app</td><td>13</td><td>5</td><td>8</td><td>13</td><td>0</td></tr><tr><td>app/api</td><td>11</td><td>0</td><td>0</td><td>11</td><td>0</td></tr><tr><td>app/core</td><td>15</td><td>5</td><td>15</td><td>15</td><td>0</td></tr><tr><td>scripts</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr></tbody></table></div>
 <p><b>miniflux</b> <span class='muted'>@ b31f786 · graph 769289b7b8d47b3eea2</span>: 1935 nodes, 157 tagged with a failure family, 2 of them have a task (5 tasks); 128 test-covered, 29 uncovered.</p>
 <div class="scroll"><table><thead><tr><th>family</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>config-round-trip</td><td>7</td><td>0</td><td>0</td><td>0</td><td>7</td></tr><tr><td>cross-field-validation</td><td>66</td><td>0</td><td>0</td><td>43</td><td>23</td></tr><tr><td>env-aware-naming</td><td>12</td><td>0</td><td>1</td><td>12</td><td>0</td></tr><tr><td>fail-fast-config</td><td>40</td><td>1</td><td>3</td><td>29</td><td>11</td></tr><tr><td>hot-reload-config</td><td>12</td><td>0</td><td>0</td><td>1</td><td>11</td></tr><tr><td>idempotent-consumer</td><td>3</td><td>0</td><td>0</td><td>2</td><td>1</td></tr><tr><td>resource-aware-defaults</td><td>21</td><td>0</td><td>0</td><td>20</td><td>1</td></tr><tr><td>tolerant-typed-config</td><td>57</td><td>0</td><td>1</td><td>56</td><td>1</td></tr></tbody></table></div>
 <div class="scroll"><table><thead><tr><th>module</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>client</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>internal/api</td><td>2</td><td>0</td><td>0</td><td>2</td><td>0</td></tr><tr><td>internal/config</td><td>90</td><td>2</td><td>4</td><td>87</td><td>3</td></tr><tr><td>internal/googlereader</td><td>4</td><td>0</td><td>1</td><td>1</td><td>3</td></tr><tr><td>internal/http</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>internal/integration</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>internal/model</td><td>4</td><td>0</td><td>0</td><td>4</td><td>0</td></tr><tr><td>internal/reader</td><td>5</td><td>0</td><td>0</td><td>3</td><td>2</td></tr><tr><td>internal/storage</td><td>3</td><td>0</td><td>0</td><td>0</td><td>3</td></tr><tr><td>internal/systemd</td><td>4</td><td>0</td><td>0</td><td>0</td><td>4</td></tr><tr><td>internal/ui</td><td>12</td><td>0</td><td>0</td><td>4</td><td>8</td></tr><tr><td>internal/validator</td><td>29</td><td>0</td><td>0</td><td>24</td><td>5</td></tr></tbody></table></div>
@@ -214,6 +214,29 @@ Build the following:
 
 The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
 </pre></details>
+<details><summary><b>fastapi-template/en-004-settings</b> <span class='muted'>env-aware-naming · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>unscoped-key: the same secret name built for staging and production gives the same store path, so one environment&#x27;s rotation overwrites the other&#x27;s credentials</li><li>wrong-env-source: secret_name falls back to the shipped default &#x27;local&#x27; instead of the DEPLOYMENT_ENVIRONMENT that was configured (via kwarg or env var), like a rotation run without an explicit environment flag</li><li>unknown-env: DEPLOYMENT_ENVIRONMENT is empty, cased wrong or not one of local/staging/production (at startup or changed later), and is accepted instead of failing with an error naming DEPLOYMENT_ENVIRONMENT</li><li>separator-injection: a secret name containing &#x27;/&#x27; (e.g. &#x27;production/db&#x27;) is accepted, so paths become ambiguous and can collide across environments</li></ul><pre># Environment-scoped secret paths
+
+All environments (local, staging, production) keep their credentials in one shared secret store. Today the backend has no single place that decides which path a secret lives under. Tooling builds paths by hand, and a rotation script that runs without an explicit environment quietly falls back to a default environment. That lets one environment&#x27;s rotation overwrite or delete another environment&#x27;s credentials.
+
+Add the setting and the helper to `app.core.config.Settings` so that every secret path comes from the configured deployment environment.
+
+Requirements:
+
+1. Add a setting `DEPLOYMENT_ENVIRONMENT` (normal settings source, so it can be read from the environment variable of the same name). It defaults to `local`, which is what the repo ships with. The only allowed values are exactly `local`, `staging` and `production`. Matching is case-sensitive and no normalisation is done.
+2. Constructing `Settings` with an empty or unknown `DEPLOYMENT_ENVIRONMENT` (for example `&quot;&quot;`, `prod`, `Production`, `staging/production`) must fail with a `ValueError` (pydantic&#x27;s `ValidationError` counts). The message must contain the text `DEPLOYMENT_ENVIRONMENT`.
+3. Add an instance method `secret_name(name: str) -&gt; str` on `Settings`. It returns the store path for the logical secret `name` in the **configured** environment, in the form `&lt;DEPLOYMENT_ENVIRONMENT&gt;/&lt;name&gt;`. For example, with the default settings `secret_name(&quot;smtp-password&quot;)` returns `local/smtp-password`, and with `DEPLOYMENT_ENVIRONMENT=production` it returns `production/smtp-password`. It must never use a hardcoded or default environment in place of the configured one.
+4. `secret_name` must check the environment again every time it is called. If the attribute was changed to an empty or unknown value after construction, the call must raise `ValueError` with `DEPLOYMENT_ENVIRONMENT` in the message instead of building a path.
+5. `/` is the separator. A `name` that contains `/`, or that is empty or only whitespace, must be rejected with `ValueError`, so that two different (environment, name) pairs can never produce the same path.
+6. Existing behaviour is unchanged: settings with no `DEPLOYMENT_ENVIRONMENT` still load, and the existing test suite still passes.
+
+## background
+
+This protection comes from a public incident report (https://blog.cloudflare.com/cloudflare-incident-march-21-2025/). What set that incident off: During a credential rotation, the secret-update and deploy commands were run without an explicit environment flag. They fell back to the default (non-production) Worker, so the production gateway kept the old credentials, and those were then deleted from the storage backend.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
 <details><summary><b>fastapi-template/ff-001-email-config</b> <span class='muted'>fail-fast-config · hard</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='bad'>gemini/gemini-2.5-flash#1 fail</span>, <span class='bad'>gemini/gemini-3.8-flash#1 fail</span></p><p>fault cases:</p><ul><li>SMTP_HOST set without EMAILS_FROM_EMAIL</li><li>SMTP_USER without SMTP_PASSWORD</li><li>SMTP_PASSWORD without SMTP_USER</li><li>SMTP_TLS and SMTP_SSL both true</li><li>SMTP_PORT outside 1-65535</li><li>several faults at once reported in one error</li></ul><pre># Fail fast on a half-configured mailer
 
 The backend reads its email settings (`SMTP_*`, `EMAILS_FROM_EMAIL`) in `app.core.config.Settings`.
@@ -327,6 +350,37 @@ How the failure must work:
 - The message must not name keys that are fine. In particular, don&#x27;t put the literal names of other settings in a generic prefix.
 
 When `SMTP_HOST` is not set, none of these checks apply and behaviour is unchanged. For example, an unused `SMTP_PASSWORD=&quot;changethis&quot;` is still accepted. Valid email setups must keep loading. That includes `SMTP_HOST` plus `EMAILS_FROM_EMAIL` without credentials, and a complete setup with credentials. The repository&#x27;s shipped defaults must also keep loading, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/ff-005-create-engine-7</b> <span class='muted'>fail-fast-config · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>missing: DATABASE_URL carries no password (or no user and no password), so the engine would connect unauthenticated</li><li>empty: DATABASE_URL password is empty or whitespace-only; DATABASE_SSL_ROOT_CERT is empty or whitespace while DATABASE_SSL_ENABLED is on</li><li>placeholder: DATABASE_SSL_ROOT_CERT left as changethis, TODO or &lt;fill-me&gt; while DATABASE_SSL_ENABLED is on</li><li>conditional-missing: DATABASE_SSL_ENABLED is on (via kwargs or the environment) but DATABASE_SSL_ROOT_CERT is absent</li><li>several-bad: a DATABASE_URL with no password plus SSL enabled with no root cert; one error must name both DATABASE_URL and DATABASE_SSL_ROOT_CERT</li></ul><pre># Refuse to start with an unauthenticated or half-configured database connection
+
+The backend builds its SQLAlchemy engine in `app/core/db.py` from `settings.DATABASE_URL` (defined on `app.core.config.Settings`). Today the settings accept a database URL with no username or password in it. The service starts without complaint and only fails, or tries to connect without credentials, when the first query reaches the database. A rollout that forgets to give one batch of instances its credentials looks healthy until real traffic arrives.
+
+We are also adding opt-in TLS for the database connection. Like the credentials, the new setting it needs must be checked at startup and must not be trusted on first use.
+
+Requirements:
+
+1. Add two new settings to `Settings`:
+   - `DATABASE_SSL_ENABLED` (bool, default `False`)
+   - `DATABASE_SSL_ROOT_CERT` (optional string, default unset): the path to the CA root certificate.
+
+   When the flag is on, the engine in `app/core/db.py` must connect with `sslmode=verify-full` and use that root certificate. When the flag is off, the engine must behave as it does today.
+2. `DATABASE_URL` must contain a database user and a password. If either one is missing, empty or whitespace-only, `DATABASE_URL` is rejected.
+3. When `DATABASE_SSL_ENABLED` is on, `DATABASE_SSL_ROOT_CERT` is required:
+   - It is rejected if it is unset, empty or whitespace-only.
+   - It is rejected if it still holds a template placeholder. Placeholders are `changethis`, `changeme`, `change-me`, `todo`, `tbd` and `fixme` (matched case-insensitively), plus any value wrapped in angle brackets, such as `&lt;fill-me&gt;`.
+
+   When the flag is off, `DATABASE_SSL_ROOT_CERT` is not checked.
+4. Rejection happens when `Settings` is constructed, not on first use. Constructing it must raise a `ValueError` (pydantic&#x27;s `ValidationError` counts).
+5. If several problems are present, a single error must name **every** offending setting (for example both `DATABASE_URL` and `DATABASE_SSL_ROOT_CERT`), not just the first one found.
+6. Valid configurations must load unchanged. This includes the repository&#x27;s shipped configuration, where the URL has a user and password and TLS is off. The existing test suite must still pass.
+
+## background
+
+This protection comes from a public incident report (https://www.heroku.com/blog/how-i-broke-git-push-heroku-main). What set that incident off: New code that needed a new auth config variable went out to a batch of production Git server instances. The variable had been set but never pushed to those instances, so the processes started without it and sent unauthenticated calls to a private internal API.
 
 ---
 
@@ -531,6 +585,40 @@ The class must accept the usual pydantic-settings construction, `DatabasePoolSet
 - The module-level `engine` must be built through this function, so the derived values are the ones actually used.
 
 The shipped defaults must still load, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>fastapi-template/rd-004-email-reset-token</b> <span class='muted'>resource-aware-defaults · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>unset-limit: EMAIL_RESET_TOKEN_EXPIRE_HOURS is blanked or removed by a config change; the lifetime must be ACCESS_TOKEN_EXPIRE_MINUTES // 240 clamped to [MIN, MAX], not a fixed constant</li><li>hardcoded-size: EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS=24 or a shorter ACCESS_TOKEN_EXPIRE_MINUTES is configured, but the lifetime stays at the fixed 48 hours</li><li>min-over-max: EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS=72 is above EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS=24</li><li>exceeds-limit: an explicit EMAIL_RESET_TOKEN_EXPIRE_HOURS is above EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS or below EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS</li><li>zero-or-negative: EMAIL_RESET_TOKEN_EXPIRE_HOURS, EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS or EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS is zero or negative</li></ul><pre># Derive the password-reset link lifetime from configured bounds
+
+The backend reads how long password-reset links stay valid from `EMAIL_RESET_TOKEN_EXPIRE_HOURS` in `app.core.config.Settings`. Today that setting falls back to a fixed built-in number. If a config change drops the key, or leaves it empty, nothing complains. The app quietly uses the hard-coded value, whatever the rest of the deployment is configured for. Nothing sets a floor or a ceiling either, so an operator can set a lifetime of zero, which breaks every reset link at once. They can also set one far longer than the security policy allows.
+
+Change the settings so that the reset-link lifetime comes from configured limits, and so that impossible combinations stop the app at startup.
+
+## Settings
+
+- `EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS` (integer, default `1`): the shortest allowed lifetime.
+- `EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS` (integer, default `168`): the longest allowed lifetime.
+- `EMAIL_RESET_TOKEN_EXPIRE_HOURS` (integer, optional): the lifetime an operator chooses explicitly. It counts as unset when it is missing or set to an empty string.
+
+## Required behaviour
+
+1. **Explicit value:** if `EMAIL_RESET_TOKEN_EXPIRE_HOURS` is set and valid, it is used as given.
+2. **Unset value, derived default:** if `EMAIL_RESET_TOKEN_EXPIRE_HOURS` is unset, the lifetime is derived instead of using a fixed constant:
+   `ACCESS_TOKEN_EXPIRE_MINUTES // 240` (a quarter of the access-token lifetime, in whole hours), clamped to `[EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS, EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS]`.
+   With the shipped defaults (8-day access tokens), this gives 48 hours, the same as today.
+3. **Resolved value is stored on the settings:** after `Settings` is built, `settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS` must hold the resolved integer. Existing code that reads this attribute, such as reset-token generation and the reset email, then uses it without further changes.
+4. **Startup rejection:** building `Settings` must raise a `ValueError` (pydantic&#x27;s `ValidationError` counts) when:
+   - `EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS` or `EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS` is zero or negative. The message names the offending setting.
+   - `EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS` is greater than `EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS`. The message names both settings.
+   - An explicit `EMAIL_RESET_TOKEN_EXPIRE_HOURS` is zero or negative. The message names `EMAIL_RESET_TOKEN_EXPIRE_HOURS`.
+   - An explicit `EMAIL_RESET_TOKEN_EXPIRE_HOURS` is above the maximum or below the minimum. The message names `EMAIL_RESET_TOKEN_EXPIRE_HOURS` and the bound it breaks.
+5. **Compatibility:** the default configuration still loads, and the existing test suite still passes.
+
+## background
+
+This protection comes from a public incident report (https://aws.amazon.com/message/74876-2/). What set that incident off: A configuration update accidentally deleted the minimum-healthy-hosts setting for the regional DNS resolver fleet. With the key gone, the system quietly used a very low built-in default, which let far too many resolver hosts be taken out of service.
 
 ---
 
