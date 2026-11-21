@@ -120,37 +120,37 @@ had never seen (python-dotenv), `scripts/finale_dry_run.sh` produced 3 accepted 
 
 | | Value |
 |---|---|
-| Tasks in the dataset | 34 across 8 families |
-| Candidates passing every gate | 34 of 34 |
-| Mutants killed by accepted tasks' tests | 179 of 201 (89%) |
+| Tasks in the dataset | 52 across 8 families |
+| Candidates passing every gate | 52 of 52 |
+| Mutants killed by accepted tasks' tests | 276 of 309 (89%) |
 | Paid API spend | $43.96 (hard cap $70) |
 
 | Model | Agent | Runs | Pass rate |
 |---|---|---|---|
-| claude-code | claude-code | 54 (up to k=3 per task) | 98% |
-| gemini/gemini-2.5-flash | terminus-2 | 54 (up to k=3 per task) | 33% |
-| gemini/gemini-3.8-flash | terminus-2 | 54 (up to k=3 per task) | 28% |
+| claude-code | claude-code | 70 (up to k=3 per task) | 99% |
+| gemini/gemini-2.5-flash | terminus-2 | 72 (up to k=3 per task) | 36% |
+| gemini/gemini-3.8-flash | terminus-2 | 72 (up to k=3 per task) | 32% |
 
 Where failed runs break (failing test kinds per model):
 
 | Model | Fault-injection tests | Happy-path tests | Repo suite |
 |---|---|---|---|
 | claude-code | 1 | 0 | 0 |
-| gemini/gemini-2.5-flash | 23 | 9 | 13 |
-| gemini/gemini-3.8-flash | 26 | 12 | 1 |
+| gemini/gemini-2.5-flash | 26 | 12 | 20 |
+| gemini/gemini-3.8-flash | 32 | 17 | 3 |
 
 Findings:
 
-- 34 of 34 tasks with a validation report passed every gate; accepted tasks' tests killed 179 of 201 injected mutants (89%).
-- pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).
-- hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).
-- of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.
-- each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo's own tests, 13 missed an injected fault, 10 wrong code.
+- 52 of 52 tasks with a validation report passed every gate; accepted tasks' tests killed 276 of 309 injected mutants (89%).
+- pass rate by model: claude-code 99% (70 runs), gemini/gemini-2.5-flash 36% (72 runs), gemini/gemini-3.8-flash 32% (72 runs) (agents differ: claude-code, terminus-2; compare models within one agent).
+- hardest family is config-round-trip (33% of 27 runs across all models); easiest is env-aware-naming (83% of 24 runs).
+- of failed runs with per-test detail, 59 failed at least one injected fault-case test and 29 at least one happy-path test.
+- each of the 96 failed runs has one cause: 70 used every turn, 1 broke the repo's own tests, 13 missed an injected fault, 12 wrong code.
 - gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.
-- gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.
-- gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap.
+- gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 46 main-run failures, 25 used every turn and 21 stopped before the cap.
+- gemini/gemini-3.8-flash with 60 turns instead of 30: 31% -> 75% on 16 tasks; of its 49 main-run failures, 45 used every turn and 4 stopped before the cap.
 
-Generated 2026-11-21T18:39:17+0530. Full per-family breakdown: `reports/index.html`.
+Generated 2026-11-22T01:11:20+0530. Full per-family breakdown: `reports/index.html`.
 <!-- results:end -->
 
 Refresh this block with `uv run python scripts/readme_results.py` after `forge report`.
