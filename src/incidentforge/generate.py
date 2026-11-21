@@ -382,7 +382,7 @@ def generate(
     work_root: Path = Path("work"),
     writer: Writer | None = None,
     validator: Validator | None = None,
-    jobs: int = 2,
+    jobs: int = 1,  # two pairs at once can reach 8 task containers with the mutation gate; D-22 keeps it at 4 (F-54)
     max_pairs: int | None = None,
     log: Callable[[str], None] = print,
     scope: Scope | None = None,

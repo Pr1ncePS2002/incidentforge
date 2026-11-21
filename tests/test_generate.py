@@ -295,3 +295,10 @@ def test_family_titles_include_gold_and_skip_other_families(target: Target, tmp_
     backend = FakeBackend(answer(good_patch(target)))
     run(target, tmp_path, backend, FakeValidator(True))
     assert "- gold title" in backend.prompts[0] and "- other" not in backend.prompts[0]
+
+
+def test_single_worker_path_stays_within_four_containers() -> None:
+    # forge run --workers 1 calls generate() with the default; the mutation gate alone uses 4 (D-22, F-54)
+    import inspect
+
+    assert inspect.signature(generate).parameters["jobs"].default == 1
