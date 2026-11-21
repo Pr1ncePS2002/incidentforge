@@ -8,9 +8,12 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "code-review-graph==2.3.9",
     "google-genai==3.5.0",
     "pydantic==2.14.3",
     "pyyaml==6.0.3",
+    "tree-sitter==0.26.1",
+    "tree-sitter-language-pack==0.13.0",
     "typer==0.29.1",
 ]
 
@@ -23,6 +26,60 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "hypothesis==6.170.15",
+    "mutmut==3.8.1",
+    "mypy==2.4.1",
+    "pip-audit==2.10.1",
     "pytest==9.2.0",
+    "pytest-cov==7.1.0",
     "ruff==0.17.5",
+    "types-pyyaml==6.0.12.20261113",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "BLE", "RUF"]
+# typer declares cli options as call defaults by design
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["docker: needs a docker daemon; run in the integration stage only"]
+addopts = "-m 'not docker'"
+
+[tool.coverage.run]
+source = ["incidentforge"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+# contract stubs and protocol bodies are filled by later phases
+exclude_also = ["raise NotImplementedError", "\\.\\.\\.$", "if __name__ == .__main__.:"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+files = ["src"]
+
+[tool.mutmut]
+# mutation testing of our own gate and spend code, run nightly in ci (mutation job)
+source_paths = ["src"]
+only_mutate = ["src/incidentforge/budget.py", "src/incidentforge/ci_checks.py", "src/incidentforge/validate/*"]
+# a mutated signal number would send a real SIGHUP to the test run's own process group
+do_not_mutate_patterns = ["os\\.kill\\(pid, 0\\)"]
+pytest_add_cli_args_test_selection = [
+    "tests/test_budget.py",
+    "tests/test_budget_concurrency.py",
+    "tests/test_budget_strict.py",
+    "tests/test_properties.py",
+    "tests/test_ci_checks.py",
+    "tests/test_validate.py",
+    "tests/test_validate_strict.py",
+    "tests/test_go_mutants.py",
+    "tests/test_mutants_strict.py",
 ]

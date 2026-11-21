@@ -1,0 +1,109 @@
+diff --git a/backend/app/api/routes/users.py b/backend/app/api/routes/users.py
+index 1748f58..e7c2d48 100644
+--- a/backend/app/api/routes/users.py
++++ b/backend/app/api/routes/users.py
+@@ -1,9 +1,11 @@
+ import uuid
+ from typing import Any
+ 
+-from fastapi import APIRouter, Depends, HTTPException
++from fastapi import APIRouter, Depends, Header, HTTPException
+ from sqlmodel import col, delete, func, select
+ 
++from app.core.idempotency import delete_user_idempotency
++
+ from app import crud
+ from app.api.deps import (
+     CurrentUser,
+@@ -213,11 +215,39 @@ def update_user(
+ 
+ @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
+ def delete_user(
+-    session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
++    session: SessionDep,
++    current_user: CurrentUser,
++    user_id: uuid.UUID,
++    idempotency_key: str | None = Header(default=None),
+ ) -> Message:
+     """
+     Delete a user.
++
++    Retried requests carrying the same ``Idempotency-Key`` header replay the
++    original result instead of failing with 404 on the already-deleted user.
+     """
++    key = (idempotency_key or "").strip()
++    if not key:
++        return _apply_user_deletion(session, current_user, user_id)
++    # serialise deliveries of the same key so back-to-back duplicates apply once
++    with delete_user_idempotency.lock_for(key):
++        record = delete_user_idempotency.get(key)
++        if record is not None:
++            if record.target_id != user_id:
++                raise HTTPException(
++                    status_code=409,
++                    detail="Idempotency-Key was already used to delete a different user",
++                )
++            return Message(**record.result)
++        result = _apply_user_deletion(session, current_user, user_id)
++        # only recorded after the commit succeeded, so a failed attempt can be retried
++        delete_user_idempotency.put(key, user_id, result.model_dump())
++        return result
++
++
++def _apply_user_deletion(
++    session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
++) -> Message:
+     user = session.get(User, user_id)
+     if not user:
+         raise HTTPException(status_code=404, detail="User not found")
+diff --git a/backend/app/core/idempotency.py b/backend/app/core/idempotency.py
+new file mode 100644
+index 0000000..a389974
+--- /dev/null
++++ b/backend/app/core/idempotency.py
+@@ -0,0 +1,45 @@
++"""Process-local idempotency records for retried mutating requests."""
++
++import threading
++import uuid
++from dataclasses import dataclass, field
++from typing import Any
++
++
++@dataclass(frozen=True)
++class IdempotencyRecord:
++    target_id: uuid.UUID
++    result: dict[str, Any]
++
++
++@dataclass
++class IdempotencyStore:
++    """Remembers the outcome of each successfully applied idempotency key."""
++
++    _records: dict[str, IdempotencyRecord] = field(default_factory=dict)
++    _key_locks: dict[str, threading.Lock] = field(default_factory=dict)
++    _guard: threading.Lock = field(default_factory=threading.Lock)
++
++    def lock_for(self, key: str) -> threading.Lock:
++        with self._guard:
++            lock = self._key_locks.get(key)
++            if lock is None:
++                lock = threading.Lock()
++                self._key_locks[key] = lock
++            return lock
++
++    def get(self, key: str) -> IdempotencyRecord | None:
++        with self._guard:
++            return self._records.get(key)
++
++    def put(self, key: str, target_id: uuid.UUID, result: dict[str, Any]) -> None:
++        with self._guard:
++            self._records[key] = IdempotencyRecord(target_id, dict(result))
++
++    def clear(self) -> None:
++        with self._guard:
++            self._records.clear()
++            self._key_locks.clear()
++
++
++delete_user_idempotency = IdempotencyStore()

@@ -1,0 +1,171 @@
+diff --git a/internal/config/env_export.go b/internal/config/env_export.go
+new file mode 100644
+index 00000000..fd805d36
+--- /dev/null
++++ b/internal/config/env_export.go
+@@ -0,0 +1,165 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import (
++	"errors"
++	"fmt"
++	"io/fs"
++	"os"
++	"path/filepath"
++	"sort"
++	"strings"
++)
++
++// ExportEnvironmentToFile merges the Miniflux settings found in environ (entries in
++// the KEY=VALUE form returned by os.Environ) into the configuration file at filename.
++//
++// The merge is lossless: comments, blank lines, unknown keys and settings that are not
++// part of environ are kept byte for byte, values are written verbatim (an explicitly
++// empty value is written as KEY=), and the file is replaced atomically so that a
++// failed export leaves the previous file untouched. When nothing changes, the file is
++// not rewritten.
++func ExportEnvironmentToFile(filename string, environ []string) error {
++	knownKeys := NewConfigParser().options.options
++
++	updates := make(map[string]string)
++	for _, entry := range environ {
++		key, value, found := strings.Cut(entry, "=")
++		if !found {
++			continue
++		}
++		key = strings.TrimSpace(key)
++		if _, isKnown := knownKeys[key]; !isKnown {
++			continue
++		}
++		if strings.ContainsAny(value, "\r\n") {
++			return fmt.Errorf("config: the value of %s contains a line break and cannot be written to %q", key, filename)
++		}
++		updates[key] = value
++	}
++
++	mode := fs.FileMode(0o600)
++	original, err := os.ReadFile(filename)
++	switch {
++	case err == nil:
++		info, statErr := os.Stat(filename)
++		if statErr != nil {
++			return fmt.Errorf("config: unable to stat %q: %w", filename, statErr)
++		}
++		mode = info.Mode().Perm()
++	case errors.Is(err, fs.ErrNotExist):
++		original = nil
++	default:
++		return fmt.Errorf("config: unable to read %q: %w", filename, err)
++	}
++
++	var lines []string
++	if len(original) > 0 {
++		lines = strings.Split(strings.TrimSuffix(string(original), "\n"), "\n")
++	}
++
++	changed := false
++	present := make(map[string]bool)
++	for i, line := range lines {
++		key, value, ok := exportSplitAssignment(line)
++		if !ok {
++			continue
++		}
++		newValue, wanted := updates[key]
++		if !wanted {
++			continue
++		}
++		present[key] = true
++		if value == newValue {
++			continue
++		}
++		lineEnding := ""
++		if strings.HasSuffix(line, "\r") {
++			lineEnding = "\r"
++		}
++		lines[i] = key + "=" + newValue + lineEnding
++		changed = true
++	}
++
++	missing := make([]string, 0, len(updates))
++	for key := range updates {
++		if !present[key] {
++			missing = append(missing, key)
++		}
++	}
++	sort.Strings(missing)
++	for _, key := range missing {
++		lines = append(lines, key+"="+updates[key])
++		changed = true
++	}
++
++	if !changed {
++		return nil
++	}
++
++	assignments := make([]string, 0, len(lines))
++	for _, line := range lines {
++		key, value, ok := exportSplitAssignment(line)
++		if !ok {
++			continue
++		}
++		if _, isKnown := knownKeys[key]; !isKnown {
++			continue
++		}
++		assignments = append(assignments, key+"="+value)
++	}
++	if err := NewConfigParser().parseLines(assignments); err != nil {
++		return fmt.Errorf("config: refusing to write an invalid configuration to %q: %w", filename, err)
++	}
++
++	return exportWriteFileAtomically(filename, []byte(strings.Join(lines, "\n")+"\n"), mode)
++}
++
++func exportSplitAssignment(line string) (string, string, bool) {
++	trimmed := strings.TrimSpace(line)
++	if trimmed == "" || strings.HasPrefix(trimmed, "#") {
++		return "", "", false
++	}
++	key, value, found := strings.Cut(trimmed, "=")
++	key = strings.TrimSpace(key)
++	if !found || key == "" {
++		return "", "", false
++	}
++	return key, strings.TrimSpace(value), true
++}
++
++func exportWriteFileAtomically(filename string, data []byte, mode fs.FileMode) error {
++	tmp, err := os.CreateTemp(filepath.Dir(filename), "."+filepath.Base(filename)+".tmp-*")
++	if err != nil {
++		return fmt.Errorf("config: unable to create a temporary file next to %q: %w", filename, err)
++	}
++	tmpName := tmp.Name()
++	committed := false
++	defer func() {
++		if !committed {
++			_ = os.Remove(tmpName)
++		}
++	}()
++
++	if _, err := tmp.Write(data); err != nil {
++		_ = tmp.Close()
++		return fmt.Errorf("config: unable to write %q: %w", tmpName, err)
++	}
++	if err := tmp.Sync(); err != nil {
++		_ = tmp.Close()
++		return fmt.Errorf("config: unable to sync %q: %w", tmpName, err)
++	}
++	if err := tmp.Close(); err != nil {
++		return fmt.Errorf("config: unable to close %q: %w", tmpName, err)
++	}
++	if err := os.Chmod(tmpName, mode); err != nil {
++		return fmt.Errorf("config: unable to set permissions on %q: %w", tmpName, err)
++	}
++	if err := os.Rename(tmpName, filename); err != nil {
++		return fmt.Errorf("config: unable to replace %q: %w", filename, err)
++	}
++	committed = true
++	return nil
++}

@@ -1,0 +1,181 @@
+diff --git a/backend/app/api/idempotency.py b/backend/app/api/idempotency.py
+new file mode 100644
+index 0000000..6c67ae6
+--- /dev/null
++++ b/backend/app/api/idempotency.py
+@@ -0,0 +1,136 @@
++"""Idempotent item creation.
++
++Clients retry ``POST /items/`` when a response is lost (timeouts, dropped
++connections, restarted workers). Without protection every retry creates one
++more item. A client that sends an ``Idempotency-Key`` header instead gets the
++item created by the first successful request back on every repeat.
++"""
++
++import hashlib
++import json
++import threading
++import uuid
++from typing import Annotated
++
++from fastapi import Header, HTTPException
++from sqlalchemy import Column, ForeignKey, UniqueConstraint
++from sqlalchemy.exc import IntegrityError
++from sqlmodel import Field, Session, SQLModel, select
++
++from app.models import Item, ItemCreate
++
++MAX_IDEMPOTENCY_KEY_LENGTH = 255
++
++IdempotencyKeyHeader = Annotated[
++    str | None,
++    Header(
++        alias="Idempotency-Key",
++        description=(
++            "Client-chosen key. Repeating a request with the same key returns "
++            "the item created by the first request instead of a new one."
++        ),
++    ),
++]
++
++
++class ItemIdempotencyRecord(SQLModel, table=True):
++    """Remembers which item an (owner, key) pair produced and for which payload."""
++
++    __tablename__ = "item_idempotency_record"
++    __table_args__ = (
++        UniqueConstraint("owner_id", "key", name="uq_item_idempotency_owner_key"),
++    )
++
++    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
++    owner_id: uuid.UUID = Field(
++        sa_column=Column(ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
++    )
++    key: str = Field(max_length=MAX_IDEMPOTENCY_KEY_LENGTH)
++    request_hash: str = Field(max_length=64)
++    item_id: uuid.UUID = Field(
++        sa_column=Column(ForeignKey("item.id", ondelete="CASCADE"), nullable=False)
++    )
++
++
++_table_lock = threading.Lock()
++_table_ready = False
++
++
++def _ensure_table(session: Session) -> None:
++    # created on first use so existing databases need no manual migration step
++    global _table_ready
++    if _table_ready:
++        return
++    with _table_lock:
++        if not _table_ready:
++            table = ItemIdempotencyRecord.__table__  # type: ignore[attr-defined]
++            table.create(session.get_bind(), checkfirst=True)
++            _table_ready = True
++
++
++def _fingerprint(item_in: ItemCreate) -> str:
++    payload = json.dumps(
++        item_in.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
++    )
++    return hashlib.sha256(payload.encode()).hexdigest()
++
++
++def _replay(
++    session: Session, owner_id: uuid.UUID, key: str, fingerprint: str
++) -> Item | None:
++    record = session.exec(
++        select(ItemIdempotencyRecord).where(
++            ItemIdempotencyRecord.owner_id == owner_id,
++            ItemIdempotencyRecord.key == key,
++        )
++    ).first()
++    if record is None:
++        return None
++    if record.request_hash != fingerprint:
++        raise HTTPException(
++            status_code=422,
++            detail="Idempotency-Key was already used with a different payload",
++        )
++    return session.get(Item, record.item_id)
++
++
++def create_item_once(
++    *, session: Session, owner_id: uuid.UUID, item_in: ItemCreate, key: str
++) -> Item:
++    """Create the item for this key once; repeats return the original item."""
++    if not key.strip() or len(key) > MAX_IDEMPOTENCY_KEY_LENGTH:
++        raise HTTPException(
++            status_code=422,
++            detail=(
++                "Idempotency-Key must be 1 to "
++                f"{MAX_IDEMPOTENCY_KEY_LENGTH} non-blank characters"
++            ),
++        )
++    _ensure_table(session)
++    fingerprint = _fingerprint(item_in)
++    original = _replay(session, owner_id, key, fingerprint)
++    if original is not None:
++        return original
++    item = Item.model_validate(item_in, update={"owner_id": owner_id})
++    # item and key are committed together: a failed attempt leaves neither behind
++    try:
++        session.add(item)
++        session.flush()
++        session.add(
++            ItemIdempotencyRecord(
++                owner_id=owner_id,
++                key=key,
++                request_hash=fingerprint,
++                item_id=item.id,
++            )
++        )
++        session.commit()
++    except IntegrityError:
++        # a concurrent delivery with the same key won the race; hand back its item
++        session.rollback()
++        original = _replay(session, owner_id, key, fingerprint)
++        if original is None:
++            raise
++        return original
++    session.refresh(item)
++    return item
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..c32594b 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -58,13 +58,33 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) ->
+     return item
+ 
+ 
++from app.api.idempotency import (  # noqa: E402
++    IdempotencyKeyHeader,
++    create_item_once,
++)
++
++
+ @router.post("/", response_model=ItemPublic)
+ def create_item(
+-    *, session: SessionDep, current_user: CurrentUser, item_in: ItemCreate
++    *,
++    session: SessionDep,
++    current_user: CurrentUser,
++    item_in: ItemCreate,
++    idempotency_key: IdempotencyKeyHeader = None,
+ ) -> Any:
+     """
+     Create new item.
++
++    Send an ``Idempotency-Key`` header to make retries safe: repeating the
++    request with the same key returns the item created the first time.
+     """
++    if idempotency_key is not None:
++        return create_item_once(
++            session=session,
++            owner_id=current_user.id,
++            item_in=item_in,
++            key=idempotency_key,
++        )
+     item = Item.model_validate(item_in, update={"owner_id": current_user.id})
+     session.add(item)
+     session.commit()

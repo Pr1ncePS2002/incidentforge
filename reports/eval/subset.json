@@ -1,0 +1,12 @@
+[
+  "fastapi-template/cf-002-userbase",
+  "fastapi-template/ff-002-settings",
+  "fastapi-template/ic-003-create-item",
+  "fastapi-template/tt-002-access-token-expire",
+  "miniflux/en-001-deleteapikeycontext",
+  "miniflux/ff-002-configvalue",
+  "miniflux/hr-001-configvalue",
+  "miniflux/rd-003-databasemaxconns",
+  "miniflux/rt-001-configvalue",
+  "miniflux/tt-002-configoptions"
+]

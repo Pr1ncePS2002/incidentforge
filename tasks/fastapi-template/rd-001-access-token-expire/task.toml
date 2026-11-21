@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "bound access token lifetime by a configured ceiling"
+family = "resource-aware-defaults"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["hardcoded-size: ACCESS_TOKEN_MAX_EXPIRE_MINUTES=90 with no explicit lifetime still yields the fixed 11520 instead of min(11520, ceiling)", "exceeds-limit: ACCESS_TOKEN_EXPIRE_MINUTES=120 configured above ACCESS_TOKEN_MAX_EXPIRE_MINUTES=60 (via kwargs and via env)", "zero-or-negative: ACCESS_TOKEN_EXPIRE_MINUTES or ACCESS_TOKEN_MAX_EXPIRE_MINUTES set to 0 or negative, so every token expires on issue", "unset-limit: ACCESS_TOKEN_MAX_EXPIRE_MINUTES unset, so the documented default 11520 or an explicit value is used unchanged"]
+map_node = "backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES"
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

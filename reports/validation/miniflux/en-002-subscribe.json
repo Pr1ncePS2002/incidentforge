@@ -1,0 +1,45 @@
+{
+  "task_id": "miniflux/en-002-subscribe",
+  "accepted": true,
+  "gates": [
+    {
+      "gate": "leak",
+      "passed": true,
+      "detail": "3% 8-gram overlap",
+      "seconds": 0.0
+    },
+    {
+      "gate": "fail_on_base",
+      "passed": true,
+      "detail": "reward=0.0 feature_tests=0.0 repo_suite=1.0",
+      "seconds": 14.5
+    },
+    {
+      "gate": "pass_on_reference",
+      "passed": true,
+      "detail": "reward=1.0",
+      "seconds": 14.1
+    },
+    {
+      "gate": "regression",
+      "passed": true,
+      "detail": "repo suite passed with the reference patch",
+      "seconds": 0.0
+    },
+    {
+      "gate": "mutation",
+      "passed": true,
+      "detail": "killed 4/6; survived: flip-comparison@internal/googlereader/handler.go:420, drop-error-return@internal/googlereader/handler.go:421",
+      "seconds": 31.7
+    },
+    {
+      "gate": "flakiness",
+      "passed": true,
+      "detail": "oracle rewards over 3 runs: [1.0, 1.0, 1.0]",
+      "seconds": 16.6
+    }
+  ],
+  "mutants_total": 6,
+  "mutants_killed": 4,
+  "log_path": "jobs/validation"
+}

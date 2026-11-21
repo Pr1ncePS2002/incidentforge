@@ -1,0 +1,34 @@
+slug: env-aware-naming
+title: environment-scoped cache, queue and topic names
+intent: >-
+  every cache key, queue, topic or bucket name is derived from the configured deployment environment or
+  namespace, so two environments sharing infrastructure never read or overwrite each other's data.
+surface_kinds: [cache-key, consumer, settings-class, env-read]
+fault_catalogue:
+  - id: unscoped-key
+    description: a key or name is built without the environment prefix, so staging and production collide
+  - id: wrong-env-source
+    description: the name uses a hardcoded or default environment instead of the configured one
+  - id: unknown-env
+    description: the configured environment is empty or not one of the allowed values; building a name must fail fast
+  - id: separator-injection
+    description: an environment or id containing the separator character produces an ambiguous key that collides with another
+acceptance:
+  - the same logical key built for two different environments yields two different names
+  - an empty or unknown environment is rejected with an error naming the setting
+  - names for the default environment the repo ships with stay stable and the existing test suite still passes
+difficulty_levers:
+  - several builders (cache, queue, topic) that must share one naming rule
+  - escaping or rejecting separator characters inside parts
+  - reading the environment through the settings object rather than the process environment
+examples:
+  - a session cache key carries the environment so a staging login never resolves against production
+  - a retry queue name is suffixed with the namespace so two deployments never consume each other's jobs
+languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: key-builder
+    surface_kinds: [cache-key]
+  - id: naming-setting
+    node_kinds: [config_read, env_read]
+    name_matches: "(?i)(name|prefix|topic|queue|bucket|database|namespace|project|domain|_db$|^db_)"

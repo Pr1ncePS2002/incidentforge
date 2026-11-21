@@ -1,0 +1,46 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..5dfb2d8 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,41 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    @model_validator(mode="after")
++    def _enforce_password_recovery_email_settings(self) -> Self:
++        # with SMTP_HOST set the app promises reset mails; refuse to boot if they cannot work
++        if self.SMTP_HOST is None:
++            return self
++        placeholders = {
++            "changethis", "changeme", "change-me", "todo", "tbd", "fixme", "placeholder"
++        }
++        problems: list[str] = []
++        checks: list[tuple[str, str | None]] = [
++            ("SMTP_HOST", self.SMTP_HOST),
++            ("EMAILS_FROM_EMAIL", self.EMAILS_FROM_EMAIL),
++            ("FRONTEND_HOST", self.FRONTEND_HOST),
++        ]
++        if self.SMTP_USER is not None:
++            checks.append(("SMTP_USER", self.SMTP_USER))
++            checks.append(("SMTP_PASSWORD", self.SMTP_PASSWORD))
++        for name, value in checks:
++            if value is None:
++                problems.append(f"{name} is missing")
++            elif not value.strip():
++                problems.append(f"{name} is blank")
++            else:
++                lowered = value.strip().lower()
++                if lowered in placeholders or (
++                    lowered.startswith("<") and lowered.endswith(">")
++                ):
++                    problems.append(f"{name} still holds a template placeholder")
++        if problems:
++            raise ValueError(
++                "email is enabled but password-recovery settings are invalid: "
++                + "; ".join(problems)
++            )
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

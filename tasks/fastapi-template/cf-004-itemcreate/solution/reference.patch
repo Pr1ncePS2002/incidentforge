@@ -1,0 +1,28 @@
+diff --git a/backend/app/models.py b/backend/app/models.py
+index 181acf2..a3ddd42 100644
+--- a/backend/app/models.py
++++ b/backend/app/models.py
+@@ -72,9 +72,22 @@ class ItemBase(SQLModel):
+     description: str | None = Field(default=None, max_length=255)
+ 
+ 
++from pydantic import model_validator  # noqa: E402
++
++
+ # Properties to receive on item creation
+ class ItemCreate(ItemBase):
+-    pass
++    min_order_quantity: int | None = Field(default=None, gt=0)
++    max_order_quantity: int | None = Field(default=None, gt=0)
++
++    @model_validator(mode="after")
++    def _check_order_quantity_range(self) -> "ItemCreate":
++        lo, hi = self.min_order_quantity, self.max_order_quantity
++        if lo is not None and hi is not None and lo > hi:
++            raise ValueError(
++                f"min_order_quantity ({lo}) must not exceed max_order_quantity ({hi})"
++            )
++        return self
+ 
+ 
+ # Properties to receive on item update

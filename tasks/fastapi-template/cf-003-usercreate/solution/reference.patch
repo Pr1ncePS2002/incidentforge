@@ -1,0 +1,33 @@
+diff --git a/backend/app/models.py b/backend/app/models.py
+index 181acf2..d88c39a 100644
+--- a/backend/app/models.py
++++ b/backend/app/models.py
+@@ -18,9 +18,28 @@ class UserBase(SQLModel):
+ 
+ 
+ # Properties to receive via API on creation
++from pydantic import model_validator  # noqa: E402
++
++
+ class UserCreate(UserBase):
+     password: str = Field(min_length=8, max_length=128)
+ 
++    @model_validator(mode="after")
++    def _reject_password_derived_from_identity(self) -> "UserCreate":
++        # each field is valid alone, but a password built from the account's own
++        # email or name is trivially guessable; reject the combination up front
++        password = self.password.casefold()
++        problems: list[str] = []
++        local_part = str(self.email).rsplit("@", 1)[0].casefold()
++        if len(local_part) >= 3 and local_part in password:
++            problems.append("password must not contain the local part of email")
++        name = (self.full_name or "").strip().casefold()
++        if len(name) >= 3 and name in password:
++            problems.append("password must not contain full_name")
++        if problems:
++            raise ValueError("; ".join(problems))
++        return self
++
+ 
+ class UserRegister(SQLModel):
+     email: EmailStr = Field(max_length=255)

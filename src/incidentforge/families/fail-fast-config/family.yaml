@@ -1,0 +1,44 @@
+slug: fail-fast-config
+title: fail fast on missing or placeholder settings
+intent: >-
+  the service refuses to start when a required setting is missing, empty, whitespace or still a placeholder,
+  and reports every bad key in one aggregated error instead of crashing later on first use.
+surface_kinds: [settings-class, env-read, pool-config]
+fault_catalogue:
+  - id: missing
+    description: a required setting is absent from the environment
+  - id: empty
+    description: a required setting is set to an empty or whitespace-only string
+  - id: placeholder
+    description: a required setting still holds a template placeholder such as "changethis", "todo" or "<fill-me>"
+  - id: conditional-missing
+    description: a setting that becomes required only when a feature flag is on is missing while the flag is on
+  - id: several-bad
+    description: two or more settings are bad at once and the error must name all of them
+acceptance:
+  - building the settings with a bad value raises at construction time, not on first use
+  - the error message names every offending key, aggregated into one error
+  - valid configurations, including the defaults the repo ships with, still load unchanged
+  - the repository's existing test suite still passes
+difficulty_levers:
+  - conditional requirements that depend on another setting
+  - aggregating several independent checks into one error
+  - placeholders that must be detected case-insensitively or after trimming
+examples:
+  - when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
+  - a signing secret left as a documented placeholder refuses to load in every environment
+languages: [python, go]
+# failure map rules (failmap/tag.py): a node is exposed to this family when any rule matches
+map_rules:
+  - id: required-setting-unchecked
+    node_kinds: [config_read]
+    where: {has_default: false, validated: false}
+  - id: placeholder-default
+    node_kinds: [config_read]
+    where: {placeholder_default: true}
+  - id: env-read-without-default
+    node_kinds: [env_read]
+    where: {has_default: false}
+  - id: settings-holder
+    node_kinds: [Class]
+    surface_kinds: [settings-class]

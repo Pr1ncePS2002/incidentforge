@@ -1,0 +1,49 @@
+diff --git a/backend/app/crud.py b/backend/app/crud.py
+index a8ceba6..3036cd2 100644
+--- a/backend/app/crud.py
++++ b/backend/app/crud.py
+@@ -8,11 +8,43 @@ from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+ 
+ 
+ def create_user(*, session: Session, user_create: UserCreate) -> User:
++    # The email is the idempotency key for user creation: a redelivered or
++    # retried create for a user that already exists replays the stored row
++    # instead of inserting a duplicate (or failing on the unique constraint).
++    from sqlalchemy.exc import IntegrityError
++
++    def replay(existing: User) -> User:
++        verified = verify_password(user_create.password, existing.hashed_password)
++        if isinstance(verified, tuple):
++            verified = verified[0]
++        same_payload = (
++            bool(verified)
++            and existing.full_name == user_create.full_name
++            and existing.is_active == user_create.is_active
++            and existing.is_superuser == user_create.is_superuser
++        )
++        if not same_payload:
++            raise ValueError(
++                "a different user with this email already exists"
++            )
++        return existing
++
++    existing = get_user_by_email(session=session, email=user_create.email)
++    if existing is not None:
++        return replay(existing)
+     db_obj = User.model_validate(
+         user_create, update={"hashed_password": get_password_hash(user_create.password)}
+     )
+     session.add(db_obj)
+-    session.commit()
++    try:
++        session.commit()
++    except IntegrityError:
++        # a concurrent delivery inserted the same user after our check
++        session.rollback()
++        existing = get_user_by_email(session=session, email=user_create.email)
++        if existing is None:
++            raise
++        return replay(existing)
+     session.refresh(db_obj)
+     return db_obj
+ 

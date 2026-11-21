@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "scope client cache keys to the configured deployment environment"
+family = "env-aware-naming"
+difficulty = "medium"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["unscoped-key: API key cache key built without the environment, so production and staging keys for the same ID collide", "wrong-env-source: key uses a hardcoded/default environment instead of CacheKeySettings.Environment", "unknown-env: empty, misspelled or wrongly-cased Environment must fail with an error naming Environment", "separator-injection: a part containing ':' (or an empty part) produces an ambiguous key and must be rejected"]
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

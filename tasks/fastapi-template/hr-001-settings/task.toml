@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reload settings at runtime without restart and keep the last good config on a bad reload"
+family = "hot-reload-config"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["stale-capture: a consumer or module alias keeps the Settings instance it got at startup, and a reload that builds a new object instead of updating that one in place leaves it serving the old ACCESS_TOKEN_EXPIRE_MINUTES / SMTP_PORT", "invalid-reload: reload supplies SMTP_PORT='not-a-port', an invalid EMAILS_FROM_EMAIL or leaves out SECRET_KEY; the reload must raise an error naming the key and every previous value (including valid keys in the same reload) must stay active", "partial-reload: reload changes related values (SMTP_USER/SMTP_PASSWORD/SMTP_HOST/EMAILS_FROM_EMAIL, PROJECT_NAME and the derived EMAILS_FROM_NAME, the computed emails_enabled); readers must never see the new value paired with the old one, and a rejected reload must not apply half of the pair", "reload-unset: ACCESS_TOKEN_EXPIRE_MINUTES / SMTP_HOST / SMTP_PORT are left out of the reload (even when set in the process env); they must fall back to their declared defaults, not keep the stale value"]
+map_node = "backend/app/core/config.py::Settings"
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

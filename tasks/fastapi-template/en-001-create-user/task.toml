@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "scope shared cache and queue names by the configured deployment environment"
+family = "env-aware-naming"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["unscoped-key: the same user cache key built for staging and production must carry the environment prefix and come out different", "wrong-env-source: names must use the FASTAPI_ENV value configured at call time, not a hardcoded or import-time default", "unknown-env: an empty, whitespace-only, None or unknown FASTAPI_ENV (qa, prod, Production) must raise a ValueError naming FASTAPI_ENV, and create_user must raise it before writing anything", "separator-injection: a name part containing ':' (or an empty part) must be rejected so that ('a:b','c') and ('a','b:c') cannot collide"]
+map_node = "backend/app/crud.py::create_user"
+blast_radius = 5
+fix_scope = "4+ files"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

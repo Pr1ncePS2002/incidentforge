@@ -1,0 +1,86 @@
+diff --git a/backend/app/core/idempotency.py b/backend/app/core/idempotency.py
+new file mode 100644
+index 0000000..2702abd
+--- /dev/null
++++ b/backend/app/core/idempotency.py
+@@ -0,0 +1,34 @@
++"""Process-local ledger of idempotency keys whose effect has already been applied."""
++
++import threading
++from collections import OrderedDict
++from collections.abc import Hashable, Iterator
++from contextlib import contextmanager
++
++
++class IdempotencyLedger:
++    """Remembers which (scope, key) pairs have been applied, oldest evicted first."""
++
++    def __init__(self, max_entries: int = 100_000) -> None:
++        self._max_entries = max_entries
++        self._applied: OrderedDict[tuple[str, str], None] = OrderedDict()
++        self._lock = threading.Lock()
++
++    @contextmanager
++    def claim(self, scope: Hashable, key: str) -> Iterator[bool]:
++        """Yield whether ``key`` was already applied within ``scope``.
++
++        The key is recorded only if the body finishes without raising, so a
++        failed attempt stays retryable. The lock is held for the whole body,
++        so two deliveries of the same key can never both apply.
++        """
++        marker = (str(scope), key)
++        with self._lock:
++            yield marker in self._applied
++            self._applied[marker] = None
++            self._applied.move_to_end(marker)
++            while len(self._applied) > self._max_entries:
++                self._applied.popitem(last=False)
++
++
++user_update_ledger = IdempotencyLedger()
+diff --git a/backend/app/crud.py b/backend/app/crud.py
+index a8ceba6..f20d344 100644
+--- a/backend/app/crud.py
++++ b/backend/app/crud.py
+@@ -17,7 +17,26 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
+     return db_obj
+ 
+ 
+-def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
++def update_user(
++    *,
++    session: Session,
++    db_user: User,
++    user_in: UserUpdate,
++    idempotency_key: str | None = None,
++) -> Any:
++    if idempotency_key is None:
++        return _apply_user_update(session=session, db_user=db_user, user_in=user_in)
++
++    from app.core.idempotency import user_update_ledger
++
++    with user_update_ledger.claim(db_user.id, idempotency_key) as already_applied:
++        if already_applied:
++            session.refresh(db_user)
++            return db_user
++        return _apply_user_update(session=session, db_user=db_user, user_in=user_in)
++
++
++def _apply_user_update(*, session: Session, db_user: User, user_in: UserUpdate) -> User:
+     user_data = user_in.model_dump(exclude_unset=True)
+     extra_data = {}
+     if "password" in user_data:
+@@ -26,7 +45,12 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
+         extra_data["hashed_password"] = hashed_password
+     db_user.sqlmodel_update(user_data, update=extra_data)
+     session.add(db_user)
+-    session.commit()
++    try:
++        session.commit()
++    except Exception:
++        # drop the half-applied change so a retry starts from the stored state
++        session.rollback()
++        raise
+     session.refresh(db_user)
+     return db_user
+ 

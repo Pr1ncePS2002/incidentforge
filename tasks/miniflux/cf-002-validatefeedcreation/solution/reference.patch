@@ -1,0 +1,50 @@
+diff --git a/internal/validator/feed.go b/internal/validator/feed.go
+index b56eecf8..e8a9f434 100644
+--- a/internal/validator/feed.go
++++ b/internal/validator/feed.go
+@@ -46,6 +46,10 @@ func ValidateFeedCreation(store *storage.Storage, userID int64, request *model.F
+ 		return locale.NewLocalizedError("error.feed_category_not_found")
+ 	}
+ 
++	if err := ValidateFeedRuleCombination(request); err != nil {
++		return locale.NewLocalizedError("%s", err.Error())
++	}
++
+ 	if !IsValidRegex(request.BlocklistRules) {
+ 		return locale.NewLocalizedError("error.feed_invalid_blocklist_rule")
+ 	}
+diff --git a/internal/validator/feed_rules.go b/internal/validator/feed_rules.go
+new file mode 100644
+index 00000000..144f6992
+--- /dev/null
++++ b/internal/validator/feed_rules.go
+@@ -0,0 +1,29 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package validator // import "miniflux.app/v2/internal/validator"
++
++import (
++	"errors"
++	"strings"
++
++	"miniflux.app/v2/internal/model"
++)
++
++// ValidateFeedRuleCombination rejects entry filter rules that cannot work
++// together. Miniflux applies the blocklist first and then drops every entry
++// that does not match the keeplist, so identical non-empty rules remove every
++// entry of the feed.
++func ValidateFeedRuleCombination(request *model.FeedCreationRequest) error {
++	if request == nil {
++		return nil
++	}
++
++	blocklistRules := strings.TrimSpace(request.BlocklistRules)
++	keeplistRules := strings.TrimSpace(request.KeeplistRules)
++	if blocklistRules != "" && blocklistRules == keeplistRules {
++		return errors.New("blocklist_rules and keeplist_rules must not be identical: every entry of the feed would be removed")
++	}
++
++	return nil
++}

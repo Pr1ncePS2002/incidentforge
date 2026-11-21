@@ -1,0 +1,65 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..051881d 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,7 +54,59 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
+-    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
++    # Password-reset link lifetime. When EMAIL_RESET_TOKEN_EXPIRE_HOURS is unset
++    # (or empty) it is derived as ACCESS_TOKEN_EXPIRE_MINUTES // 240 (a quarter of
++    # the access-token lifetime, in hours), clamped to
++    # [EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS, EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS].
++    # With the shipped defaults this is 48 hours.
++    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int | None = None
++    EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS: int = 1
++    EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS: int = 168
++
++    @model_validator(mode="after")
++    def _resolve_email_reset_token_expiry(self) -> Self:
++        # a missing value used to fall back silently to a fixed constant; derive
++        # it from the configured limits and reject impossible bounds at startup
++        low = self.EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS
++        high = self.EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS
++        hours = self.EMAIL_RESET_TOKEN_EXPIRE_HOURS
++        problems: list[str] = []
++        if low < 1:
++            problems.append(
++                f"EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS must be at least 1, got {low}"
++            )
++        if high < 1:
++            problems.append(
++                f"EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS must be at least 1, got {high}"
++            )
++        if low > high:
++            problems.append(
++                f"EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS ({low}) must not exceed "
++                f"EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS ({high})"
++            )
++        if hours is not None:
++            if hours < 1:
++                problems.append(
++                    f"EMAIL_RESET_TOKEN_EXPIRE_HOURS must be at least 1, got {hours}"
++                )
++            elif hours > high:
++                problems.append(
++                    f"EMAIL_RESET_TOKEN_EXPIRE_HOURS ({hours}) exceeds "
++                    f"EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS ({high})"
++                )
++            elif hours < low:
++                problems.append(
++                    f"EMAIL_RESET_TOKEN_EXPIRE_HOURS ({hours}) is below "
++                    f"EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS ({low})"
++                )
++        if problems:
++            raise ValueError(
++                "invalid password-reset token configuration: " + "; ".join(problems)
++            )
++        if hours is None:
++            derived = self.ACCESS_TOKEN_EXPIRE_MINUTES // 240
++            self.EMAIL_RESET_TOKEN_EXPIRE_HOURS = min(max(derived, low), high)
++        return self
+ 
+     @computed_field  # type: ignore[prop-decorator]
+     @property

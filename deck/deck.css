@@ -1,0 +1,52 @@
+/* 16:9 slides printed one per pdf page; blue/orange accents follow the event template */
+@page { size: 13.333in 7.5in; margin: 0; }
+:root { --blue: #1565c0; --orange: #e07b24; --ink: #1f2933; --muted: #52606d; --pale: #e8f1fb; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #fff; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); }
+.slide { width: 13.333in; height: 7.5in; position: relative; overflow: hidden; page-break-after: always;
+  break-after: page; background: #fff; }
+.slide::before { content: "IncidentForge"; position: absolute; top: 0; left: 0; right: 0; height: 0.62in;
+  background: #0b1320; color: #fff; font-weight: 700; font-size: 18px; padding: 0.19in 0.5in; }
+.foot { position: absolute; left: 0; right: 0; bottom: 0; height: 0.14in;
+  background: linear-gradient(90deg, var(--blue), var(--orange)); }
+.content { position: absolute; top: 0.85in; left: 0.6in; right: 0.6in; bottom: 0.35in; }
+h1 { font-size: 34px; margin: 0 0 18px; color: var(--ink); border-left: 6px solid var(--orange);
+  padding-left: 14px; }
+ul { font-size: 22px; line-height: 1.45; padding-left: 26px; margin: 8px 0; }
+ul.tight { font-size: 18px; line-height: 1.35; }
+li { margin-bottom: 8px; }
+p.lead { font-size: 23px; line-height: 1.4; margin: 0 0 14px; }
+p.label { font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue);
+  font-weight: 700; margin: 10px 0 6px; }
+code { font-family: Menlo, Consolas, monospace; font-size: 0.85em; background: var(--pale); padding: 1px 5px;
+  border-radius: 4px; }
+b { color: var(--blue); }
+.tbd { background: var(--orange); color: #fff; padding: 1px 8px; border-radius: 4px; font-weight: 700; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+table.grid { border-collapse: collapse; width: 100%; font-size: 19px; }
+table.grid th, table.grid td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #d9e2ec;
+  vertical-align: top; }
+table.grid th { background: var(--pale); color: var(--blue); }
+table.grid.small { font-size: 17px; }
+table.grid.small td, table.grid.small th { padding: 6px 10px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 20px; }
+.kpis div { background: var(--pale); border-radius: 10px; padding: 14px 16px; }
+.kpis b { display: block; font-size: 36px; }
+.kpis span { font-size: 15px; color: var(--muted); }
+pre.instr { font-size: 13px; line-height: 1.4; background: #f5f7fa; border: 1px solid #d9e2ec; border-radius: 8px;
+  padding: 12px; white-space: pre-wrap; max-height: 4.6in; overflow: hidden; margin: 0; }
+.fig svg.diagram { width: 100%; height: auto; max-height: 5.6in; }
+.title { background: linear-gradient(120deg, #0b1320 55%, #12345e 80%, #7a4316); }
+.title::before { display: none; }
+.title .content { top: 1.2in; color: #fff; }
+.title h1 { font-size: 72px; color: #fff; border: 0; padding: 0; margin: 10px 0; }
+.title .kicker { font-size: 20px; color: #9fc3ee; margin: 0; }
+.title .tagline { font-size: 30px; color: var(--orange); margin: 0 0 40px; }
+table.meta { font-size: 22px; color: #fff; border-collapse: collapse; max-width: 10in; }
+table.meta td { padding: 8px 18px 8px 0; vertical-align: top; }
+table.meta td:first-child { color: #9fc3ee; white-space: nowrap; font-weight: 700; }
+.end .content { top: 2.4in; }
+p.note { font-size: 15px; color: var(--muted); margin: 6px 0 10px; }
+table.grid.heat td { font-size: 16px; padding: 7px 12px; }
+table.grid.heat td span { color: var(--muted); font-size: 13px; }

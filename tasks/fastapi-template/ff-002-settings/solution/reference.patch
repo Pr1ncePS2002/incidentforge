@@ -1,0 +1,31 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..bf9dfaf 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,26 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    @model_validator(mode="after")
++    def _reject_blank_or_placeholder_settings(self) -> Self:
++        # refuse to start with required values left blank or holding template text
++        placeholders = {
++            "todo", "tbd", "fixme", "changeme", "replaceme", "replace-me", "xxx",
++        }
++        problems: list[str] = []
++        for name in ("PROJECT_NAME", "SECRET_KEY", "FIRST_SUPERUSER_PASSWORD"):
++            value = getattr(self, name)
++            stripped = value.strip()
++            if not stripped:
++                problems.append(f"{name} must not be empty")
++            elif stripped.lower() in placeholders or (
++                stripped.startswith("<") and stripped.endswith(">")
++            ):
++                problems.append(f"{name} still holds a placeholder value")
++        if problems:
++            raise ValueError("invalid settings: " + "; ".join(problems))
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

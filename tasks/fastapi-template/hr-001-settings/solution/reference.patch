@@ -1,0 +1,49 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..6474d44 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,44 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    def reload(self, values: dict[str, object]) -> Self:
++        """Swap in a new configuration on this live instance without a restart.
++
++        `values` is the complete new raw configuration (setting name -> raw
++        value, e.g. strings as read from the environment). The process
++        environment and the dotenv file are not consulted, so a key missing
++        from `values` falls back to its documented default (a missing required
++        setting is rejected). The whole candidate is validated before anything
++        changes: on error the exception propagates and every current value keeps
++        serving. On success all values are replaced in one step, so readers never
++        see new and old values mixed. The instance is updated in place, so every
++        module that imported it reads the new values on its next attribute access.
++        """
++        candidate = self._validate_raw(dict(values))
++        # one reference swap: a reader sees either the old dict or the new one
++        object.__setattr__(
++            self, "__pydantic_fields_set__", set(candidate.__pydantic_fields_set__)
++        )
++        object.__setattr__(self, "__dict__", dict(candidate.__dict__))
++        return self
++
++    @classmethod
++    def _validate_raw(cls, values: dict[str, object]) -> "Settings":
++        # validate only the supplied values: no env vars, no dotenv, no secrets dir
++        class _ReloadedSettings(cls):  # type: ignore[valid-type,misc]
++            @classmethod
++            def settings_customise_sources(  # type: ignore[no-untyped-def,override]
++                sub_cls,
++                settings_cls,
++                init_settings,
++                env_settings,
++                dotenv_settings,
++                file_secret_settings,
++            ):
++                return (init_settings,)
++
++        return _ReloadedSettings(**values)
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

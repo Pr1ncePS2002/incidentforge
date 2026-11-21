@@ -1,0 +1,167 @@
+diff --git a/internal/config/rename.go b/internal/config/rename.go
+new file mode 100644
+index 00000000..e8c6ed69
+--- /dev/null
++++ b/internal/config/rename.go
+@@ -0,0 +1,161 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import (
++	"errors"
++	"fmt"
++	"os"
++	"path/filepath"
++	"strings"
++)
++
++// RenameConfigKeys renames keys in a KEY=VALUE configuration file without
++// losing anything else: comments, blank lines, unknown keys, ordering, raw
++// values (including explicitly empty ones), surrounding whitespace and line
++// endings are kept byte for byte. Only the key text of matching lines changes.
++//
++// When no line matches, the file is not rewritten. When the rename cannot be
++// applied (invalid line, conflicting target, invalid rename), an error is
++// returned and the file is left untouched. Successful rewrites are atomic and
++// keep the original file permissions.
++func RenameConfigKeys(filename string, renames map[string]string) error {
++	if err := validateConfigKeyRenames(renames); err != nil {
++		return err
++	}
++
++	info, err := os.Stat(filename)
++	if err != nil {
++		return fmt.Errorf("config: unable to stat configuration file %q: %w", filename, err)
++	}
++	if !info.Mode().IsRegular() {
++		return fmt.Errorf("config: configuration file %q is not a regular file", filename)
++	}
++
++	original, err := os.ReadFile(filename)
++	if err != nil {
++		return fmt.Errorf("config: unable to read configuration file %q: %w", filename, err)
++	}
++
++	updated, changed, err := renameKeysInConfigContent(string(original), renames)
++	if err != nil {
++		return err
++	}
++	if !changed {
++		return nil
++	}
++
++	return replaceConfigFileAtomically(filename, []byte(updated), info.Mode().Perm())
++}
++
++func validateConfigKeyRenames(renames map[string]string) error {
++	for oldKey, newKey := range renames {
++		if err := validateRenamedConfigKey(oldKey); err != nil {
++			return err
++		}
++		if err := validateRenamedConfigKey(newKey); err != nil {
++			return err
++		}
++		if oldKey == newKey {
++			return fmt.Errorf("config: cannot rename key %q to itself", oldKey)
++		}
++		if _, chained := renames[newKey]; chained {
++			return fmt.Errorf("config: rename target %q is itself renamed", newKey)
++		}
++	}
++	return nil
++}
++
++func validateRenamedConfigKey(key string) error {
++	if key == "" {
++		return errors.New("config: empty key name in rename")
++	}
++	if strings.HasPrefix(key, "#") || strings.ContainsAny(key, "= \t\r\n") {
++		return fmt.Errorf("config: invalid key name %q in rename", key)
++	}
++	return nil
++}
++
++func renameKeysInConfigContent(content string, renames map[string]string) (string, bool, error) {
++	var builder strings.Builder
++	builder.Grow(len(content))
++
++	finalKeyCount := make(map[string]int)
++	renamedTargets := make(map[string]bool)
++	changed := false
++
++	for i, line := range strings.SplitAfter(content, "\n") {
++		body := strings.TrimRight(line, "\r\n")
++		trimmed := strings.TrimSpace(body)
++		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
++			builder.WriteString(line)
++			continue
++		}
++
++		separator := strings.Index(body, "=")
++		if separator < 0 {
++			return "", false, fmt.Errorf("config: unable to parse configuration, invalid format on line %d", i+1)
++		}
++
++		rawKey := body[:separator]
++		key := strings.TrimSpace(rawKey)
++		if key == "" {
++			return "", false, fmt.Errorf("config: unable to parse configuration, empty key on line %d", i+1)
++		}
++
++		newKey, ok := renames[key]
++		if !ok {
++			finalKeyCount[key]++
++			builder.WriteString(line)
++			continue
++		}
++
++		start := strings.Index(rawKey, key)
++		builder.WriteString(line[:start])
++		builder.WriteString(newKey)
++		builder.WriteString(line[start+len(key):])
++		finalKeyCount[newKey]++
++		renamedTargets[newKey] = true
++		changed = true
++	}
++
++	for key := range renamedTargets {
++		if finalKeyCount[key] > 1 {
++			return "", false, fmt.Errorf("config: renaming would define key %q more than once", key)
++		}
++	}
++
++	return builder.String(), changed, nil
++}
++
++func replaceConfigFileAtomically(filename string, data []byte, perm os.FileMode) (err error) {
++	tmp, err := os.CreateTemp(filepath.Dir(filename), "."+filepath.Base(filename)+".tmp-*")
++	if err != nil {
++		return fmt.Errorf("config: unable to create temporary configuration file: %w", err)
++	}
++	tmpName := tmp.Name()
++	defer func() {
++		if err != nil {
++			_ = tmp.Close()
++			_ = os.Remove(tmpName)
++		}
++	}()
++
++	if _, err = tmp.Write(data); err != nil {
++		return fmt.Errorf("config: unable to write temporary configuration file: %w", err)
++	}
++	if err = tmp.Chmod(perm); err != nil {
++		return fmt.Errorf("config: unable to set permissions on temporary configuration file: %w", err)
++	}
++	if err = tmp.Sync(); err != nil {
++		return fmt.Errorf("config: unable to sync temporary configuration file: %w", err)
++	}
++	if err = tmp.Close(); err != nil {
++		return fmt.Errorf("config: unable to close temporary configuration file: %w", err)
++	}
++	if err = os.Rename(tmpName, filename); err != nil {
++		return fmt.Errorf("config: unable to replace configuration file %q: %w", filename, err)
++	}
++	return nil
++}

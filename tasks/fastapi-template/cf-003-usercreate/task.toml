@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject user passwords derived from the account's own email or name"
+family = "cross-field-validation"
+difficulty = "hard"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["dependent-bound: password contains the email local part (case-insensitive), e.g. marigold@example.com with xxMARIGOLD2024", "dependent-bound: password contains the stripped full_name (case-insensitive)", "dependent-bound: password contains both the local part and full_name; one error must name password, email and full_name", "dependent-bound: signup payload converted via UserCreate.model_validate with a password containing the local part", "boundary-equal: password exactly equal to the email local part or to full_name (ignoring case) is rejected", "boundary-equal: a 3-character local part is checked, a 2-character one is not"]
+map_node = "backend/app/models.py::UserCreate"
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

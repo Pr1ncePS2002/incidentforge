@@ -1,0 +1,38 @@
+diff --git a/internal/config/interval_validators.go b/internal/config/interval_validators.go
+new file mode 100644
+index 00000000..a2f11799
+--- /dev/null
++++ b/internal/config/interval_validators.go
+@@ -0,0 +1,32 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package config // import "miniflux.app/v2/internal/config"
++
++import "fmt"
++
++// boundedInteger covers plain integers and integer-backed types such as time.Duration.
++type boundedInteger interface {
++	~int | ~int64
++}
++
++// validateBoundOrder rejects a lower bound that is greater than its upper bound.
++// Equal values are accepted.
++func validateBoundOrder[T boundedInteger](minKey string, minValue T, maxKey string, maxValue T) error {
++	if minValue > maxValue {
++		return fmt.Errorf("%s (%v) must be less than or equal to %s (%v)", minKey, minValue, maxKey, maxValue)
++	}
++	return nil
++}
++
++// ValidateIntervalRanges checks the scheduler minimum/maximum interval pairs,
++// rejecting any pair whose minimum is greater than its maximum.
++func (c *configOptions) ValidateIntervalRanges() error {
++	if err := validateBoundOrder("SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL", c.SchedulerEntryFrequencyMinInterval(), "SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL", c.SchedulerEntryFrequencyMaxInterval()); err != nil {
++		return err
++	}
++	if err := validateBoundOrder("SCHEDULER_ROUND_ROBIN_MIN_INTERVAL", c.SchedulerRoundRobinMinInterval(), "SCHEDULER_ROUND_ROBIN_MAX_INTERVAL", c.SchedulerRoundRobinMaxInterval()); err != nil {
++		return err
++	}
++	return nil
++}

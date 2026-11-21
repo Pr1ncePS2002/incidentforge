@@ -1,0 +1,89 @@
+diff --git a/backend/app/core/runtime_config.py b/backend/app/core/runtime_config.py
+new file mode 100644
+index 0000000..d6c7b78
+--- /dev/null
++++ b/backend/app/core/runtime_config.py
+@@ -0,0 +1,83 @@
++"""Runtime reload of the token lifetime settings.
++
++Operators can change how long access tokens and password-reset tokens live
++without restarting the process. ``reload_token_lifetimes`` validates the new
++raw values and swaps both onto the shared ``settings`` object together, in
++place, so every module that imported ``settings`` sees them on its next read.
++An invalid reload is rejected as a whole and the last good values keep serving.
++"""
++
++import threading
++from collections.abc import Mapping
++from typing import NamedTuple
++
++from app.core.config import Settings, settings
++
++ACCESS_TOKEN_KEY = "ACCESS_TOKEN_EXPIRE_MINUTES"
++RESET_TOKEN_KEY = "EMAIL_RESET_TOKEN_EXPIRE_HOURS"
++
++
++class TokenLifetimes(NamedTuple):
++    access_token_expire_minutes: int
++    email_reset_token_expire_hours: int
++
++
++_lock = threading.Lock()
++
++
++def _default(key: str) -> int:
++    return int(Settings.model_fields[key].default)
++
++
++def _parse(key: str, raw: object) -> tuple[int | None, str | None]:
++    if raw is None or (isinstance(raw, str) and not raw.strip()):
++        # an unset key falls back to the documented default
++        return _default(key), None
++    if isinstance(raw, bool):
++        return None, f"{key} must be a positive integer, got {raw!r}"
++    if isinstance(raw, int):
++        value = raw
++    elif isinstance(raw, str):
++        try:
++            value = int(raw.strip())
++        except ValueError:
++            return None, f"{key} must be a positive integer, got {raw!r}"
++    else:
++        return None, f"{key} must be a positive integer, got {raw!r}"
++    if value < 1:
++        return None, f"{key} must be a positive integer, got {raw!r}"
++    return value, None
++
++
++def get_token_lifetimes() -> TokenLifetimes:
++    """Return the token lifetimes currently in effect, as one consistent pair."""
++    with _lock:
++        return TokenLifetimes(
++            settings.ACCESS_TOKEN_EXPIRE_MINUTES,
++            settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
++        )
++
++
++def reload_token_lifetimes(raw: Mapping[str, object]) -> TokenLifetimes:
++    """Apply new raw token lifetime values; all or nothing.
++
++    Missing, ``None`` or blank keys fall back to the defaults declared on
++    ``Settings``. Any invalid value raises ``ValueError`` naming every
++    offending key, and the previous values stay active.
++    """
++    values: dict[str, int] = {}
++    errors: list[str] = []
++    for key in (ACCESS_TOKEN_KEY, RESET_TOKEN_KEY):
++        value, error = _parse(key, raw.get(key))
++        if error is not None:
++            errors.append(error)
++        elif value is not None:
++            values[key] = value
++    if errors:
++        raise ValueError("invalid token lifetime reload: " + "; ".join(errors))
++    with _lock:
++        settings.ACCESS_TOKEN_EXPIRE_MINUTES = values[ACCESS_TOKEN_KEY]
++        settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS = values[RESET_TOKEN_KEY]
++        return TokenLifetimes(
++            values[ACCESS_TOKEN_KEY], values[RESET_TOKEN_KEY]
++        )

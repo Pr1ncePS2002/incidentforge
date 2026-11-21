@@ -1,0 +1,24 @@
+diff --git a/internal/config/parser.go b/internal/config/parser.go
+index cb78f8b..d263659 100644
+--- a/internal/config/parser.go
++++ b/internal/config/parser.go
+@@ -52,6 +52,19 @@ func (cp *configParser) ParseFile(filename string) (*configOptions, error) {
+ 
+ // Validate checks for invalid or incomplete option combinations.
+ func (c *configOptions) Validate() error {
++	if c.CreateAdmin() {
++		var missing []string
++		if strings.TrimSpace(c.AdminUsername()) == "" {
++			missing = append(missing, "ADMIN_USERNAME")
++		}
++		if strings.TrimSpace(c.AdminPassword()) == "" {
++			missing = append(missing, "ADMIN_PASSWORD")
++		}
++		if len(missing) > 0 {
++			return fmt.Errorf("CREATE_ADMIN is enabled but %s must be set", strings.Join(missing, " and "))
++		}
++	}
++
+ 	if c.OAuth2Provider() == "oidc" && c.OAuth2OIDCDiscoveryEndpoint() == "" {
+ 		return errors.New("OAUTH2_OIDC_DISCOVERY_ENDPOINT must be configured when using the OIDC provider")
+ 	}

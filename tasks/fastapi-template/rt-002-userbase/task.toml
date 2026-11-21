@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "lossless read-modify-write for exported user records"
+family = "config-round-trip"
+difficulty = "medium"
+origin = "llm"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["dropped-field: unknown keys (id, team, preferences) or UserBase fields that were never set disappear or get filled with defaults after an update of another field", "default-overwrite: explicit is_superuser=false, full_name=null, full_name=\"\" or login_count=0 is omitted or replaced after a save", "type-drift: a boolean saved as the string \"false\" or as 1, a tuple, set, datetime or NaN silently converted to another JSON type, or an int/float/list changing type across the round trip", "partial-write: os.replace or os.fsync fails mid-save, or the record fails validation, and the previous file is truncated, changed or left with stray temp files"]
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

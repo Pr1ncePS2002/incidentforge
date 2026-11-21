@@ -1,0 +1,60 @@
+diff --git a/internal/validator/category_limits.go b/internal/validator/category_limits.go
+new file mode 100644
+index 00000000..500f0e30
+--- /dev/null
++++ b/internal/validator/category_limits.go
+@@ -0,0 +1,54 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package validator // import "miniflux.app/v2/internal/validator"
++
++import (
++	"fmt"
++	"unicode/utf8"
++)
++
++// CategoryTitleLimits describes the accepted length of a category title, counted in characters.
++// Both bounds are inclusive.
++type CategoryTitleLimits struct {
++	MinLength int
++	MaxLength int
++}
++
++// DefaultCategoryTitleLimits are the limits applied to category titles by default.
++var DefaultCategoryTitleLimits = CategoryTitleLimits{MinLength: 1, MaxLength: 255}
++
++// Validate rejects limits that no title could ever satisfy.
++func (l CategoryTitleLimits) Validate() error {
++	if l.MinLength <= 0 {
++		return fmt.Errorf("invalid category title limits: MinLength must be greater than zero, got %d", l.MinLength)
++	}
++
++	if l.MaxLength <= 0 {
++		return fmt.Errorf("invalid category title limits: MaxLength must be greater than zero, got %d", l.MaxLength)
++	}
++
++	if l.MinLength > l.MaxLength {
++		return fmt.Errorf("invalid category title limits: MinLength (%d) is greater than MaxLength (%d)", l.MinLength, l.MaxLength)
++	}
++
++	return nil
++}
++
++// CheckTitle validates the limits, then checks that the title length is within them.
++func (l CategoryTitleLimits) CheckTitle(title string) error {
++	if err := l.Validate(); err != nil {
++		return err
++	}
++
++	length := utf8.RuneCountInString(title)
++	if length < l.MinLength {
++		return fmt.Errorf("category title is too short: %d characters, MinLength is %d", length, l.MinLength)
++	}
++
++	if length > l.MaxLength {
++		return fmt.Errorf("category title is too long: %d characters, MaxLength is %d", length, l.MaxLength)
++	}
++
++	return nil
++}
