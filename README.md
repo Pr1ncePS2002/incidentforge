@@ -101,7 +101,7 @@ uv sync
 cp .env.example .env            # add GEMINI_API_KEY
 
 # build the failure map (code graph, family tags, coverage from one real test run)
-uv run forge map build --target fastapi-template --coverage --image incidentforge/fastapi-template-env:dev
+uv run forge map build --target fastapi-template --coverage
 
 # generate, validate and keep tasks for a target; --workers runs one worker per map cluster
 uv run forge run --target fastapi-template --family fail-fast-config --n 2
@@ -120,9 +120,6 @@ harbor run -p tasks/fastapi-template -a nop
 # evaluate models and build the report
 uv run forge eval --tasks tasks --model gemini/gemini-3.8-flash
 uv run forge report             # writes reports/index.html and reports/map.html
-
-# paid-key spend against the hard cap
-uv run forge budget
 ```
 
 ## Adding a new target repo
@@ -149,7 +146,6 @@ had never seen (python-dotenv), `scripts/finale_dry_run.sh` produced 3 accepted 
 | Tasks in the dataset | 52 across 8 families |
 | Candidates passing every gate | 52 of 52 |
 | Mutants killed by accepted tasks' tests | 276 of 309 (89%) |
-| Paid API spend | $43.96 (hard cap $70) |
 
 | Model | Agent | Runs | Pass rate |
 |---|---|---|---|
@@ -186,11 +182,6 @@ Refresh this block with `uv run python scripts/readme_results.py` after `forge r
 Every accepted task has a JSON log in `reports/validation/<task_id>.json` with the result and timing of each
 gate and the number of mutants killed. CI re-runs the oracle and no-op agents on every committed task
 before anything reaches `main`, and nightly on `develop`.
-
-## Cost control
-
-All metered API calls go through one backend under a hard spend cap, checked **before** each call against a
-local ledger; `forge budget` shows spend against the cap and whether the remaining evaluation fits.
 
 ## Limitations
 

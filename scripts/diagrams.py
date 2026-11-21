@@ -111,7 +111,7 @@ def architecture() -> str:
             520,
             60,
             "forge CLI (typer)",
-            "run · validate · eval · report · budget · map · from-postmortem",
+            "run · validate · eval · report · map · from-postmortem",
         )
     )
     row = [
@@ -131,11 +131,10 @@ def architecture() -> str:
         body.append(_box(x, y, bw, 80, title, sub, accent))
         body.append(_arrow(w / 2, 116, x + bw / 2, y - 2))
     row2 = [
-        ("backends/", "claude code headless,\ngemini (budgeted)"),
+        ("backends/", "claude code headless,\ngemini api"),
         ("harbor.py", "run jobs,\nread rewards"),
         ("evaluate.py", "models x tasks,\ncap check per batch"),
         ("report.py", "static html +\nsummary.json"),
-        ("budget.py", "spend ledger,\n$70 hard cap"),
         ("parallel.py", "workers, docker\nslots, id merge"),
         ("postmortem.py", "incident report\n-> family + trigger"),
         ("map_render.py", "offline d3\nfailure map page"),

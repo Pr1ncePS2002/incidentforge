@@ -292,7 +292,7 @@ def build_html(d: dict[str, Any]) -> str:
             "<li>6 validation gates, JSON log per task</li>"
             "<li>Harbor packaging; oracle 1.0 / no-op 0.0 checked in CI</li>"
             "<li>Evaluation report with one failure cause per run</li>"
-            "<li>Hard spend cap on paid API usage</li></ul></div>"
+            "</ul></div>"
             f"<div><table class='grid small'><tr><th>Family</th><th>The model must…</th></tr>{fam}</table></div></div>",
         )
     )
@@ -431,16 +431,6 @@ def build_html(d: dict[str, Any]) -> str:
             "<li>pytest + mutation gate; go test for Go targets</li>"
             "<li>GitHub Actions: ruff, mypy strict, coverage ≥ 90%, secret scan, dependency audit, Docker "
             "integration before release; GitHub Pages for the report; Codespaces devcontainer</li></ul>",
-        )
-    )
-    spend = s.get("spend_usd")
-    slides.append(
-        slide(
-            "Cost",
-            "<ul><li>Generation on a Claude Code subscription: <b>$0</b> marginal.</li>"
-            f"<li>Gemini API use only under a <b>$70 hard cap</b>, checked before every call; "
-            f"total paid spend for generation and evaluation: <b>{_v(spend, '${:.2f}')}</b>.</li>"
-            "<li>Everything else is open source and runs on one laptop.</li></ul>",
         )
     )
     slides.append(

@@ -6,7 +6,6 @@ from pathlib import Path
 from test_evaluate import make_task
 from typer.testing import CliRunner
 
-from incidentforge.budget import Ledger
 from incidentforge.cli import app
 from incidentforge.models import EvalResult, GateResult, ValidationReport
 from incidentforge.report import CAUSES, build, classify_failure, failure_cause
@@ -58,13 +57,13 @@ def seed(tmp: Path) -> tuple[Path, Path]:
 
 def test_build_writes_html_and_summary(tmp_path: Path) -> None:
     tasks, reports = seed(tmp_path)
-    ledger = Ledger(tmp_path / "l.jsonl")
-    out = build(reports / "index.html", tasks, reports, ledger)
+    out = build(reports / "index.html", tasks, reports)
     page = out.read_text()
     assert "IncidentForge report" in page and "prefers-color-scheme:dark" in page
     assert "make &lt;Settings&gt; fail fast" in page and "<Settings>" not in page
     summary = json.loads((reports / "summary.json").read_text())
-    assert set(summary) >= {"generated_at", "tasks_total", "tasks_by_family", "models", "by_family", "spend_usd"}
+    assert set(summary) >= {"generated_at", "tasks_total", "tasks_by_family", "models", "by_family"}
+    assert "spend_usd" not in summary and "$70" not in page
     assert summary["tasks_total"] == 2
     hyd = next(m for m in summary["models"] if m["model"].endswith("hydrogen"))
     assert hyd["pass_rate"] == 0.75 and hyd["n"] == 4 and hyd["k"] == 2
@@ -77,14 +76,7 @@ def test_build_writes_html_and_summary(tmp_path: Path) -> None:
     assert "injected fault-case test" in text
 
 
-def test_committed_ledger_snapshot_is_used_for_spend(tmp_path: Path) -> None:
-    tasks, reports = seed(tmp_path)
-    Ledger(reports / "eval/spend-ledger.jsonl").record("gemini-2.5-pro", 0, 1_000_000)
-    build(reports / "index.html", tasks, reports)
-    assert json.loads((reports / "summary.json").read_text())["spend_usd"] == 15.0
-
-
-def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
+def test_excluded_models_are_listed(tmp_path: Path) -> None:
     tasks, reports = seed(tmp_path)
     rows = (reports / "eval/results.jsonl").read_text().splitlines()
     paid = json.loads(rows[0]) | {"cost_usd": 0.5, "key": "paid"}
@@ -93,9 +85,9 @@ def test_excluded_models_and_spend_without_a_ledger(tmp_path: Path) -> None:
         {"model": "gemini/gemini-4-hydrogen", "agent": "terminus-2", "reason": "empty <completions>", "evidence": "x"}
     ]
     (reports / "eval/excluded.json").write_text(json.dumps(note))
-    out = build(reports / "index.html", tasks, reports, Ledger(tmp_path / "missing.jsonl"))
+    out = build(reports / "index.html", tasks, reports)
     summary = json.loads((reports / "summary.json").read_text())
-    assert summary["spend_usd"] == 0.5 and summary["excluded_models"] == note
+    assert summary["excluded_models"] == note
     assert any("gemini-4-hydrogen was left out" in f for f in summary["findings"])
     assert "Models left out" in out.read_text() and "empty &lt;completions&gt;" in out.read_text()
 
@@ -105,7 +97,7 @@ def test_results_for_removed_tasks_are_ignored(tmp_path: Path) -> None:
     gone = EvalResult(task_id="x/removed", family="f", agent="terminus-2", model="m", attempt=1, reward=1.0)
     with (reports / "eval/results.jsonl").open("a") as f:
         f.write(gone.model_dump_json() + "\n")
-    build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    build(reports / "index.html", tasks, reports)
     summary = json.loads((reports / "summary.json").read_text())
     assert all(m["model"] != "m" for m in summary["models"])
 
@@ -125,7 +117,7 @@ def test_turn_ablation_is_reported_apart_from_the_main_table(tmp_path: Path) -> 
         f.write("".join(r.model_dump_json() + "\n" for r in more))
     side.append({"task_id": "fastapi-template/ff-001", "model": flash, "attempt": 1, "max_turns": 60, "turns": 40})
     (reports / "eval/trials.jsonl").write_text("".join(json.dumps(s) + "\n" for s in side))
-    out = build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    out = build(reports / "index.html", tasks, reports)
     summary = json.loads((reports / "summary.json").read_text())
     main = next(m for m in summary["models"] if m["model"] == flash)
     assert main["n"] == 4 and main["pass_rate"] == 0.0
@@ -137,7 +129,7 @@ def test_turn_ablation_is_reported_apart_from_the_main_table(tmp_path: Path) -> 
 
 
 def test_empty_inputs_still_render(tmp_path: Path) -> None:
-    out = build(tmp_path / "r/index.html", tmp_path / "none", tmp_path / "r", Ledger(tmp_path / "l.jsonl"))
+    out = build(tmp_path / "r/index.html", tmp_path / "none", tmp_path / "r")
     assert "no results yet" in out.read_text()
     assert json.loads((tmp_path / "r/summary.json").read_text())["models"] == []
 
@@ -215,7 +207,7 @@ def test_failure_causes_cover_every_failed_run(tmp_path: Path) -> None:
     # one failed run has no trial row at all
     side = [s for s in side if not (s["model"] == flash and s["task_id"].endswith("ff-001") and s["attempt"] == 2)]
     (reports / "eval/trials.jsonl").write_text("".join(json.dumps(s) + "\n" for s in side))
-    out = build(reports / "index.html", tasks, reports, Ledger(tmp_path / "l.jsonl"))
+    out = build(reports / "index.html", tasks, reports)
     summary = json.loads((reports / "summary.json").read_text())
     fc = summary["failure_causes"]
     assert fc["causes"] == list(CAUSES)
@@ -244,4 +236,4 @@ def test_deck_mentions_failure_causes() -> None:
         "models": [{"model": "m", "agent": "terminus-2", "pass_rate": 0.5, "n": 2}],
         "failure_causes": {"by_model": {"m": {"turn_budget": 2, "fault_path_missed": 3}}},
     }
-    assert "<b>2</b> used every turn, <b>3</b> passed the normal cases" in deck.build_html(d)
+    assert "<b>2</b> failed runs used every turn and <b>3</b> passed the normal cases" in deck.build_html(d)
