@@ -1,4 +1,4 @@
-"""adds map node, blast radius, fix scope and fault-based difficulty to tasks that predate the map (D-60, D-95)."""
+"""adds map node, blast radius, fix scope and fault-based difficulty to tasks that predate the map (D-60, D-98)."""
 
 from __future__ import annotations
 

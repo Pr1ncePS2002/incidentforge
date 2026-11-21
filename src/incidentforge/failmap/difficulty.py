@@ -1,4 +1,4 @@
-"""task difficulty and fix scope as two separate labels (D-91, provisional thresholds D-95)."""
+"""task difficulty and fix scope as two separate labels (D-91, provisional thresholds D-98)."""
 
 from __future__ import annotations
 

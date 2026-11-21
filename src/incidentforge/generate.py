@@ -274,7 +274,7 @@ def _failed(task_id: str, gate: str, detail: str) -> ValidationReport:
 
 
 def difficulty(faults: int) -> str:
-    """measured from the fault cases the tests cover, not the model's guess (D-95)."""
+    """measured from the fault cases the tests cover, not the model's guess (D-98)."""
     return difficulty_from_faults(faults)
 
 
