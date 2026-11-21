@@ -25,6 +25,10 @@ def run(
     n: int = typer.Option(5, help="tasks to accept"),
     backend: str = typer.Option("claude-code", help="claude-code | gemini"),
     out: str = typer.Option("tasks", help="tasks root dir"),
+    workers: int = typer.Option(1, help="parallel workers, one per failure-map cluster; 1 = single-worker path"),
+    max_containers: int = typer.Option(4, help="docker containers shared by all workers (workers > 1 only)"),
+    skip_file: list[str] = typer.Option(None, help="workers > 1: leave clusters holding this repo file alone"),
+    peer_tasks: list[str] = typer.Option(None, help="workers > 1: other tasks roots whose titles and ids count"),
 ) -> None:
     """generate, validate and keep tasks for a target. owner: phase 2."""
     from pathlib import Path
@@ -38,7 +42,27 @@ def run(
     tgt = load_target(target)
     # weighted mix decides the family order; generate round-robins so each family gets a turn
     slugs = list(dict.fromkeys(family or pick_families(max(n, 8), available=list_families())))
-    reports = generate(tgt, slugs, n, get_backend(backend), tasks_root=Path(out), log=typer.echo)
+    map_path = Path("work") / target / "map.sqlite"
+    if workers > 1 and map_path.exists():
+        from incidentforge.parallel import run_parallel
+
+        reports = run_parallel(
+            tgt,
+            slugs,
+            n,
+            get_backend(backend),
+            map_path=map_path,
+            workers=workers,
+            max_containers=max_containers,
+            tasks_root=Path(out),
+            skip_files=tuple(skip_file or ()),
+            peers=tuple(Path(p) for p in peer_tasks or ()),
+            log=typer.echo,
+        )
+    else:
+        if workers > 1:
+            typer.echo(f"no failure map at {map_path} (run `forge map build --target {target}`); using one worker")
+        reports = generate(tgt, slugs, n, get_backend(backend), tasks_root=Path(out), log=typer.echo)
     kept = sum(r.accepted for r in reports)
     if kept < n:
         typer.echo(f"only {kept}/{n} tasks accepted")
