@@ -150,6 +150,11 @@ def near_duplicate(title: str, existing: list[str], threshold: float = NEAR_DUPL
     return None
 
 
+def kept_titles(tasks_root: Path, target: str, family: str, peers: tuple[Path, ...] = ()) -> list[str]:
+    """kept titles of the family here and in peer tasks roots (other worktrees generating the same target)."""
+    return [t for root in (tasks_root, *peers) for t in family_titles(root, target, family)]
+
+
 def merge_lock_path(tasks_root: Path, target: str) -> Path:
     # beside the target dir, not inside it, so harbor never sees it as a task
     return tasks_root / f".{target}.merge.lock"
@@ -188,13 +193,14 @@ def merge_task(
     tasks_root: Path,
     work_root: Path,
     reports_dir: Path = Path("reports/validation"),
+    peers: tuple[Path, ...] = (),
 ) -> Merged:
     """move one accepted staged task into tasks/<target>/ under the next free number for its prefix."""
     meta = _meta(staged)
     title, family = str(meta.get("title", "")), str(meta.get("family", ""))
     staged_id = f"{target}/{staged.name}"
     with merge_lock(tasks_root, target):
-        dup = near_duplicate(title, family_titles(tasks_root, target, family))
+        dup = near_duplicate(title, kept_titles(tasks_root, target, family, peers))
         if dup is not None:
             dest = work_root / "duplicates" / target / staged.name
             if dest.exists():
@@ -202,7 +208,9 @@ def merge_task(
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.move(str(staged), str(dest))
             return Merged(None, dup)
-        num = next_number(tasks_root, work_root, target, prefix, set())
+        # numbers kept in a peer worktree count too, so two branches never ship the same id
+        nums = [next_number(p, p / ".none", target, prefix, set()) for p in peers]
+        num = max([next_number(tasks_root, work_root, target, prefix, set()), *nums])
         final = f"{prefix}-{num:03d}-{slug}"
         dest = tasks_root / target / final
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -256,6 +264,7 @@ class RunState:
     reports_dir: Path
     clusters: list[Cluster]
     slots: DockerSlots
+    peers: tuple[Path, ...] = ()
     _lock: threading.Lock = field(default_factory=threading.Lock)
     owner: dict[str, str] = field(default_factory=dict)  # file -> cluster id that may edit it
     edited: dict[str, str] = field(default_factory=dict)  # file -> merged task id that edits it
@@ -305,7 +314,7 @@ class ClusterScope:
 
     def titles(self, family: str) -> list[str]:
         with merge_lock(self.tasks_root, self.state.target.name):
-            return family_titles(self.tasks_root, self.state.target.name, family)
+            return kept_titles(self.tasks_root, self.state.target.name, family, self.state.peers)
 
     def check_patch(self, patch: str) -> None:
         self.state.claim(self.job.cluster.id, patch)
@@ -334,6 +343,8 @@ def run_parallel(
     validator: Validator | None = None,
     slots: DockerSlots | None = None,
     seed: int = 0,
+    skip_files: tuple[str, ...] = (),
+    peers: tuple[Path, ...] = (),
     log: Callable[[str], None] = print,
 ) -> list[ValidationReport]:
     """riskiest clusters first, one worker per cluster, at most one live job per cluster, n merged tasks."""
@@ -347,9 +358,10 @@ def run_parallel(
     ranked = rank_surfaces(annotate_surfaces(find_target_surfaces(repo, target), map_path), seed)
     fams = [f for f in families if target.language.value in load_family(f).languages]
     cl = load_clusters(map_path)
-    jobs = plan_jobs(cl, ranked, fams)
+    # clusters holding a skipped file are left to whoever else is working on that code
+    jobs = [j for j in plan_jobs(cl, ranked, fams) if not set(j.cluster.files) & set(skip_files)]
     slots = slots or DockerSlots.default(max_containers)
-    state = RunState(target, tasks_root, work_root, reports_dir, cl, slots)
+    state = RunState(target, tasks_root, work_root, reports_dir, cl, slots, peers)
     if validator is None:
         from incidentforge.validate.mutation import repo_checkout
 
@@ -429,6 +441,7 @@ def run_parallel(
                 tasks_root=tasks_root,
                 work_root=work_root,
                 reports_dir=reports_dir,
+                peers=peers,
             )
             _log_merge(work_root, {"staged": r.task_id, "task_id": m.task_id, "duplicate_of": m.duplicate_of})
             if m.task_id is None:

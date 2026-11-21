@@ -511,9 +511,11 @@ def test_cli_workers_use_the_map_or_fall_back(target: Target, tmp_path: Path, mo
     monkeypatch.setattr(parallel, "run_parallel", fake)
     (tmp_path / "work" / "fixture").mkdir(parents=True, exist_ok=True)
     (tmp_path / "work" / "fixture" / "map.sqlite").write_text("")
-    res = CliRunner().invoke(app, [*args, "--max-containers", "3"])
+    extra = ["--max-containers", "3", "--skip-file", "backend/app/core/db.py", "--peer-tasks", "../wt/tasks"]
+    res = CliRunner().invoke(app, [*args, *extra])
     assert res.exit_code == 0, res.output
     assert seen["workers"] == 4 and seen["max_containers"] == 3
+    assert seen["skip_files"] == ("backend/app/core/db.py",) and seen["peers"] == (Path("../wt/tasks"),)
 
 
 def test_default_validator_clones_the_mutation_repo_once_up_front(
@@ -534,3 +536,44 @@ def test_default_validator_clones_the_mutation_repo_once_up_front(
         log=lambda _m: None,
     )
     assert out == [] and cloned == ["fixture"]
+
+
+def test_peer_roots_count_for_ids_and_titles(tmp_path: Path) -> None:
+    peer = tmp_path / "peer"
+    stage(peer, "fixture", "ff-005-engine", "derive pool size from the connection budget")
+    stage(tmp_path / "tasks", "fixture", "ff-002-x", "something else")
+    a = stage(tmp_path / "s1", "fixture", "ff-c001-01-a", "reject blank smtp host")
+    m = merge_task(
+        a,
+        target="fixture",
+        prefix="ff",
+        slug="a",
+        tasks_root=tmp_path / "tasks",
+        work_root=tmp_path / "w",
+        peers=(peer,),
+    )
+    assert m.task_id == "fixture/ff-006-a"
+    b = stage(tmp_path / "s2", "fixture", "ff-c002-01-b", "Derive the pool size from the connection budget")
+    m = merge_task(
+        b,
+        target="fixture",
+        prefix="ff",
+        slug="b",
+        tasks_root=tmp_path / "tasks",
+        work_root=tmp_path / "w",
+        peers=(peer,),
+    )
+    assert m.task_id is None and m.duplicate_of == "derive pool size from the connection budget"
+
+
+def test_skip_files_drop_their_clusters_and_peer_titles_reach_prompts(
+    target: Target, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    peer = tmp_path / "peer"
+    stage(peer, "fixture", "ff-001-peer", "peer title here")
+    backend = FileBackend({f: [answer(patch_for(target, f), f"strict flag in {f[-4]}")] for f in FILES})
+    reports, _g, _s = run_fixture(target, tmp_path, monkeypatch, backend, skip_files=(FILES[0],), peers=(peer,))
+    assert sum(r.accepted for r in reports) == 2
+    assert not any(FILES[0] + "::" in p for p in backend.prompts)
+    assert all("- peer title here" in p for p in backend.prompts)
+    assert sorted(d.name for d in (tmp_path / "tasks" / "fixture").iterdir()) == ["ff-002-settings", "ff-003-settings"]

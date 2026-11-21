@@ -27,6 +27,8 @@ def run(
     out: str = typer.Option("tasks", help="tasks root dir"),
     workers: int = typer.Option(1, help="parallel workers, one per failure-map cluster; 1 = single-worker path"),
     max_containers: int = typer.Option(4, help="docker containers shared by all workers (workers > 1 only)"),
+    skip_file: list[str] = typer.Option(None, help="workers > 1: leave clusters holding this repo file alone"),
+    peer_tasks: list[str] = typer.Option(None, help="workers > 1: other tasks roots whose titles and ids count"),
 ) -> None:
     """generate, validate and keep tasks for a target. owner: phase 2."""
     from pathlib import Path
@@ -53,6 +55,8 @@ def run(
             workers=workers,
             max_containers=max_containers,
             tasks_root=Path(out),
+            skip_files=tuple(skip_file or ()),
+            peers=tuple(Path(p) for p in peer_tasks or ()),
             log=typer.echo,
         )
     else:
