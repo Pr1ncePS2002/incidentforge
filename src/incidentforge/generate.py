@@ -11,9 +11,9 @@ import time
 import tomllib
 from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from pydantic import ValidationError
 
@@ -49,6 +49,28 @@ GOLD_LINES = 140
 OUTPUT_TOKENS = 32000
 Writer = Callable[[TaskSpec, Path], Path]
 Validator = Callable[[Path], ValidationReport]
+_PATH_LOCKS: dict[str, threading.Lock] = {}
+_PATH_LOCKS_GUARD = threading.Lock()
+
+
+def path_lock(path: Path) -> threading.Lock:
+    """one lock per path, so parallel workers sharing a checkout or log do not interleave."""
+    key = str(path.resolve())
+    with _PATH_LOCKS_GUARD:
+        return _PATH_LOCKS.setdefault(key, threading.Lock())
+
+
+class Scope(Protocol):
+    """narrows one generate() call to a slice of the target; used by parallel workers."""
+
+    surfaces: list[Surface]
+    tasks_root: Path  # the shared tasks root: gold example and kept titles come from here
+
+    def task_id(self, prefix: str, surface: Surface) -> str: ...
+
+    def titles(self, family: str) -> list[str]: ...
+
+    def check_patch(self, patch: str) -> None: ...
 
 
 def _git(repo: Path, *args: str, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -136,7 +158,7 @@ class Generator:
     gold: str = "none"
     log: Callable[[str], None] = print
     jobs_dir: Path = Path("jobs/validation")
-    _lock: threading.Lock = field(default_factory=threading.Lock)
+    scope: Scope | None = None
 
     @property
     def log_path(self) -> Path:
@@ -148,14 +170,14 @@ class Generator:
         return [json.loads(line) for line in self.log_path.read_text().splitlines() if line.strip()]
 
     def record(self, row: dict[str, Any]) -> None:
-        with self._lock:
+        with path_lock(self.log_path):
             self.log_path.parent.mkdir(parents=True, exist_ok=True)
             with self.log_path.open("a") as fh:
                 fh.write(json.dumps(row) + "\n")
 
     def normalise_patch(self, patch: str) -> str:
         """apply with --recount on the clean checkout and re-diff, so model hunk-count slips do not reject a task."""
-        with self._lock:
+        with path_lock(self.repo):
             try:
                 res = _git(self.repo, "apply", "--recount", "--whitespace=nowarn", "-", stdin=patch)
                 if res.returncode != 0:
@@ -194,6 +216,8 @@ class Generator:
         tests = data.get("feature_tests") or {}
         if not any("fault" in body for body in tests.values()):
             raise PatchError("feature tests must include test_fault_<id> tests for the injected faults")
+        if self.scope is not None:
+            self.scope.check_patch(patch)
         keys = ("title", "instruction", "feature_tests", "fault_cases")
         fields: dict[str, Any] = {k: data[k] for k in keys if k in data}
         fields["difficulty"] = difficulty(len(data.get("fault_cases") or []))
@@ -361,6 +385,7 @@ def generate(
     jobs: int = 2,
     max_pairs: int | None = None,
     log: Callable[[str], None] = print,
+    scope: Scope | None = None,
 ) -> list[ValidationReport]:
     """keep generating (family, surface) pairs until n tasks are accepted or pairs run out."""
     from incidentforge.package import write_task
@@ -369,9 +394,9 @@ def generate(
     write: Writer = writer or write_task
     check: Validator = validator or validate_task
     repo = checkout(target, work_root)
-    gold = gold_example(tasks_root, target)
-    gen = Generator(target, backend, repo, tasks_root, work_root, write, check, gold, log)
-    surfaces = find_target_surfaces(repo, target)
+    gold = gold_example(scope.tasks_root if scope else tasks_root, target)
+    gen = Generator(target, backend, repo, tasks_root, work_root, write, check, gold, log, scope=scope)
+    surfaces = scope.surfaces if scope else find_target_surfaces(repo, target)
     fams = [load_family(f) for f in families]
     fams = [f for f in fams if target.language.value in f.languages]
     history = gen.history()
@@ -379,6 +404,9 @@ def generate(
     pairs = plan_pairs(fams, surfaces, used)
     limit = max_pairs if max_pairs is not None else max(3 * n, n + 4)
     log(f"{target.name}: {len(surfaces)} surfaces, families {[f.slug for f in fams]}, want {n} accepted")
+
+    def titles(family: str) -> list[str]:
+        return scope.titles(family) if scope else family_titles(tasks_root, target.name, family)
 
     outcomes: list[Outcome] = []
     taken: set[str] = set()
@@ -388,17 +416,18 @@ def generate(
             batch: list[Pair] = []
             for fam, s in pairs:
                 prefix = PREFIX.get(fam.slug, slugify(fam.slug, 1)[:2])
-                num = next_number(tasks_root, work_root, target.name, prefix, taken)
-                tid = f"{target.name}/{prefix}-{num:03d}-{slugify(s.symbol.split('.')[-1], 3)}"
+                if scope is not None:
+                    tid = scope.task_id(prefix, s)
+                else:
+                    num = next_number(tasks_root, work_root, target.name, prefix, taken)
+                    tid = f"{target.name}/{prefix}-{num:03d}-{slugify(s.symbol.split('.')[-1], 3)}"
                 taken.add(tid)
                 batch.append(Pair(fam, s, tid))
                 if len(batch) >= min(jobs, n - accepted, limit - len(outcomes)):
                     break
             if not batch:
                 break
-            futures = [
-                pool.submit(gen.run_pair, p, family_titles(tasks_root, target.name, p.family.slug)) for p in batch
-            ]
+            futures = [pool.submit(gen.run_pair, p, titles(p.family.slug)) for p in batch]
             for fut in futures:
                 o = fut.result()
                 outcomes.append(o)
