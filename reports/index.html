@@ -25,22 +25,22 @@ margin:0 4px 0 10px;vertical-align:middle}.c-turn_budget{background:#d08b16}.c-r
 .c-fault_path_missed{background:#a98be8}.c-wrong_code{background:#6c6c74}}
 input{padding:6px 8px;width:100%;max-width:360px;margin:6px 0;background:var(--card);color:var(--fg);
 border:1px solid var(--line);border-radius:6px}
-</style></head><body><main><h1>IncidentForge report</h1><p class="muted">generated 2026-11-21T21:04:01+0530 from files under reports/ and tasks/</p><div class="cards">
-<div class="card"><span class="muted">tasks</span><b>43</b></div>
+</style></head><body><main><h1>IncidentForge report</h1><p class="muted">generated 2026-11-21T21:33:13+0530 from files under reports/ and tasks/</p><div class="cards">
+<div class="card"><span class="muted">tasks</span><b>52</b></div>
 <div class="card"><span class="muted">families</span><b>8</b></div>
 <div class="card"><span class="muted">acceptance</span><b>100%</b></div>
-<div class="card"><span class="muted">mutants killed</span><b>230/255</b></div>
+<div class="card"><span class="muted">mutants killed</span><b>276/309</b></div>
 <div class="card"><span class="muted">eval runs</span><b>162</b></div>
 <div class="card"><span class="muted">paid spend</span><b>$43.96 / $70</b></div>
 </div>
 <h2>Headline findings</h2>
-<ul><li>43 of 43 tasks with a validation report passed every gate; accepted tasks&#x27; tests killed 230 of 255 injected mutants (90%).</li><li>pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).</li><li>hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).</li><li>of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.</li><li>each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo&#x27;s own tests, 13 missed an injected fault, 10 wrong code.</li><li>gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.</li><li>gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -&gt; 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.</li><li>gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -&gt; 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap.</li></ul>
+<ul><li>52 of 52 tasks with a validation report passed every gate; accepted tasks&#x27; tests killed 276 of 309 injected mutants (89%).</li><li>pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).</li><li>hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).</li><li>of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.</li><li>each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo&#x27;s own tests, 13 missed an injected fault, 10 wrong code.</li><li>gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.</li><li>gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -&gt; 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.</li><li>gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -&gt; 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap.</li></ul>
 <h2>Models left out</h2>
 <div class="scroll"><table><thead><tr><th>model</th><th>agent</th><th>why</th><th>evidence</th></tr></thead><tbody><tr><td>gemini/gemini-4-hydrogen</td><td>terminus-2</td><td>through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model</td><td>3 gold-task trials on 2026-11-18: 72 of 84 turns got &#x27;No valid JSON found in response&#x27;, at most 1,376 completion tokens per trial; direct google-genai calls to the same model work</td></tr></tbody></table></div>
 <h2>Dataset</h2>
-<div class="scroll"><table><thead><tr><th>dimension</th><th>tasks</th></tr></thead><tbody><tr><td>family</td><td>config-round-trip: 5, cross-field-validation: 5, env-aware-naming: 6, fail-fast-config: 9, hot-reload-config: 4, idempotent-consumer: 6, resource-aware-defaults: 4, tolerant-typed-config: 4</td></tr><tr><td>language/target</td><td>fastapi-template: 33, miniflux: 10</td></tr><tr><td>difficulty</td><td>easy: 11, hard: 2, medium: 30</td></tr><tr><td>origin</td><td>hand-written: 2, llm: 38, postmortem: 3</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>dimension</th><th>tasks</th></tr></thead><tbody><tr><td>family</td><td>config-round-trip: 7, cross-field-validation: 11, env-aware-naming: 6, fail-fast-config: 10, hot-reload-config: 4, idempotent-consumer: 6, resource-aware-defaults: 4, tolerant-typed-config: 4</td></tr><tr><td>language/target</td><td>fastapi-template: 33, miniflux: 19</td></tr><tr><td>difficulty</td><td>easy: 17, hard: 2, medium: 33</td></tr><tr><td>origin</td><td>hand-written: 2, llm: 47, postmortem: 3</td></tr></tbody></table></div>
 <p>validation gates over all task candidates:</p>
-<div class="scroll"><table><thead><tr><th>gate</th><th>passed</th><th>rate</th></tr></thead><tbody><tr><td>fail_on_base</td><td>43/43</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>flakiness</td><td>43/43</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>leak</td><td>43/43</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>mutation</td><td>43/43</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>pass_on_reference</td><td>43/43</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>regression</td><td>43/43</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>gate</th><th>passed</th><th>rate</th></tr></thead><tbody><tr><td>fail_on_base</td><td>52/52</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>flakiness</td><td>52/52</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>leak</td><td>52/52</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>mutation</td><td>52/52</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>pass_on_reference</td><td>52/52</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr><tr><td>regression</td><td>52/52</td><td><span class="bar"><span style="width:100.0%"></span></span> 100%</td></tr></tbody></table></div>
 <h2>Results</h2>
 <div class="scroll"><table><thead><tr><th>model</th><th>agent</th><th>tasks</th><th>runs</th><th>pass rate</th><th>tokens in / out</th><th>billed</th><th>at list price</th></tr></thead><tbody><tr><td>claude-code</td><td>claude-code</td><td>34</td><td>54</td><td><span class="bar"><span style="width:98.2%"></span></span> 98%</td><td>5,883,658 / 122,370</td><td>$0.00</td><td>$32.48</td></tr><tr><td>gemini/gemini-2.5-flash</td><td>terminus-2</td><td>34</td><td>54</td><td><span class="bar"><span style="width:33.3%"></span></span> 33%</td><td>19,937,970 / 1,636,360</td><td>$6.11</td><td>$10.07</td></tr><tr><td>gemini/gemini-3.8-flash</td><td>terminus-2</td><td>34</td><td>54</td><td><span class="bar"><span style="width:27.8%"></span></span> 28%</td><td>28,269,016 / 925,624</td><td>$22.07</td><td>$49.35</td></tr></tbody></table></div>
 <p>pass rate per model and family:</p>
@@ -61,9 +61,9 @@ border:1px solid var(--line);border-radius:6px}
 <p><b>fastapi-template</b> <span class='muted'>@ 77e550a · graph c07e1bf9704fcb05d99</span>: 135 nodes, 40 tagged with a failure family, 15 of them have a task (29 tasks); 39 test-covered, 1 uncovered.</p>
 <div class="scroll"><table><thead><tr><th>family</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>config-round-trip</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>cross-field-validation</td><td>12</td><td>5</td><td>5</td><td>12</td><td>0</td></tr><tr><td>env-aware-naming</td><td>3</td><td>1</td><td>4</td><td>3</td><td>0</td></tr><tr><td>fail-fast-config</td><td>2</td><td>1</td><td>6</td><td>2</td><td>0</td></tr><tr><td>hot-reload-config</td><td>1</td><td>1</td><td>2</td><td>1</td><td>0</td></tr><tr><td>idempotent-consumer</td><td>13</td><td>6</td><td>6</td><td>13</td><td>0</td></tr><tr><td>resource-aware-defaults</td><td>3</td><td>3</td><td>3</td><td>3</td><td>0</td></tr><tr><td>tolerant-typed-config</td><td>11</td><td>2</td><td>3</td><td>11</td><td>0</td></tr></tbody></table></div>
 <div class="scroll"><table><thead><tr><th>module</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>app</td><td>13</td><td>6</td><td>9</td><td>13</td><td>0</td></tr><tr><td>app/api</td><td>11</td><td>4</td><td>4</td><td>11</td><td>0</td></tr><tr><td>app/core</td><td>15</td><td>5</td><td>16</td><td>15</td><td>0</td></tr><tr><td>scripts</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr></tbody></table></div>
-<p><b>miniflux</b> <span class='muted'>@ b31f786 · graph 769289b7b8d47b3eea2</span>: 1935 nodes, 157 tagged with a failure family, 2 of them have a task (5 tasks); 128 test-covered, 29 uncovered.</p>
-<div class="scroll"><table><thead><tr><th>family</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>config-round-trip</td><td>7</td><td>0</td><td>0</td><td>0</td><td>7</td></tr><tr><td>cross-field-validation</td><td>66</td><td>0</td><td>0</td><td>43</td><td>23</td></tr><tr><td>env-aware-naming</td><td>12</td><td>0</td><td>1</td><td>12</td><td>0</td></tr><tr><td>fail-fast-config</td><td>40</td><td>1</td><td>3</td><td>29</td><td>11</td></tr><tr><td>hot-reload-config</td><td>12</td><td>0</td><td>0</td><td>1</td><td>11</td></tr><tr><td>idempotent-consumer</td><td>3</td><td>0</td><td>0</td><td>2</td><td>1</td></tr><tr><td>resource-aware-defaults</td><td>21</td><td>0</td><td>0</td><td>20</td><td>1</td></tr><tr><td>tolerant-typed-config</td><td>57</td><td>0</td><td>1</td><td>56</td><td>1</td></tr></tbody></table></div>
-<div class="scroll"><table><thead><tr><th>module</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>client</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>internal/api</td><td>2</td><td>0</td><td>0</td><td>2</td><td>0</td></tr><tr><td>internal/config</td><td>90</td><td>2</td><td>4</td><td>87</td><td>3</td></tr><tr><td>internal/googlereader</td><td>4</td><td>0</td><td>1</td><td>1</td><td>3</td></tr><tr><td>internal/http</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>internal/integration</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>internal/model</td><td>4</td><td>0</td><td>0</td><td>4</td><td>0</td></tr><tr><td>internal/reader</td><td>5</td><td>0</td><td>0</td><td>3</td><td>2</td></tr><tr><td>internal/storage</td><td>3</td><td>0</td><td>0</td><td>0</td><td>3</td></tr><tr><td>internal/systemd</td><td>4</td><td>0</td><td>0</td><td>0</td><td>4</td></tr><tr><td>internal/ui</td><td>12</td><td>0</td><td>0</td><td>4</td><td>8</td></tr><tr><td>internal/validator</td><td>29</td><td>0</td><td>0</td><td>24</td><td>5</td></tr></tbody></table></div>
+<p><b>miniflux</b> <span class='muted'>@ b31f786 · graph 769289b7b8d47b3eea2</span>: 1935 nodes, 157 tagged with a failure family, 3 of them have a task (6 tasks); 128 test-covered, 29 uncovered.</p>
+<div class="scroll"><table><thead><tr><th>family</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>config-round-trip</td><td>7</td><td>0</td><td>0</td><td>0</td><td>7</td></tr><tr><td>cross-field-validation</td><td>66</td><td>1</td><td>1</td><td>43</td><td>23</td></tr><tr><td>env-aware-naming</td><td>12</td><td>0</td><td>1</td><td>12</td><td>0</td></tr><tr><td>fail-fast-config</td><td>40</td><td>1</td><td>3</td><td>29</td><td>11</td></tr><tr><td>hot-reload-config</td><td>12</td><td>0</td><td>0</td><td>1</td><td>11</td></tr><tr><td>idempotent-consumer</td><td>3</td><td>0</td><td>0</td><td>2</td><td>1</td></tr><tr><td>resource-aware-defaults</td><td>21</td><td>0</td><td>0</td><td>20</td><td>1</td></tr><tr><td>tolerant-typed-config</td><td>57</td><td>0</td><td>1</td><td>56</td><td>1</td></tr></tbody></table></div>
+<div class="scroll"><table><thead><tr><th>module</th><th>tagged surfaces</th><th>with a task</th><th>tasks</th><th>test-covered</th><th>uncovered</th></tr></thead><tbody><tr><td>client</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>internal/api</td><td>2</td><td>0</td><td>0</td><td>2</td><td>0</td></tr><tr><td>internal/config</td><td>90</td><td>2</td><td>4</td><td>87</td><td>3</td></tr><tr><td>internal/googlereader</td><td>4</td><td>0</td><td>1</td><td>1</td><td>3</td></tr><tr><td>internal/http</td><td>2</td><td>0</td><td>0</td><td>1</td><td>1</td></tr><tr><td>internal/integration</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>internal/model</td><td>4</td><td>0</td><td>0</td><td>4</td><td>0</td></tr><tr><td>internal/reader</td><td>5</td><td>0</td><td>0</td><td>3</td><td>2</td></tr><tr><td>internal/storage</td><td>3</td><td>0</td><td>0</td><td>0</td><td>3</td></tr><tr><td>internal/systemd</td><td>4</td><td>0</td><td>0</td><td>0</td><td>4</td></tr><tr><td>internal/ui</td><td>12</td><td>0</td><td>0</td><td>4</td><td>8</td></tr><tr><td>internal/validator</td><td>29</td><td>1</td><td>1</td><td>24</td><td>5</td></tr></tbody></table></div>
 <h2>Task browser</h2>
 <input id="q" placeholder="filter tasks" aria-label="filter tasks">
 <div id="tasks">
@@ -965,6 +965,160 @@ Requirements (whether the value comes from the environment variable `EMAILS_BCC`
 
 The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
 </pre></details>
+<details><summary><b>miniflux/cf-001-checktimezonerange</b> <span class='muted'>cross-field-validation · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>inverted-range: OffsetWindow with MinOffsetSeconds greater than MaxOffsetSeconds (e.g. 3600 / -3600, swapped defaults)</li><li>dependent-bound: OffsetWindow that does not contain the UTC fallback offset 0 (e.g. 3600..7200 or -7200..-3600)</li><li>boundary-equal: MinOffsetSeconds == MaxOffsetSeconds is allowed when it is 0 and rejected when it excludes UTC (3600/3600)</li></ul><pre># Reject impossible timezone offset windows for parsed feed dates
+
+When Miniflux parses a feed date, it keeps the date&#x27;s timezone only if the offset is between UTC-12:00 and UTC+14:00. Any date outside that range is converted to UTC. Today that range is hard-coded in `checkTimezoneRange` (package `internal/reader/date`). We want the range to be a value that can be configured. A configurable range can also be set to something that can never work, so it must be validated before use:
+
+- **Inverted range:** the lower bound is above the upper bound, so no offset can ever be kept.
+- **Range that excludes UTC:** out-of-range dates fall back to UTC (offset 0). If offset 0 is outside the range, the fallback result breaks the range it was meant to enforce.
+
+Add this to package `internal/reader/date` (`miniflux.app/v2/internal/reader/date`):
+
+1. A struct type `OffsetWindow` with two exported `int` fields, `MinOffsetSeconds` and `MaxOffsetSeconds`. Both are offsets in seconds east of UTC, and both bounds are inclusive.
+2. `func DefaultOffsetWindow() OffsetWindow` returns the shipped range: `MinOffsetSeconds = -12*60*60` and `MaxOffsetSeconds = 14*60*60`.
+3. `func (w OffsetWindow) Validate() error`:
+   - returns an error when `MinOffsetSeconds &gt; MaxOffsetSeconds`;
+   - returns an error when the range does not contain offset 0 (`MinOffsetSeconds &gt; 0` or `MaxOffsetSeconds &lt; 0`);
+   - in both cases, the error message must contain both field names, `MinOffsetSeconds` and `MaxOffsetSeconds`;
+   - returns `nil` for any other range, including the default.
+   - **Equal-values rule:** `MinOffsetSeconds == MaxOffsetSeconds` is allowed. It is not an inverted range. It is still subject to the UTC rule: `{0, 0}` is valid (only UTC dates keep their zone), and `{3600, 3600}` is rejected because it excludes UTC.
+4. `func (w OffsetWindow) Apply(t time.Time) time.Time` returns `t` unchanged when its zone offset is within `[MinOffsetSeconds, MaxOffsetSeconds]` (bounds included). Otherwise it returns `t.UTC()`. For the default range, `Apply` must give the same result as the existing `checkTimezoneRange`.
+5. The existing behaviour of `checkTimezoneRange` and of date parsing does not change, and the existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/cf-002-validatefeedcreation</b> <span class='muted'>cross-field-validation · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>mutually-exclusive: BlocklistRules and KeeplistRules set to the same non-empty regex, so every entry is dropped</li><li>boundary-equal: rules that differ only in leading/trailing whitespace count as equal and must be rejected</li></ul><pre># Reject feed filter rules that would drop every entry
+
+When a feed is created, Miniflux accepts two optional regular-expression filters: `blocklist_rules` (`BlocklistRules`) and `keeplist_rules` (`KeeplistRules`). During refresh the blocklist runs first and removes every entry that matches it. Then the keeplist removes every entry that does **not** match it. When both are set to the same expression, each entry is removed by one filter or the other, so the feed stays empty forever. Today `ValidateFeedCreation` checks each rule on its own (is it a valid regex?) and accepts this combination without a word. Users only notice days later, when nothing ever shows up.
+
+Reject this combination when the feed is validated.
+
+Requirements:
+
+1. Add an exported function to package `internal/validator` (import path `miniflux.app/v2/internal/validator`):
+
+   `func ValidateFeedRuleCombination(request *model.FeedCreationRequest) error`
+
+   It needs no database access. It returns `nil` when the combination is acceptable. Otherwise it returns a non-nil error.
+2. If `BlocklistRules` and `KeeplistRules` are both non-empty and identical, the function must return an error. The error message must name **both** fields, using the strings `blocklist_rules` and `keeplist_rules`.
+3. Equality rule: compare the two rules after removing leading and trailing whitespace. Rules that are equal after trimming count as identical and are **rejected**. Rules that still differ after trimming are allowed, even if they differ only in letter case (regexes are case-sensitive).
+4. These are allowed: both rules empty (the default), or one rule empty and the other set. Rules made only of whitespace count as empty. A `nil` request returns `nil`.
+5. `ValidateFeedCreation` must apply the same check, so feed creation through the API and UI refuses the combination.
+6. Leave the other validation rules alone. The existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/cf-003-validatechoices</b> <span class='muted'>cross-field-validation · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>inverted-range: SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL=120 is greater than SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL=60</li><li>inverted-range: SCHEDULER_ROUND_ROBIN_MIN_INTERVAL=600 is greater than SCHEDULER_ROUND_ROBIN_MAX_INTERVAL=120</li><li>boundary-equal: a minimum equal to its maximum (60/60, 120/120) is accepted, while a minimum one above (61/60) is rejected</li></ul><pre># Reject scheduler interval ranges whose minimum is above their maximum
+
+Miniflux&#x27;s refresh scheduler uses two minimum/maximum pairs, both in minutes:
+
+- `SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL` / `SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL` (used by the `entry_frequency` scheduler)
+- `SCHEDULER_ROUND_ROBIN_MIN_INTERVAL` / `SCHEDULER_ROUND_ROBIN_MAX_INTERVAL` (used by the `round_robin` scheduler)
+
+Each value is checked on its own, but nothing checks the pair. An operator can set a minimum above its maximum, for example `SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL=120` with `SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL=60`. Miniflux accepts it, and feeds are later polled on a schedule nobody asked for. Catch this during configuration validation.
+
+Requirements:
+
+1. Add a method `ValidateIntervalRanges() error` on the parsed configuration options type (`*configOptions`, package `internal/config`). Put the new logic in a new file in that package. Do not modify `parser.go`.
+2. If `SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL` is greater than `SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL`, return an error that names **both** variables.
+3. If `SCHEDULER_ROUND_ROBIN_MIN_INTERVAL` is greater than `SCHEDULER_ROUND_ROBIN_MAX_INTERVAL`, return an error that names **both** of those variables.
+4. An error about one pair must not name the variables of the other pair. Check the entry-frequency pair first.
+5. **Boundary rule:** a minimum equal to its maximum is valid. It means a fixed interval and must not produce an error.
+6. The shipped defaults and any combination where each minimum is at or below its maximum must still validate (return `nil`).
+7. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/cf-004-validatedirection</b> <span class='muted'>cross-field-validation · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>inverted-range: published_after/changed_after/after_entry_id/after greater than its matching before bound is accepted and returns an empty list</li><li>boundary-equal: equal lower and upper bounds (exclusive on both ends) describe an empty range and must be rejected, naming both parameters</li><li>negative-or-zero: a negative entry ID or timestamp bound is accepted and silently ignored instead of rejected</li></ul><pre># Reject entry query filters that can never match
+
+The entries API (`GET /v1/entries`, `/v1/feeds/{id}/entries`, `/v1/categories/{id}/entries`) takes several pairs of optional range filters next to `order`/`direction`/`offset`/`limit`:
+
+| lower bound (query param) | upper bound (query param) | meaning |
+|---|---|---|
+| `after` | `before` | published date, Unix seconds |
+| `published_after` | `published_before` | published date, Unix seconds |
+| `changed_after` | `changed_before` | changed date, Unix seconds |
+| `after_entry_id` | `before_entry_id` | entry ID |
+
+Each value is accepted on its own, but nothing checks the pairs against each other. A client that swaps the two bounds (for example `published_after=2000&amp;published_before=1000`) gets back an empty list with HTTP 200. That looks like &quot;no new entries&quot;, so sync clients silently stop getting updates. Negative values are also accepted and then silently ignored.
+
+Add a validator for these combinations to package `internal/validator` (`miniflux.app/v2/internal/validator`), next to the existing `ValidateDirection`/`ValidateRange` helpers.
+
+## API
+
+- An exported struct type `EntryQueryWindow` with these `int64` fields: `After`, `Before`, `PublishedAfter`, `PublishedBefore`, `ChangedAfter`, `ChangedBefore`, `AfterEntryID`, `BeforeEntryID`.
+- `func ValidateEntryQueryWindow(w EntryQueryWindow) error`
+
+## Rules
+
+1. A value of `0` means the bound is not set. A pair is only compared when **both** of its bounds are non-zero. If only one bound is set, the window is valid.
+2. Any negative value is rejected. The error must name that field&#x27;s query parameter (for example `after_entry_id`).
+3. **Inverted range:** if both bounds of a pair are set and the lower bound is greater than the upper bound, return an error. The error must name **both** query parameters of that pair (for example `published_after` and `published_before`; for the legacy pair, `after` and `before`). The error must not name parameters from a different pair: an error about the `after`/`before` pair must not contain `published_`.
+4. **Equal values are rejected.** Both bounds are exclusive (strictly greater than the lower bound, strictly less than the upper bound), so equal values describe an empty range. Return the same kind of error that names both parameters. Adjacent values are valid, for example `after_entry_id=10` with `before_entry_id=11`.
+5. Valid combinations still return `nil`. That includes the all-zero window (no filters, the default) and any pair where lower &lt; upper.
+6. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/cf-005-validatecategorycreation</b> <span class='muted'>cross-field-validation · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>inverted-range: CategoryTitleLimits with MinLength 50 greater than MaxLength 20 is rejected naming both fields</li><li>negative-or-zero: MinLength or MaxLength set to zero or a negative value is rejected naming the offending field</li><li>boundary-equal: MinLength == MaxLength is allowed and only titles of exactly that length pass</li></ul><pre># Reject category title length limits that no title can satisfy
+
+Category creation (`internal/validator/category.go`, `ValidateCategoryCreation`) only checks that a title is not empty and not already in use. We want to add a configurable length policy for category titles. A policy has a lower and an upper bound. Each bound can look fine by itself while the pair is impossible, for example a minimum of 50 with a maximum of 20. If nothing checks the pair, it is accepted and every later category creation fails without a clear reason. The policy must be checked as a whole, and the error must name the fields involved.
+
+Add the following to package `internal/validator` (import path `miniflux.app/v2/internal/validator`):
+
+1. An exported struct `CategoryTitleLimits` with two exported `int` fields, `MinLength` and `MaxLength`. Lengths count characters (Unicode code points), not bytes. Both bounds are inclusive.
+2. An exported package-level variable `DefaultCategoryTitleLimits` of type `CategoryTitleLimits`, with `MinLength` 1 and `MaxLength` 255. This default must pass validation.
+3. A method `func (l CategoryTitleLimits) Validate() error` that returns:
+   - an error naming `MinLength` when `MinLength` is zero or negative. This error must not mention `MaxLength`.
+   - an error naming `MaxLength` when `MaxLength` is zero or negative.
+   - an error naming **both** `MinLength` and `MaxLength` when `MinLength` is greater than `MaxLength`.
+   - `nil` otherwise.
+
+   **Boundary rule:** `MinLength == MaxLength` is allowed. It means titles of exactly that length.
+4. A method `func (l CategoryTitleLimits) CheckTitle(title string) error` that:
+   - first validates the limits and returns the `Validate()` error unchanged if they are invalid.
+   - returns an error naming `MinLength` if the title has fewer characters than `MinLength`.
+   - returns an error naming `MaxLength` if the title has more characters than `MaxLength`.
+   - returns `nil` otherwise. A title whose length equals either bound is accepted.
+
+The field names `MinLength` and `MaxLength` must appear literally in the error messages. The existing behaviour of `ValidateCategoryCreation` / `ValidateCategoryModification` stays the same, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/cf-006-validate</b> <span class='muted'>cross-field-validation · easy</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>inverted-range: MinUsernameLength or MinPasswordLength set greater than its matching Max, rejected with both field names</li><li>negative-or-zero: any of the four length limits set to 0 or -1, rejected naming that field</li><li>boundary-equal: Min == Max is allowed and enforces an exact length counted in characters</li></ul><pre># Reject impossible credential length policies for the login form
+
+The login form (package `internal/ui/form`, type `authForm`, fields `Username` and `Password`) only checks that both fields are non-empty. We want operators to be able to set length limits on login credentials. The risk is a policy that no credential can ever satisfy, such as a minimum above its maximum or a zero or negative limit. Today nothing would catch that: the policy would be accepted, and then every login would fail later with a confusing &quot;wrong credentials&quot;-style error. Catch impossible policies when they are validated.
+
+## What to build (package `miniflux.app/v2/internal/ui/form`)
+
+1. An exported struct `AuthPolicy` with four `int` fields: `MinUsernameLength`, `MaxUsernameLength`, `MinPasswordLength`, `MaxPasswordLength`. Lengths are counted in characters (Unicode code points / runes), not bytes.
+2. `func DefaultAuthPolicy() AuthPolicy` returning the shipped defaults: username 1..255, password 1..1024. These defaults must validate.
+3. `func (p AuthPolicy) Validate() error`:
+   - Each of the four limits must be strictly positive. A zero or negative value returns an error that names the offending field by its Go field name (e.g. `MinPasswordLength`).
+   - An inverted range (`MinUsernameLength &gt; MaxUsernameLength`, or `MinPasswordLength &gt; MaxPasswordLength`) returns an error that names **both** fields of that pair (for example both `MinUsernameLength` and `MaxUsernameLength`). It must not name the fields of the other, valid pair.
+   - **Boundary rule:** equal values are allowed. `Min == Max` is a valid policy and means the length must be exactly that value.
+   - A valid policy returns `nil`.
+4. `func (a authForm) ValidateWithPolicy(p AuthPolicy) error`:
+   - If `p.Validate()` fails, return a non-nil error that includes that policy error&#x27;s message (so it still names the fields), whatever the form contains.
+   - Otherwise, an empty username or password returns an error.
+   - Otherwise, a username or password whose length (in characters) is outside `[Min, Max]` (inclusive) for its pair returns an error.
+   - Otherwise it returns `nil`.
+5. The existing `authForm.Validate()` keeps its current behaviour. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
 <details><summary><b>miniflux/en-001-deleteapikeycontext</b> <span class='muted'>env-aware-naming · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='ok'>claude-code#1 pass</span>, <span class='ok'>claude-code#2 pass</span>, <span class='ok'>claude-code#3 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#1 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#2 pass</span>, <span class='ok'>gemini/gemini-2.5-flash#3 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#1 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#2 pass</span>, <span class='ok'>gemini/gemini-3.8-flash#3 pass</span></p><p>fault cases:</p><ul><li>unscoped-key: API key cache key built without the environment, so production and staging keys for the same ID collide</li><li>wrong-env-source: key uses a hardcoded/default environment instead of CacheKeySettings.Environment</li><li>unknown-env: empty, misspelled or wrongly-cased Environment must fail with an error naming Environment</li><li>separator-injection: a part containing &#x27;:&#x27; (or an empty part) produces an ambiguous key and must be rejected</li></ul><pre># Scope client-side cache keys to the deployment environment
 
 Teams that build on the Go API client (package `client`, import path `miniflux.app/v2/client`) cache API resources such as API keys, for example to invalidate an entry after `DeleteAPIKeyContext`. Staging and production often share one cache cluster. Today there is no shared way to build those names, so each caller writes its own, usually without the environment. When that happens, a staging delete evicts or overwrites the production entry for the same API key ID.
@@ -1086,6 +1240,39 @@ Make the configuration check reject these settings, so the service refuses to st
 3. Collect every problem in the pair into **one** error, and name each offending key (`CERT_FILE` and/or `KEY_FILE`) in its message. If only one key is bad, the message must name only that key and must not mention the other one.
 4. If neither `CERT_FILE` nor `KEY_FILE` is set (the shipped default), nothing changes. When both are set to real values, validation passes. The checks `Validate()` already performs keep working.
 5. The existing test suite still passes.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/ff-004-hassystemdwatchdog</b> <span class='muted'>fail-fast-config · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>conditional-missing: WATCHDOG_USEC is set (watchdog on) but NOTIFY_SOCKET is absent</li><li>empty: NOTIFY_SOCKET is whitespace-only, or WATCHDOG_USEC is whitespace-only, while the watchdog is on</li><li>placeholder: WATCHDOG_USEC left as changethis / TODO / &lt;fill-me&gt;, or NOTIFY_SOCKET left as changethis</li><li>several-bad: WATCHDOG_USEC=todo and NOTIFY_SOCKET missing; one error must name both</li></ul><pre># Fail fast on missing or placeholder systemd watchdog settings
+
+Miniflux supports the systemd watchdog. `systemd.HasSystemdWatchdog()` (package `internal/systemd`) only checks whether `WATCHDOG_USEC` is non-empty. Any non-empty value counts as &quot;watchdog on&quot;, including whitespace or a template value left in a unit or env file (`WATCHDOG_USEC=changethis`). The interval is parsed later, and the keep-alive messages need `NOTIFY_SOCKET`, which nothing checks. With a bad value the service starts fine, but systemd then kills and restarts it in a loop because no keep-alive ever arrives. Nothing in the logs points at the bad setting.
+
+Add one place that reads and checks all watchdog settings at once, so the daemon can refuse to start when they are wrong.
+
+## API
+
+In package `internal/systemd`, add:
+
+- an exported struct type `WatchdogSettings` with the fields
+  - `Enabled bool`
+  - `Interval time.Duration`
+  - `NotifySocket string`
+- an exported function `LoadWatchdogSettings() (WatchdogSettings, error)` that reads the process environment.
+
+Leave the existing functions (`HasSystemdWatchdog`, `WatchdogInterval`, and the others) unchanged.
+
+## Behaviour
+
+1. If `WATCHDOG_USEC` is absent or the empty string, the watchdog is off. The function returns `Enabled == false` and a nil error, whatever `NOTIFY_SOCKET` holds. This is the default, and it must keep loading.
+2. Any other value of `WATCHDOG_USEC` turns the watchdog on. Then:
+   - After trimming surrounding whitespace, `WATCHDOG_USEC` must be a positive integer number of microseconds. A whitespace-only value, a placeholder, a non-number, zero or a negative number is invalid.
+   - `NOTIFY_SOCKET` becomes required. If it is absent, empty, whitespace-only or a placeholder, it is invalid. Any other value is accepted as is (trimmed), including abstract sockets such as `@/org/freedesktop/systemd1/notify`.
+3. A value counts as a placeholder when, trimmed and compared case-insensitively, it is one of `changethis`, `changeme`, `todo`, `fixme` or `placeholder`, or when it is wrapped in angle brackets (for example `&lt;fill-me&gt;`).
+4. If any setting is invalid, the function returns a non-nil error. That single error must name **every** offending variable (`WATCHDOG_USEC` and/or `NOTIFY_SOCKET`) and must not name a variable that is valid. For example, a placeholder `WATCHDOG_USEC` with a good `NOTIFY_SOCKET` must not mention `NOTIFY_SOCKET`.
+5. With valid settings, the function returns `Enabled == true`, `Interval` equal to the configured microseconds as a `time.Duration` (for example, `30000000` → 30s), and `NotifySocket` set to the socket path.
+6. The existing test suite still passes.
 
 ---
 
@@ -1220,6 +1407,72 @@ Requirements:
 8. **Permissions:** an existing file keeps its permission bits. A file that doesn&#x27;t exist yet is created with mode `0600`. If the file exists but can&#x27;t be read, return an error.
 9. The result must be loadable with the existing configuration file parser (`NewConfigParser().ParseFile(filename)`).
 10. Existing configuration parsing behaviour and the repository&#x27;s existing test suite are unchanged.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/rt-003-options</b> <span class='muted'>config-round-trip · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>dropped-field: unknown keys (object, string, list, number) or an unchanged known key such as timeout &quot;1m30s&quot; disappear or get rewritten when another option is updated</li><li>default-overwrite: explicit block_private_networks=false, timeout &quot;0s&quot; or an empty-string key is dropped, a field set back to false is removed instead of written, or an absent key gets materialised</li><li>type-drift: the timeout duration string is written back as an integer number of nanoseconds, or unknown numbers and lists change type</li><li>partial-write: a mutation that returns an error or sets a negative timeout still modifies the file or leaves temporary files behind instead of keeping the previous record</li></ul><pre># Lossless read/update of HTTP client options files
+
+The HTTP client package (`internal/http/client`) describes its behaviour with `client.Options` (`Timeout time.Duration`, `BlockPrivateNetworks bool`). Operators want to keep these settings in a small JSON file that other tools also write to, and change one setting at a time. Naive &quot;unmarshal into a struct, change it, marshal it back&quot; writers lose data: unknown keys disappear, explicit `false` / `&quot;0s&quot;` values get dropped or replaced, durations turn into integer nanoseconds, and a failed save can leave a truncated file. Add a reader and a lossless updater for this record.
+
+## File format
+
+A JSON object. Known keys:
+
+- `&quot;timeout&quot;`: a Go duration **string** (anything `time.ParseDuration` accepts, e.g. `&quot;30s&quot;`, `&quot;1m30s&quot;`, `&quot;0s&quot;`). Negative durations are invalid.
+- `&quot;block_private_networks&quot;`: a JSON boolean.
+
+Any other key may be present and belongs to other tools. A known key that is absent leaves the field at its zero value.
+
+## API (package `client`, `miniflux.app/v2/internal/http/client`)
+
+1. `func ReadOptionsFile(path string) (Options, error)`
+   - Returns the decoded options.
+   - Returns an error if the file can&#x27;t be read, isn&#x27;t a JSON object (e.g. an array, `null` or invalid JSON), if `timeout` isn&#x27;t a string, can&#x27;t be parsed as a duration or is negative, or if `block_private_networks` isn&#x27;t a boolean.
+
+2. `func UpdateOptionsFile(path string, mutate func(*Options) error) error`
+   - Loads the file (same rules and errors as `ReadOptionsFile`), calls `mutate` on a copy of the loaded options (`mutate` may be nil), then saves.
+   - **No change means no write:** if no field&#x27;s value differs from what was loaded, the file stays byte-for-byte as it was.
+   - **Only changed fields are rewritten:** a known key whose field value didn&#x27;t change keeps its original JSON value exactly (e.g. `&quot;1m30s&quot;` stays `&quot;1m30s&quot;`). A changed `Timeout` is written as a duration string (`Duration.String()`, e.g. `&quot;45s&quot;`), never as a number. A changed `BlockPrivateNetworks` is written as a JSON boolean.
+   - **Unknown keys are kept** with their values and JSON types (objects, lists, numbers, strings, including empty strings).
+   - **Explicit values and absence stay distinct:** a known key that is present with a zero value (`false`, `&quot;0s&quot;`) stays present. A known key that is absent stays absent unless the mutation changes that field. Changing a field to its zero value writes the explicit zero value and never removes the key.
+   - **A failed save keeps the previous record:** if `mutate` returns an error, `UpdateOptionsFile` returns an error that wraps it (it must work with `errors.Is`) and the file is untouched. If the mutated `Timeout` is negative, it returns an error and the file is untouched. The new content is written to a temporary file in the same directory, then renamed over the original. No temporary files are left behind, whether the save succeeds or fails.
+   - After a successful update, `ReadOptionsFile` returns the mutated options.
+
+Existing behaviour of the client package is unchanged, and the existing test suite must still pass.
+
+---
+
+The repository is checked out at `/app`. Run the test suite with `run_tests` (it accepts the usual test runner arguments).
+</pre></details>
+<details><summary><b>miniflux/rt-004-configparser</b> <span class='muted'>config-round-trip · medium</span></summary><p>gates: <span class='ok'>leak</span>, <span class='ok'>fail_on_base</span>, <span class='ok'>pass_on_reference</span>, <span class='ok'>regression</span>, <span class='ok'>mutation</span>, <span class='ok'>flakiness</span></p><p>outcomes: <span class='muted'>not evaluated</span></p><p>fault cases:</p><ul><li>dropped-field: comments, blank lines, unknown keys such as SOME_FUTURE_OPTION and a final line with no newline disappear or move when a different key is renamed</li><li>default-overwrite: explicitly empty (ADMIN_PASSWORD=), whitespace-only or zero (CREATE_ADMIN=0) values are dropped or normalised when their key is renamed</li><li>type-drift: raw values like &#x27; 1h30m &#x27;, &#x27;a, b ,c&#x27;, a quoted string or &#x27;007&#x27; are reformatted, and CRLF line endings are changed across the rename</li><li>partial-write: a rename that fails on a malformed line later in the file, or because the target key already exists, leaves a truncated or partly renamed file or a leftover temp file instead of the previous file</li></ul><pre># Rename configuration keys without losing anything
+
+Operators run Miniflux from a `KEY=VALUE` configuration file (the one read by the config parser&#x27;s `ParseFile`). When an option is renamed or deprecated, they move the old key to the new name with ad-hoc `sed` scripts or small tools that read the file, rebuild it and write it back. Those tools often lose data. They drop comments and keys they don&#x27;t know about. They drop explicitly empty values such as `ADMIN_PASSWORD=`, or rewrite values (`1h30m`, `007` and quoted strings come back in a different form). If they fail partway through, they leave a truncated file, and Miniflux then starts with a different configuration.
+
+Add a key-rename writer to package `internal/config` (`miniflux.app/v2/internal/config`) that makes this round trip lossless.
+
+## API
+
+```
+func RenameConfigKeys(filename string, renames map[string]string) error
+```
+
+`renames` maps an old key name to a new key name.
+
+## Behaviour
+
+1. **Only the key text changes.** For every non-comment line whose key (the text before the first `=`, ignoring surrounding spaces and tabs) matches an old name, replace only the key text with the new name. These stay byte-for-byte identical: whitespace before the key, whitespace between the key and `=`, and everything from `=` onwards (the raw value, including empty or whitespace-only values, quotes, inner spaces, leading zeros, duration strings and the line ending, `\n` or `\r\n`).
+2. **Nothing else is touched.** Comment lines (first non-blank character `#`, indented or not), blank lines, keys that are not renamed (including keys Miniflux does not know about), line order and the presence or absence of a final newline must be kept exactly.
+3. **No-op means no write.** If no line matches (including a `nil` or empty map), return `nil` and leave the file alone: same content, same modification time.
+4. **Invalid input is rejected before anything is written.** Return an error and leave the file byte-for-byte unchanged when:
+   - a non-blank, non-comment line has no `=`, or has an empty key;
+   - after the rename, a key produced by a rename would be defined more than once (for example, the new name already exists in the file);
+   - a rename entry is invalid: an empty old or new name, a name containing `=` or whitespace, a name starting with `#`, an old name equal to its new name, or a new name that is also an old name in the same map (chained renames);
+   - the file does not exist or is not a regular file. A missing file must not be created.
+5. **Atomic save.** When the file changes, write the new content to a temporary file in the same directory and rename it over the original. Keep the original file&#x27;s permission bits (for example, a `0640` file stays `0640`). On success, and on any failure, no temporary files may be left in the directory. A failed save must always leave the previous file in place.
+6. A renamed file must still load through the existing parser (`NewConfigParser()` followed by `ParseFile`) with the renamed values in effect.
+7. Existing parsing behaviour and the existing test suite are unchanged.
 
 ---
 

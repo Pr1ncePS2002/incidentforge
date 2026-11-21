@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject identical blocklist and keeplist rules at feed creation"
+family = "cross-field-validation"
+difficulty = "easy"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["mutually-exclusive: BlocklistRules and KeeplistRules set to the same non-empty regex, so every entry is dropped", "boundary-equal: rules that differ only in leading/trailing whitespace count as equal and must be rejected"]
+map_node = "internal/validator/feed.go::ValidateFeedCreation"
+blast_radius = 5
+fix_scope = "4+ files"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

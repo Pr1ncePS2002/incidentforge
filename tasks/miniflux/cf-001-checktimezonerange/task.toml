@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "validate timezone offset windows for parsed feed dates"
+family = "cross-field-validation"
+difficulty = "easy"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["inverted-range: OffsetWindow with MinOffsetSeconds greater than MaxOffsetSeconds (e.g. 3600 / -3600, swapped defaults)", "dependent-bound: OffsetWindow that does not contain the UTC fallback offset 0 (e.g. 3600..7200 or -7200..-3600)", "boundary-equal: MinOffsetSeconds == MaxOffsetSeconds is allowed when it is 0 and rejected when it excludes UTC (3600/3600)"]
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

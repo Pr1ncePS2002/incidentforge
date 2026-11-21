@@ -1,0 +1,87 @@
+diff --git a/internal/systemd/watchdog_settings.go b/internal/systemd/watchdog_settings.go
+new file mode 100644
+index 00000000..47a563ba
+--- /dev/null
++++ b/internal/systemd/watchdog_settings.go
+@@ -0,0 +1,81 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package systemd // import "miniflux.app/v2/internal/systemd"
++
++import (
++	"fmt"
++	"os"
++	"strconv"
++	"strings"
++	"time"
++)
++
++// WatchdogSettings holds the systemd watchdog settings read from the environment.
++type WatchdogSettings struct {
++	Enabled      bool
++	Interval     time.Duration
++	NotifySocket string
++}
++
++// LoadWatchdogSettings reads and validates the systemd watchdog settings.
++//
++// The watchdog is disabled when WATCHDOG_USEC is absent or empty. When it is
++// present, WATCHDOG_USEC must be a positive number of microseconds and
++// NOTIFY_SOCKET must name the notification socket. Every invalid setting is
++// reported in a single error.
++func LoadWatchdogSettings() (WatchdogSettings, error) {
++	rawInterval := os.Getenv("WATCHDOG_USEC")
++	if rawInterval == "" {
++		return WatchdogSettings{}, nil
++	}
++
++	var problems []string
++	settings := WatchdogSettings{Enabled: true}
++
++	interval := strings.TrimSpace(rawInterval)
++	switch {
++	case interval == "":
++		problems = append(problems, "WATCHDOG_USEC is blank")
++	case isPlaceholderValue(interval):
++		problems = append(problems, fmt.Sprintf("WATCHDOG_USEC still holds the placeholder %q", interval))
++	default:
++		usec, err := strconv.ParseInt(interval, 10, 64)
++		if err != nil || usec <= 0 {
++			problems = append(problems, fmt.Sprintf("WATCHDOG_USEC must be a positive number of microseconds, got %q", interval))
++		} else {
++			settings.Interval = time.Duration(usec) * time.Microsecond
++		}
++	}
++
++	socket := strings.TrimSpace(os.Getenv("NOTIFY_SOCKET"))
++	switch {
++	case socket == "":
++		problems = append(problems, "NOTIFY_SOCKET is missing or blank but is required when the watchdog is enabled")
++	case isPlaceholderValue(socket):
++		problems = append(problems, fmt.Sprintf("NOTIFY_SOCKET still holds the placeholder %q", socket))
++	default:
++		settings.NotifySocket = socket
++	}
++
++	if len(problems) > 0 {
++		return WatchdogSettings{}, fmt.Errorf("systemd: invalid watchdog settings: %s", strings.Join(problems, "; "))
++	}
++	return settings, nil
++}
++
++// isPlaceholderValue reports whether value looks like an unfilled template placeholder.
++func isPlaceholderValue(value string) bool {
++	lower := strings.ToLower(strings.TrimSpace(value))
++	if strings.HasPrefix(lower, "<") && strings.HasSuffix(lower, ">") {
++		return true
++	}
++	if strings.HasPrefix(lower, "${") && strings.HasSuffix(lower, "}") {
++		return true
++	}
++	switch lower {
++	case "changethis", "changeme", "change-me", "todo", "tbd", "fixme", "placeholder", "xxx":
++		return true
++	}
++	return false
++}

@@ -1,0 +1,85 @@
+diff --git a/internal/ui/form/auth_policy.go b/internal/ui/form/auth_policy.go
+new file mode 100644
+index 00000000..0970d80d
+--- /dev/null
++++ b/internal/ui/form/auth_policy.go
+@@ -0,0 +1,79 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package form // import "miniflux.app/v2/internal/ui/form"
++
++import (
++	"errors"
++	"fmt"
++	"unicode/utf8"
++)
++
++// AuthPolicy describes the length limits applied to login credentials.
++// Lengths are counted in characters (runes).
++type AuthPolicy struct {
++	MinUsernameLength int
++	MaxUsernameLength int
++	MinPasswordLength int
++	MaxPasswordLength int
++}
++
++// DefaultAuthPolicy returns the limits applied when nothing else is configured.
++func DefaultAuthPolicy() AuthPolicy {
++	return AuthPolicy{
++		MinUsernameLength: 1,
++		MaxUsernameLength: 255,
++		MinPasswordLength: 1,
++		MaxPasswordLength: 1024,
++	}
++}
++
++// Validate rejects limits that no credential could ever satisfy.
++// Equal minimum and maximum values are allowed.
++func (p AuthPolicy) Validate() error {
++	limits := []struct {
++		name  string
++		value int
++	}{
++		{"MinUsernameLength", p.MinUsernameLength},
++		{"MaxUsernameLength", p.MaxUsernameLength},
++		{"MinPasswordLength", p.MinPasswordLength},
++		{"MaxPasswordLength", p.MaxPasswordLength},
++	}
++	for _, limit := range limits {
++		if limit.value <= 0 {
++			return fmt.Errorf("%s must be greater than zero, got %d", limit.name, limit.value)
++		}
++	}
++
++	if p.MinUsernameLength > p.MaxUsernameLength {
++		return fmt.Errorf("MinUsernameLength (%d) must not be greater than MaxUsernameLength (%d)", p.MinUsernameLength, p.MaxUsernameLength)
++	}
++
++	if p.MinPasswordLength > p.MaxPasswordLength {
++		return fmt.Errorf("MinPasswordLength (%d) must not be greater than MaxPasswordLength (%d)", p.MinPasswordLength, p.MaxPasswordLength)
++	}
++
++	return nil
++}
++
++// ValidateWithPolicy validates the form against the given length policy.
++func (a authForm) ValidateWithPolicy(p AuthPolicy) error {
++	if err := p.Validate(); err != nil {
++		return fmt.Errorf("invalid authentication policy: %w", err)
++	}
++
++	if a.Username == "" || a.Password == "" {
++		return errors.New("username and password are mandatory")
++	}
++
++	if n := utf8.RuneCountInString(a.Username); n < p.MinUsernameLength || n > p.MaxUsernameLength {
++		return fmt.Errorf("username must be between %d and %d characters, got %d", p.MinUsernameLength, p.MaxUsernameLength, n)
++	}
++
++	if n := utf8.RuneCountInString(a.Password); n < p.MinPasswordLength || n > p.MaxPasswordLength {
++		return fmt.Errorf("password must be between %d and %d characters, got %d", p.MinPasswordLength, p.MaxPasswordLength, n)
++	}
++
++	return nil
++}

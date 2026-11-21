@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "lossless load-modify-save of http client options files"
+family = "config-round-trip"
+difficulty = "medium"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["dropped-field: unknown keys (object, string, list, number) or an unchanged known key such as timeout \"1m30s\" disappear or get rewritten when another option is updated", "default-overwrite: explicit block_private_networks=false, timeout \"0s\" or an empty-string key is dropped, a field set back to false is removed instead of written, or an absent key gets materialised", "type-drift: the timeout duration string is written back as an integer number of nanoseconds, or unknown numbers and lists change type", "partial-write: a mutation that returns an error or sets a negative timeout still modifies the file or leaves temporary files behind instead of keeping the previous record"]
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

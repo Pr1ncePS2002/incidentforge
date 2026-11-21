@@ -1,0 +1,50 @@
+diff --git a/internal/reader/date/offset_window.go b/internal/reader/date/offset_window.go
+new file mode 100644
+index 00000000..eb31826b
+--- /dev/null
++++ b/internal/reader/date/offset_window.go
+@@ -0,0 +1,44 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package date // import "miniflux.app/v2/internal/reader/date"
++
++import (
++	"fmt"
++	"time"
++)
++
++// OffsetWindow describes the range of timezone offsets, in seconds east of UTC,
++// that parsed dates may keep. Dates outside of the window are converted to UTC.
++type OffsetWindow struct {
++	MinOffsetSeconds int
++	MaxOffsetSeconds int
++}
++
++// DefaultOffsetWindow returns the window used by the date parser: UTC-12:00 to UTC+14:00.
++func DefaultOffsetWindow() OffsetWindow {
++	return OffsetWindow{
++		MinOffsetSeconds: -12 * 60 * 60,
++		MaxOffsetSeconds: 14 * 60 * 60,
++	}
++}
++
++// Validate rejects windows whose bounds cannot work together.
++func (w OffsetWindow) Validate() error {
++	if w.MinOffsetSeconds > w.MaxOffsetSeconds {
++		return fmt.Errorf("date: invalid offset window: MinOffsetSeconds (%d) is greater than MaxOffsetSeconds (%d)", w.MinOffsetSeconds, w.MaxOffsetSeconds)
++	}
++	if w.MinOffsetSeconds > 0 || w.MaxOffsetSeconds < 0 {
++		return fmt.Errorf("date: invalid offset window: MinOffsetSeconds (%d) and MaxOffsetSeconds (%d) must include the UTC offset 0 used as fallback", w.MinOffsetSeconds, w.MaxOffsetSeconds)
++	}
++	return nil
++}
++
++// Apply converts t to UTC when its offset falls outside of the window.
++func (w OffsetWindow) Apply(t time.Time) time.Time {
++	_, offset := t.Zone()
++	if offset < w.MinOffsetSeconds || offset > w.MaxOffsetSeconds {
++		return t.UTC()
++	}
++	return t
++}

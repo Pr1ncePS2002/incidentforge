@@ -1,0 +1,22 @@
+schema_version = "1.4"
+
+[metadata]
+title = "fail fast on missing or placeholder systemd watchdog settings"
+family = "fail-fast-config"
+difficulty = "medium"
+origin = "llm"
+target = "miniflux"
+base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+fault_cases = ["conditional-missing: WATCHDOG_USEC is set (watchdog on) but NOTIFY_SOCKET is absent", "empty: NOTIFY_SOCKET is whitespace-only, or WATCHDOG_USEC is whitespace-only, while the watchdog is on", "placeholder: WATCHDOG_USEC left as changethis / TODO / <fill-me>, or NOTIFY_SOCKET left as changethis", "several-bad: WATCHDOG_USEC=todo and NOTIFY_SOCKET missing; one error must name both"]
+blast_radius = 1
+fix_scope = "1 file"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0
