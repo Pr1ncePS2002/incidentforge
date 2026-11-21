@@ -17,109 +17,98 @@ from incidentforge.report import build as build_report
 FIXTURE = Path(__file__).parent / "fixtures" / "map" / "map.json"
 
 
-def fixture_map() -> dict[str, Any]:
-    return mr.normalise(json.loads(FIXTURE.read_text()))
+T = "fastapi-template"
+SETTINGS = "backend/app/core/config.py::Settings"
+USERCREATE = "backend/app/models.py::UserCreate"
 
 
-def test_normalise_drops_broken_parts_and_fills_defaults() -> None:
-    m = mr.normalise(
-        {
-            "nodes": [
-                {"id": "a.b.f", "file": "a/b.py", "families": ["x", "x"], "blast_radius": "n/a", "covered": "yes"},
-                {"name": "no id"},
-                "junk",
-                {"id": "g", "module": "m"},
-            ],
-            "edges": [
-                {"source": "a.b.f", "target": "g"},
-                {"source": "a.b.f", "target": "a.b.f"},
-                {"source": "a.b.f", "target": "missing"},
-            ],
-            "tasks": [{"task_id": "t/1", "node_id": "g"}, {"task_id": "t/1", "node_id": "g"}, {"node_id": "g"}],
-        }
-    )
-    f, g = m["nodes"]
-    assert (f["name"], f["module"], f["kind"], f["families"], f["blast_radius"], f["covered"]) == (
-        "f",
-        "a",
-        "function",
-        ["x"],
-        0,
-        None,
-    )
-    assert g["module"] == "m" and g["file"] == ""
-    assert m["edges"] == [{"source": "a.b.f", "target": "g", "kind": "edge"}]
-    assert [t["task_id"] for t in m["tasks"]] == ["t/1"]
-    assert m["target"] == "unknown"
-    assert mr.normalise({"nodes": [{"id": "solo"}]})["nodes"][0]["module"] == "."
-
-
-def test_normalise_reads_the_builder_shape() -> None:
-    # v2-map writes tags, is_test and crg kinds; tests and files are left off the page
-    m = mr.normalise(
-        {
-            "nodes": [
-                {"id": "f", "kind": "Function", "file": "internal/config/parser/p.go", "tags": ["fail-fast-config"]},
-                {"id": "t", "kind": "Function", "file": "x_test.go", "is_test": True},
-                {"id": "file", "kind": "File", "file": "internal/config/parser/p.go"},
-            ],
-            "edges": [{"kind": "TESTED_BY", "source": "f", "target": "t", "line": 3}],
-        }
-    )
-    assert [(n["id"], n["module"], n["families"]) for n in m["nodes"]] == [
-        ("f", "internal/config", ["fail-fast-config"])
-    ]
-    assert m["edges"] == []
-
-
-def test_coverage_counts_per_family_and_module() -> None:
-    cov = mr.coverage(fixture_map())
-    assert cov["nodes"] == 7 and cov["unplaced_tasks"] == 1
-    assert cov["total"] == {"surfaces": 5, "with_task": 2, "tasks": 3, "covered": 2, "uncovered": 3}
-    assert cov["by_family"]["fail-fast-config"] == {
-        "surfaces": 1,
-        "with_task": 1,
-        "tasks": 1,
-        "covered": 1,
-        "uncovered": 0,
-    }
-    assert cov["by_family"]["tolerant-typed-config"]["with_task"] == 0
-    assert cov["by_module"]["app.core.config"] == {
-        "surfaces": 2,
-        "with_task": 1,
-        "tasks": 2,
-        "covered": 1,
-        "uncovered": 1,
-    }
-    assert cov["by_module"]["app.core.db"] == {"surfaces": 1, "with_task": 0, "tasks": 0, "covered": 0, "uncovered": 1}
-    # untagged nodes are not surfaces
-    assert "app.utils" in cov["by_module"] and set(mr.by_target([fixture_map()])) == {"demo"}
-
-
-def test_snapshot_merges_tasks_from_task_metadata(tmp_path: Path) -> None:
-    tasks = tmp_path / "tasks" / "demo"
+def write_tasks(root: Path) -> Path:
+    tasks = root / "tasks" / T
     for name, meta in [
-        ("rd-001-engine", 'node_id = "app.core.db.create_engine"\nfamily = "resource-aware-defaults"'),
-        ("ff-001-settings", 'node_id = "app.core.config.Settings"\nfamily = "other"'),
-        ("xx-001-plain", 'family = "fail-fast-config"'),
+        ("ff-001-settings", f'node_id = "{SETTINGS}"\nfamily = "fail-fast-config"\ndifficulty = "easy"'),
+        ("cf-003-usercreate", f'node_id = "{USERCREATE}"\nfamily = "cross-field-validation"'),
+        ("xx-001-gone", 'node_id = "backend/app/gone.py::f"\nfamily = "fail-fast-config"'),
+        ("xx-002-plain", 'family = "fail-fast-config"'),
         ("bad", "= not toml"),
     ]:
         (tasks / name).mkdir(parents=True)
         (tasks / name / "task.toml").write_text(f"[metadata]\n{meta}\n")
-    out = mr.snapshot(FIXTURE, tmp_path / "reports", tmp_path / "tasks")
-    assert out == tmp_path / "reports" / "map" / "demo.json"
+    return root / "tasks"
+
+
+def fixture_map(tmp: Path) -> dict[str, Any]:
+    out = mr.snapshot(FIXTURE, tmp / "reports", write_tasks(tmp))
+    return mr.normalise(json.loads(out.read_text()))
+
+
+def test_normalise_reads_schema_v1_and_drops_broken_parts() -> None:
+    m = mr.normalise(json.loads(FIXTURE.read_text()))
+    assert (m["schema"], m["language"], m["coverage_mode"], m["target"]) == (1, "python", "run", T)
+    ids = {n["id"]: n for n in m["nodes"]}
+    # the untagged file node is left off; the tagged one is a surface and stays
+    assert "backend/app/core/config.py" not in ids and "backend/app/core/db.py" in ids
+    s = ids[SETTINGS]
+    assert (s["kind"], s["module"], s["covered"]) == ("Class", "app/core", True)
+    assert s["line"] > 0 and "fail-fast-config" in s["families"]
+    # edges touching the dropped file node go with it
+    assert all(e["source"] in ids and e["target"] in ids for e in m["edges"]) and len(m["edges"]) == 4
+    m = mr.normalise(
+        {
+            "nodes": [
+                {"id": "a::f", "families": ["x", "x"], "blast_radius": "n/a", "covered": "yes", "line": None},
+                {"name": "no id"},
+                "junk",
+            ],
+            "edges": [{"source": "a::f", "target": "a::f"}, {"source": "a::f", "target": "missing"}],
+            "tasks": [{"task_id": "t/1", "node_id": "a::f"}, {"task_id": "t/1"}, {"node_id": "a::f"}],
+        }
+    )
+    [f] = m["nodes"]
+    assert (f["name"], f["module"], f["kind"], f["families"], f["blast_radius"], f["covered"], f["line"]) == (
+        "a::f",
+        ".",
+        "function",
+        ["x"],
+        0,
+        None,
+        0,
+    )
+    assert m["edges"] == [] and [t["task_id"] for t in m["tasks"]] == ["t/1"] and m["schema"] == 0
+
+
+def test_coverage_counts_per_family_and_module(tmp_path: Path) -> None:
+    cov = mr.coverage(fixture_map(tmp_path))
+    assert cov["nodes"] == 8 and cov["unplaced_tasks"] == 1
+    assert cov["total"] == {"surfaces": 7, "with_task": 2, "tasks": 2, "covered": 6, "uncovered": 1}
+    fam = cov["by_family"]
+    assert fam["fail-fast-config"] == {"surfaces": 1, "with_task": 1, "tasks": 1, "covered": 1, "uncovered": 0}
+    assert fam["cross-field-validation"] == {"surfaces": 2, "with_task": 1, "tasks": 1, "covered": 2, "uncovered": 0}
+    assert fam["config-round-trip"] == {"surfaces": 2, "with_task": 0, "tasks": 0, "covered": 1, "uncovered": 1}
+    mod = cov["by_module"]
+    assert mod["app/core"] == {"surfaces": 4, "with_task": 1, "tasks": 1, "covered": 4, "uncovered": 0}
+    assert mod["scripts"] == {"surfaces": 1, "with_task": 0, "tasks": 0, "covered": 0, "uncovered": 1}
+    assert mod["app"] == {"surfaces": 2, "with_task": 1, "tasks": 1, "covered": 2, "uncovered": 0}
+    assert set(mr.by_target([fixture_map(tmp_path / "again")])) == {T}
+
+
+def test_snapshot_merges_tasks_and_round_trips(tmp_path: Path) -> None:
+    out = mr.snapshot(FIXTURE, tmp_path / "reports", write_tasks(tmp_path))
+    assert out == tmp_path / "reports" / "map" / f"{T}.json"
     snap = json.loads(out.read_text())
     ids = {t["task_id"]: t for t in snap["tasks"]}
-    assert "demo/rd-001-engine" in ids and "demo/xx-001-plain" not in ids
-    # the map's own task row wins over the task.toml copy
-    assert ids["demo/ff-001-settings"]["family"] == "fail-fast-config"
-    assert mr.load_snapshots(tmp_path / "reports")[0]["target"] == "demo"
+    assert set(ids) == {f"{T}/ff-001-settings", f"{T}/cf-003-usercreate", f"{T}/xx-001-gone"}
+    assert ids[f"{T}/ff-001-settings"]["difficulty"] == "easy"
+    # snapshot is one row per line and reads back unchanged
+    assert len(out.read_text().splitlines()) > len(snap["nodes"]) and mr.normalise(snap) == snap
+    assert mr.load_snapshots(tmp_path / "reports")[0]["target"] == T
+    # no tasks dir for the target: snapshot still written
+    assert json.loads(mr.snapshot(FIXTURE, tmp_path / "r2", tmp_path / "none").read_text())["tasks"] == []
 
 
 def test_render_is_self_contained_and_escapes_data(tmp_path: Path) -> None:
-    m = fixture_map()
+    m = fixture_map(tmp_path)
     m["nodes"][0]["name"] = "</script><b>x"
-    page = mr.render([m, {**fixture_map(), "target": "other"}])
+    page = mr.render([m, {**m, "target": "other"}])
     assert "https://d3js.org v7.9.0" in page
     assert "</script><b>x" not in page and "<\\/script><b>x" in page
     # nothing is fetched: no external scripts, styles or images
@@ -177,12 +166,12 @@ def test_find_chrome(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 
 def test_cli_map_render(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    (tmp_path / "work" / "demo").mkdir(parents=True)
-    shutil.copy(FIXTURE, tmp_path / "work" / "demo" / "map.json")
+    (tmp_path / "work" / T).mkdir(parents=True)
+    shutil.copy(FIXTURE, tmp_path / "work" / T / "map.json")
     args = ["map", "render", "--work", str(tmp_path / "work"), "--reports", str(tmp_path / "r")]
     args += ["--tasks", str(tmp_path / "tasks")]
     runner = CliRunner()
-    res = runner.invoke(app, [*args, "--target", "demo"])
+    res = runner.invoke(app, [*args, "--target", T])
     assert res.exit_code == 0 and (tmp_path / "r" / "map.html").exists(), res.output
     res = runner.invoke(app, [*args, "--target", "nope"])
     assert res.exit_code == 1 and "forge map build --target nope" in res.output
@@ -191,10 +180,10 @@ def test_cli_map_render(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
         raise RuntimeError("chrome/chromium not found")
 
     monkeypatch.setattr(mr, "export_png", boom)
-    res = runner.invoke(app, [*args, "--target", "demo", "--png", str(tmp_path / "m.png")])
+    res = runner.invoke(app, [*args, "--target", T, "--png", str(tmp_path / "m.png")])
     assert res.exit_code == 1 and "png export failed" in res.output
     monkeypatch.setattr(mr, "export_png", lambda page, png: png)
-    res = runner.invoke(app, [*args, "--target", "demo", "--png", str(tmp_path / "m.png")])
+    res = runner.invoke(app, [*args, "--target", T, "--png", str(tmp_path / "m.png")])
     assert res.exit_code == 0 and "m.png" in res.output
 
 
@@ -203,7 +192,7 @@ def test_report_links_the_map_and_shows_coverage(tmp_path: Path) -> None:
     mr.snapshot(FIXTURE, reports)
     out = build_report(reports / "index.html", tmp_path / "tasks", reports, Ledger(tmp_path / "l.jsonl"))
     page = out.read_text()
-    assert 'href="map.html"' in page and "tagged surfaces" in page and "app.core.config" in page
+    assert 'href="map.html"' in page and "tagged surfaces" in page and "app/core" in page
     assert (reports / "map.html").exists()
     summary = json.loads((reports / "summary.json").read_text())
-    assert summary["map_coverage"]["demo"]["total"]["surfaces"] == 5
+    assert summary["map_coverage"][T]["total"]["surfaces"] == 7

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T18:46:45+0530",
+  "generated_at": "2026-11-21T19:36:16+0530",
   "tasks_total": 34,
   "tasks_by_family": {
     "config-round-trip": 5,
@@ -383,5 +383,260 @@
     "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.",
     "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap."
   ],
-  "map_coverage": {}
+  "map_coverage": {
+    "fastapi-template": {
+      "nodes": 135,
+      "total": {
+        "surfaces": 40,
+        "with_task": 0,
+        "tasks": 0,
+        "covered": 39,
+        "uncovered": 1
+      },
+      "unplaced_tasks": 0,
+      "by_family": {
+        "config-round-trip": {
+          "surfaces": 2,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 1
+        },
+        "cross-field-validation": {
+          "surfaces": 12,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 12,
+          "uncovered": 0
+        },
+        "env-aware-naming": {
+          "surfaces": 3,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 3,
+          "uncovered": 0
+        },
+        "fail-fast-config": {
+          "surfaces": 2,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 2,
+          "uncovered": 0
+        },
+        "hot-reload-config": {
+          "surfaces": 1,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 0
+        },
+        "idempotent-consumer": {
+          "surfaces": 13,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 13,
+          "uncovered": 0
+        },
+        "resource-aware-defaults": {
+          "surfaces": 3,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 3,
+          "uncovered": 0
+        },
+        "tolerant-typed-config": {
+          "surfaces": 11,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 11,
+          "uncovered": 0
+        }
+      },
+      "by_module": {
+        "app": {
+          "surfaces": 13,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 13,
+          "uncovered": 0
+        },
+        "app/api": {
+          "surfaces": 11,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 11,
+          "uncovered": 0
+        },
+        "app/core": {
+          "surfaces": 15,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 15,
+          "uncovered": 0
+        },
+        "scripts": {
+          "surfaces": 1,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 0,
+          "uncovered": 1
+        }
+      }
+    },
+    "miniflux": {
+      "nodes": 1935,
+      "total": {
+        "surfaces": 157,
+        "with_task": 0,
+        "tasks": 0,
+        "covered": 128,
+        "uncovered": 29
+      },
+      "unplaced_tasks": 0,
+      "by_family": {
+        "config-round-trip": {
+          "surfaces": 7,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 0,
+          "uncovered": 7
+        },
+        "cross-field-validation": {
+          "surfaces": 66,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 43,
+          "uncovered": 23
+        },
+        "env-aware-naming": {
+          "surfaces": 12,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 12,
+          "uncovered": 0
+        },
+        "fail-fast-config": {
+          "surfaces": 40,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 29,
+          "uncovered": 11
+        },
+        "hot-reload-config": {
+          "surfaces": 12,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 11
+        },
+        "idempotent-consumer": {
+          "surfaces": 3,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 2,
+          "uncovered": 1
+        },
+        "resource-aware-defaults": {
+          "surfaces": 21,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 20,
+          "uncovered": 1
+        },
+        "tolerant-typed-config": {
+          "surfaces": 57,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 56,
+          "uncovered": 1
+        }
+      },
+      "by_module": {
+        "client": {
+          "surfaces": 1,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 0
+        },
+        "internal/api": {
+          "surfaces": 2,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 2,
+          "uncovered": 0
+        },
+        "internal/config": {
+          "surfaces": 90,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 87,
+          "uncovered": 3
+        },
+        "internal/googlereader": {
+          "surfaces": 4,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 3
+        },
+        "internal/http": {
+          "surfaces": 2,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 1
+        },
+        "internal/integration": {
+          "surfaces": 1,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 1,
+          "uncovered": 0
+        },
+        "internal/model": {
+          "surfaces": 4,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 4,
+          "uncovered": 0
+        },
+        "internal/reader": {
+          "surfaces": 5,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 3,
+          "uncovered": 2
+        },
+        "internal/storage": {
+          "surfaces": 3,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 0,
+          "uncovered": 3
+        },
+        "internal/systemd": {
+          "surfaces": 4,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 0,
+          "uncovered": 4
+        },
+        "internal/ui": {
+          "surfaces": 12,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 4,
+          "uncovered": 8
+        },
+        "internal/validator": {
+          "surfaces": 29,
+          "with_task": 0,
+          "tasks": 0,
+          "covered": 24,
+          "uncovered": 5
+        }
+      }
+    }
+  }
 }

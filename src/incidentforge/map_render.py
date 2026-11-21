@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import tomllib
 from collections.abc import Callable
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any
 
 ASSETS = Path(__file__).parent / "report_assets"
@@ -18,7 +18,8 @@ D3_FILE = "d3.v7.9.0.min.js"
 # pinned build from the npm tarball d3@7.9.0 (ISC); checked on every render so a swapped file fails loudly
 D3_SHA256 = "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539"
 SNAPSHOT_DIR = "map"
-SKIP_KINDS = frozenset({"File", "Test"})
+# untagged file nodes would bury the functions; tagged ones stay because they are surfaces too
+FILE_KIND = "File"
 PAGE = "map.html"
 
 FAMILY_COLOURS = {
@@ -59,17 +60,13 @@ def _int(x: Any) -> int:
         return 0
 
 
-def _module_of(file: str) -> str:
-    # same rule as the map builder: first two directories, root files are "."
-    return "/".join(PurePosixPath(file).parts[:-1][:2]) or "."
-
-
 def normalise(raw: dict[str, Any]) -> dict[str, Any]:
     """keep only the fields the page reads; tolerate missing ones so a partial map still renders."""
     nodes = []
     for n in raw.get("nodes") or []:
-        # test and file nodes would bury the functions; modules already group by file
-        if not isinstance(n, dict) or not n.get("id") or n.get("is_test") or n.get("kind") in SKIP_KINDS:
+        if not isinstance(n, dict) or not n.get("id"):
+            continue
+        if n.get("kind") == FILE_KIND and not n.get("families"):
             continue
         nid = str(n["id"])
         file = _str(n.get("file"))
@@ -79,8 +76,10 @@ def normalise(raw: dict[str, Any]) -> dict[str, Any]:
                 "kind": _str(n.get("kind"), "function"),
                 "name": _str(n.get("name"), nid.rsplit(".", 1)[-1]),
                 "file": file,
-                "module": _str(n.get("module")) or _module_of(file),
-                "families": sorted({str(f) for f in n.get("families") or n.get("tags") or []}),
+                "line": _int(n.get("line")),
+                "module": _str(n.get("module")) or ".",
+                "families": sorted({str(f) for f in n.get("families") or []}),
+                "surface_kinds": sorted({str(k) for k in n.get("surface_kinds") or []}),
                 "blast_radius": _int(n.get("blast_radius")),
                 "difficulty": _str(n.get("difficulty")),
                 "covered": n.get("covered") if isinstance(n.get("covered"), bool) else None,
@@ -92,6 +91,7 @@ def normalise(raw: dict[str, Any]) -> dict[str, Any]:
         for e in raw.get("edges") or []
         if isinstance(e, dict) and e.get("source") in ids and e.get("target") in ids and e["source"] != e["target"]
     ]
+    # tasks are not in map.json; snapshot() adds them from task.toml and they round-trip through here
     tasks: dict[str, dict[str, str]] = {}
     for t in raw.get("tasks") or []:
         if isinstance(t, dict) and t.get("task_id"):
@@ -105,6 +105,9 @@ def normalise(raw: dict[str, Any]) -> dict[str, Any]:
         "target": _str(raw.get("target"), "unknown"),
         "commit": _str(raw.get("commit")),
         "graph_hash": _str(raw.get("graph_hash")),
+        "schema": _int(raw.get("schema")),
+        "language": _str(raw.get("language")),
+        "coverage_mode": _str(raw.get("coverage_mode") or raw.get("coverage")),
         "nodes": nodes,
         "edges": edges,
         "tasks": sorted(tasks.values(), key=lambda t: t["task_id"]),
@@ -179,8 +182,21 @@ def snapshot(map_json: Path, reports_root: Path, tasks_root: Path | None = None)
         m["tasks"] = sorted(known.values(), key=lambda t: t["task_id"])
     out = reports_root / SNAPSHOT_DIR / f"{m['target']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(m, indent=1, sort_keys=True) + "\n")
+    # one node or edge per line keeps the committed snapshot small but still diffable
+    out.write_text(_lines_json(m))
     return out
+
+
+def _lines_json(m: dict[str, Any]) -> str:
+    def block(rows: list[Any]) -> str:
+        return "[\n" + ",\n".join(json.dumps(r, sort_keys=True, separators=(",", ":")) for r in rows) + "\n]"
+
+    head = {k: v for k, v in m.items() if not isinstance(v, list)}
+    parts = [f"{json.dumps(k)}:{json.dumps(v)}" for k, v in sorted(head.items())]
+    parts += [f"{json.dumps(k)}:{block(m[k])}" for k in sorted(k for k, v in m.items() if isinstance(v, list))]
+    text = "{\n" + ",\n".join(parts) + "\n}\n"
+    assert json.loads(text) == m
+    return text
 
 
 def load_snapshots(reports_root: Path) -> list[dict[str, Any]]:
@@ -241,7 +257,7 @@ def render(maps: list[dict[str, Any]]) -> str:
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f"<title>IncidentForge failure map</title><style>{(ASSETS / 'map.css').read_text()}</style></head><body><main>"
         '<h1>Failure map</h1><p class="intro muted">repo → modules → functions; colour = failure family, '
-        'size = blast radius, squares = generated tasks. <a href="index.html">back to the report</a></p>'
+        'size = blast radius (fix scope), squares = generated tasks. <a href="index.html">back to the report</a></p>'
         '<div class="bar"><select id="target" aria-label="target"></select>'
         '<input id="q" placeholder="search name or file" aria-label="search">'
         '<select id="fam" aria-label="family"></select><select id="kind" aria-label="kind"></select>'
