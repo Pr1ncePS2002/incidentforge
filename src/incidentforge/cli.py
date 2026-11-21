@@ -114,6 +114,49 @@ def budget(
     typer.echo(render(status(Ledger.default(), runs_left, per_run_usd)))
 
 
+@app.command("from-postmortem")
+def from_postmortem_cmd(
+    source: str = typer.Argument(..., help="public postmortem url, or a local copy with --source-url"),
+    target: str = typer.Option(..., help="target name under incidentforge/targets"),
+    source_url: str = typer.Option(None, help="public url of the report; required for a local file"),
+    backend: str = typer.Option("claude-code", help="claude-code | gemini"),
+    model: str = typer.Option(None, help="backend model override"),
+    tries: int = typer.Option(2, help="surfaces to try in rank order before giving up"),
+    family: str = typer.Option(None, help="use this family even if the classifier picks another (logged)"),
+    out: str = typer.Option("tasks", help="tasks root dir"),
+) -> None:
+    """turn a public incident report into one validated task with source_url set. owner: v2-postmortem."""
+    from pathlib import Path
+
+    from incidentforge.backends.base import get_backend
+    from incidentforge.postmortem import NoFamilyFits, PostmortemError, from_postmortem
+    from incidentforge.targets import load_target
+
+    try:
+        res = from_postmortem(
+            source,
+            load_target(target),
+            get_backend(backend, model),
+            source_url=source_url,
+            tasks_root=Path(out),
+            tries=tries,
+            family=family,
+            log=typer.echo,
+        )
+    except NoFamilyFits as exc:
+        typer.echo(f"refused: {exc}")
+        raise typer.Exit(3) from exc
+    except PostmortemError as exc:
+        typer.echo(f"error: {exc}")
+        raise typer.Exit(2) from exc
+    ok = res.accepted
+    if ok is None:
+        typer.echo(f"no task accepted for {res.postmortem.source_url}")
+        raise typer.Exit(1)
+    note = "" if res.classifier_family == res.classification.family else f", classifier said {res.classifier_family}"
+    typer.echo(f"accepted {ok.task_id} ({res.classification.family}{note}) from {res.postmortem.source_url}")
+
+
 map_app = typer.Typer(help="failure map of a target repo", no_args_is_help=True)
 app.add_typer(map_app, name="map")
 
