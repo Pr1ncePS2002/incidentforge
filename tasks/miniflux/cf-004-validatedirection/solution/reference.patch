@@ -1,0 +1,60 @@
+diff --git a/internal/validator/entry_query_window.go b/internal/validator/entry_query_window.go
+new file mode 100644
+index 00000000..48d6d84d
+--- /dev/null
++++ b/internal/validator/entry_query_window.go
+@@ -0,0 +1,54 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package validator // import "miniflux.app/v2/internal/validator"
++
++import "fmt"
++
++// EntryQueryWindow holds the optional range filters accepted by the entries API.
++// A zero value means the bound is not set. Timestamps are Unix seconds.
++type EntryQueryWindow struct {
++	After           int64
++	Before          int64
++	PublishedAfter  int64
++	PublishedBefore int64
++	ChangedAfter    int64
++	ChangedBefore   int64
++	AfterEntryID    int64
++	BeforeEntryID   int64
++}
++
++type entryQueryBound struct {
++	lowerName string
++	lower     int64
++	upperName string
++	upper     int64
++}
++
++// ValidateEntryQueryWindow rejects negative bounds and lower/upper pairs that
++// describe an empty range. Both bounds are exclusive, so equal values are rejected.
++func ValidateEntryQueryWindow(w EntryQueryWindow) error {
++	bounds := []entryQueryBound{
++		{"after", w.After, "before", w.Before},
++		{"published_after", w.PublishedAfter, "published_before", w.PublishedBefore},
++		{"changed_after", w.ChangedAfter, "changed_before", w.ChangedBefore},
++		{"after_entry_id", w.AfterEntryID, "before_entry_id", w.BeforeEntryID},
++	}
++
++	for _, b := range bounds {
++		if b.lower < 0 {
++			return fmt.Errorf("%s value should be >= 0", b.lowerName)
++		}
++		if b.upper < 0 {
++			return fmt.Errorf("%s value should be >= 0", b.upperName)
++		}
++	}
++
++	for _, b := range bounds {
++		if b.lower > 0 && b.upper > 0 && b.lower >= b.upper {
++			return fmt.Errorf("%s (%d) must be lower than %s (%d): the requested range is empty", b.lowerName, b.lower, b.upperName, b.upper)
++		}
++	}
++
++	return nil
++}

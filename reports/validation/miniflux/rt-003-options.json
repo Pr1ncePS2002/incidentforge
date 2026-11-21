@@ -1,0 +1,45 @@
+{
+  "task_id": "miniflux/rt-003-options",
+  "accepted": true,
+  "gates": [
+    {
+      "gate": "leak",
+      "passed": true,
+      "detail": "2% 8-gram overlap",
+      "seconds": 0.0
+    },
+    {
+      "gate": "fail_on_base",
+      "passed": true,
+      "detail": "reward=0.0 feature_tests=0.0 repo_suite=1.0",
+      "seconds": 12.4
+    },
+    {
+      "gate": "pass_on_reference",
+      "passed": true,
+      "detail": "reward=1.0",
+      "seconds": 12.6
+    },
+    {
+      "gate": "regression",
+      "passed": true,
+      "detail": "repo suite passed with the reference patch",
+      "seconds": 0.0
+    },
+    {
+      "gate": "mutation",
+      "passed": true,
+      "detail": "killed 3/6; survived: disable-if@internal/http/client/options_file.go:27, drop-error-return@internal/http/client/options_file.go:28, drop-statement@internal/http/client/options_file.go:90",
+      "seconds": 30.2
+    },
+    {
+      "gate": "flakiness",
+      "passed": true,
+      "detail": "oracle rewards over 3 runs: [1.0, 1.0, 1.0]",
+      "seconds": 13.7
+    }
+  ],
+  "mutants_total": 6,
+  "mutants_killed": 3,
+  "log_path": "jobs/validation"
+}

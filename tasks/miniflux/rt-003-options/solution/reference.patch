@@ -1,0 +1,165 @@
+diff --git a/internal/http/client/options_file.go b/internal/http/client/options_file.go
+new file mode 100644
+index 00000000..d24bfaa0
+--- /dev/null
++++ b/internal/http/client/options_file.go
+@@ -0,0 +1,159 @@
++// SPDX-FileCopyrightText: Copyright The Miniflux Authors. All rights reserved.
++// SPDX-License-Identifier: Apache-2.0
++
++package client // import "miniflux.app/v2/internal/http/client"
++
++import (
++	"encoding/json"
++	"errors"
++	"fmt"
++	"os"
++	"path/filepath"
++	"time"
++)
++
++const (
++	optionsKeyTimeout              = "timeout"
++	optionsKeyBlockPrivateNetworks = "block_private_networks"
++)
++
++// ReadOptionsFile loads client options from a JSON settings file.
++//
++// The file must contain a JSON object. The "timeout" key holds a Go duration
++// string such as "30s" and "block_private_networks" holds a boolean. Keys that
++// are absent leave the corresponding field at its zero value; other keys are ignored.
++func ReadOptionsFile(path string) (Options, error) {
++	data, err := os.ReadFile(path)
++	if err != nil {
++		return Options{}, err
++	}
++	_, opts, err := decodeOptionsDocument(data)
++	if err != nil {
++		return Options{}, err
++	}
++	return opts, nil
++}
++
++// UpdateOptionsFile loads the options stored at path, applies mutate and saves
++// the result without losing information.
++//
++// Only fields whose value was changed by mutate are rewritten. Unknown keys,
++// unchanged keys and explicit zero values are kept as they were, absent keys
++// stay absent, and when nothing changed the file is not touched. The new
++// content is written to a temporary file and renamed over the original, so
++// a failed save leaves the previous file intact.
++func UpdateOptionsFile(path string, mutate func(*Options) error) error {
++	data, err := os.ReadFile(path)
++	if err != nil {
++		return err
++	}
++	doc, current, err := decodeOptionsDocument(data)
++	if err != nil {
++		return err
++	}
++
++	updated := current
++	if mutate != nil {
++		if err := mutate(&updated); err != nil {
++			return fmt.Errorf("client: options update aborted: %w", err)
++		}
++	}
++	if updated.Timeout < 0 {
++		return fmt.Errorf("client: %s must not be negative, got %s", optionsKeyTimeout, updated.Timeout)
++	}
++
++	changed := false
++	if updated.Timeout != current.Timeout {
++		raw, err := json.Marshal(updated.Timeout.String())
++		if err != nil {
++			return err
++		}
++		doc[optionsKeyTimeout] = raw
++		changed = true
++	}
++	if updated.BlockPrivateNetworks != current.BlockPrivateNetworks {
++		raw, err := json.Marshal(updated.BlockPrivateNetworks)
++		if err != nil {
++			return err
++		}
++		doc[optionsKeyBlockPrivateNetworks] = raw
++		changed = true
++	}
++	if !changed {
++		return nil
++	}
++
++	out, err := json.MarshalIndent(doc, "", "  ")
++	if err != nil {
++		return err
++	}
++	out = append(out, '\n')
++	return writeOptionsFileAtomically(path, out)
++}
++
++func decodeOptionsDocument(data []byte) (map[string]json.RawMessage, Options, error) {
++	var doc map[string]json.RawMessage
++	if err := json.Unmarshal(data, &doc); err != nil {
++		return nil, Options{}, fmt.Errorf("client: invalid options document: %w", err)
++	}
++	if doc == nil {
++		return nil, Options{}, errors.New("client: options document must be a JSON object")
++	}
++
++	var opts Options
++	if raw, ok := doc[optionsKeyTimeout]; ok {
++		var value string
++		if err := json.Unmarshal(raw, &value); err != nil {
++			return nil, Options{}, fmt.Errorf("client: %s must be a duration string: %w", optionsKeyTimeout, err)
++		}
++		timeout, err := time.ParseDuration(value)
++		if err != nil {
++			return nil, Options{}, fmt.Errorf("client: invalid %s: %w", optionsKeyTimeout, err)
++		}
++		if timeout < 0 {
++			return nil, Options{}, fmt.Errorf("client: %s must not be negative, got %s", optionsKeyTimeout, timeout)
++		}
++		opts.Timeout = timeout
++	}
++	if raw, ok := doc[optionsKeyBlockPrivateNetworks]; ok {
++		if err := json.Unmarshal(raw, &opts.BlockPrivateNetworks); err != nil {
++			return nil, Options{}, fmt.Errorf("client: %s must be a boolean: %w", optionsKeyBlockPrivateNetworks, err)
++		}
++	}
++	return doc, opts, nil
++}
++
++func writeOptionsFileAtomically(path string, data []byte) error {
++	info, err := os.Stat(path)
++	if err != nil {
++		return err
++	}
++	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".tmp-*")
++	if err != nil {
++		return err
++	}
++	tmpName := tmp.Name()
++	if _, err := tmp.Write(data); err != nil {
++		tmp.Close()
++		os.Remove(tmpName)
++		return err
++	}
++	if err := tmp.Sync(); err != nil {
++		tmp.Close()
++		os.Remove(tmpName)
++		return err
++	}
++	if err := tmp.Close(); err != nil {
++		os.Remove(tmpName)
++		return err
++	}
++	if err := os.Chmod(tmpName, info.Mode().Perm()); err != nil {
++		os.Remove(tmpName)
++		return err
++	}
++	if err := os.Rename(tmpName, path); err != nil {
++		os.Remove(tmpName)
++		return err
++	}
++	return nil
++}
