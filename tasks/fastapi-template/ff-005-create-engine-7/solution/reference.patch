@@ -1,0 +1,66 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..8dbd50d 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,39 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    # TLS to the database; the root certificate is required once it is enabled
++    DATABASE_SSL_ENABLED: bool = False
++    DATABASE_SSL_ROOT_CERT: str | None = None
++
++    @model_validator(mode="after")
++    def _enforce_database_auth_settings(self) -> Self:
++        # a half-configured database connection used to start fine and fail on the
++        # first query (or connect without credentials); refuse to start instead
++        from sqlalchemy.engine import make_url
++
++        placeholders = {"changethis", "change-me", "changeme", "todo", "tbd", "fixme"}
++        problems: list[str] = []
++        url = make_url(str(self.DATABASE_URL))
++        if not (url.username or "").strip():
++            problems.append("DATABASE_URL must include a database user")
++        if not (url.password or "").strip():
++            problems.append("DATABASE_URL must include a non-empty password")
++        if self.DATABASE_SSL_ENABLED:
++            cert = (self.DATABASE_SSL_ROOT_CERT or "").strip()
++            if not cert:
++                problems.append(
++                    "DATABASE_SSL_ROOT_CERT is required when DATABASE_SSL_ENABLED is on"
++                )
++            elif cert.lower() in placeholders or (
++                cert.startswith("<") and cert.endswith(">")
++            ):
++                problems.append(
++                    f"DATABASE_SSL_ROOT_CERT still holds a placeholder ({cert!r})"
++                )
++        if problems:
++            raise ValueError("invalid database configuration: " + "; ".join(problems))
++        return self
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]
+diff --git a/backend/app/core/db.py b/backend/app/core/db.py
+index d11b0eb..110b85b 100644
+--- a/backend/app/core/db.py
++++ b/backend/app/core/db.py
+@@ -4,7 +4,16 @@ from app import crud
+ from app.core.config import settings
+ from app.models import User, UserCreate
+ 
+-engine = create_engine(str(settings.DATABASE_URL), pool_pre_ping=True)
++# verify the server certificate when TLS to the database is switched on
++connect_args: dict[str, str] = {}
++if settings.DATABASE_SSL_ENABLED and settings.DATABASE_SSL_ROOT_CERT:
++    connect_args = {
++        "sslmode": "verify-full",
++        "sslrootcert": settings.DATABASE_SSL_ROOT_CERT,
++    }
++engine = create_engine(
++    str(settings.DATABASE_URL), pool_pre_ping=True, connect_args=connect_args
++)
+ 
+ 
+ # make sure all SQLModel models are imported (app.models) before initializing DB

@@ -1,0 +1,38 @@
+diff --git a/backend/app/core/config.py b/backend/app/core/config.py
+index 095f72e..63a712a 100644
+--- a/backend/app/core/config.py
++++ b/backend/app/core/config.py
+@@ -54,6 +54,33 @@ class Settings(BaseSettings):
+             self.EMAILS_FROM_NAME = self.PROJECT_NAME
+         return self
+ 
++    # Deployment environment used to namespace secret / credential store paths.
++    DEPLOYMENT_ENVIRONMENT: str = "local"
++
++    @staticmethod
++    def _check_deployment_environment(value: object) -> str:
++        allowed = ("local", "staging", "production")
++        if not isinstance(value, str) or value not in allowed:
++            raise ValueError(
++                f"DEPLOYMENT_ENVIRONMENT must be one of {', '.join(allowed)}; "
++                f"got {value!r}"
++            )
++        return value
++
++    @field_validator("DEPLOYMENT_ENVIRONMENT")
++    @classmethod
++    def _validate_deployment_environment(cls, value: str) -> str:
++        return cls._check_deployment_environment(value)
++
++    def secret_name(self, name: str) -> str:
++        """Environment-scoped path of a secret in the shared credential store."""
++        environment = self._check_deployment_environment(self.DEPLOYMENT_ENVIRONMENT)
++        if not isinstance(name, str) or not name or not name.strip():
++            raise ValueError("secret name must be a non-empty string")
++        if "/" in name:
++            raise ValueError(f"secret name must not contain '/': {name!r}")
++        return f"{environment}/{name}"
++
+     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+ 
+     @computed_field  # type: ignore[prop-decorator]

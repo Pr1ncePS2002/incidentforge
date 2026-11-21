@@ -1,0 +1,24 @@
+schema_version = "1.4"
+
+[metadata]
+title = "scope credential store secret paths by an explicitly validated deployment environment"
+family = "env-aware-naming"
+difficulty = "hard"
+origin = "postmortem"
+target = "fastapi-template"
+base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+fault_cases = ["unscoped-key: the same secret name built for staging and production gives the same store path, so one environment's rotation overwrites the other's credentials", "wrong-env-source: secret_name falls back to the shipped default 'local' instead of the DEPLOYMENT_ENVIRONMENT that was configured (via kwarg or env var), like a rotation run without an explicit environment flag", "unknown-env: DEPLOYMENT_ENVIRONMENT is empty, cased wrong or not one of local/staging/production (at startup or changed later), and is accepted instead of failing with an error naming DEPLOYMENT_ENVIRONMENT", "separator-injection: a secret name containing '/' (e.g. 'production/db') is accepted, so paths become ambiguous and can collide across environments"]
+source_url = "https://blog.cloudflare.com/cloudflare-incident-march-21-2025/"
+map_node = "backend/app/core/config.py::Settings"
+blast_radius = 1
+classifier_family = "none"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0
