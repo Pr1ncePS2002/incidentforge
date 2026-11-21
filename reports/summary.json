@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-22T01:11:20+0530",
+  "generated_at": "2026-11-22T01:14:53+0530",
   "tasks_total": 52,
   "tasks_by_family": {
     "config-round-trip": 7,
@@ -389,7 +389,7 @@
       "total": {
         "surfaces": 40,
         "with_task": 15,
-        "tasks": 29,
+        "tasks": 33,
         "covered": 39,
         "uncovered": 1
       },
@@ -397,8 +397,8 @@
       "by_family": {
         "config-round-trip": {
           "surfaces": 2,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 3,
           "covered": 1,
           "uncovered": 1
         },
@@ -426,7 +426,7 @@
         "hot-reload-config": {
           "surfaces": 1,
           "with_task": 1,
-          "tasks": 2,
+          "tasks": 3,
           "covered": 1,
           "uncovered": 0
         },
@@ -456,7 +456,7 @@
         "app": {
           "surfaces": 13,
           "with_task": 6,
-          "tasks": 9,
+          "tasks": 11,
           "covered": 13,
           "uncovered": 0
         },
@@ -470,7 +470,7 @@
         "app/core": {
           "surfaces": 15,
           "with_task": 5,
-          "tasks": 16,
+          "tasks": 18,
           "covered": 15,
           "uncovered": 0
         },
@@ -487,8 +487,8 @@
       "nodes": 1935,
       "total": {
         "surfaces": 157,
-        "with_task": 3,
-        "tasks": 6,
+        "with_task": 14,
+        "tasks": 19,
         "covered": 128,
         "uncovered": 29
       },
@@ -496,36 +496,36 @@
       "by_family": {
         "config-round-trip": {
           "surfaces": 7,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 4,
+          "tasks": 4,
           "covered": 0,
           "uncovered": 7
         },
         "cross-field-validation": {
           "surfaces": 66,
-          "with_task": 1,
-          "tasks": 1,
+          "with_task": 6,
+          "tasks": 6,
           "covered": 43,
           "uncovered": 23
         },
         "env-aware-naming": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 1,
+          "with_task": 1,
+          "tasks": 2,
           "covered": 12,
           "uncovered": 0
         },
         "fail-fast-config": {
           "surfaces": 40,
-          "with_task": 1,
-          "tasks": 3,
+          "with_task": 2,
+          "tasks": 4,
           "covered": 29,
           "uncovered": 11
         },
         "hot-reload-config": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 11
         },
@@ -538,8 +538,8 @@
         },
         "resource-aware-defaults": {
           "surfaces": 21,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 20,
           "uncovered": 1
         },
@@ -554,8 +554,8 @@
       "by_module": {
         "client": {
           "surfaces": 1,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 0
         },
@@ -568,8 +568,8 @@
         },
         "internal/config": {
           "surfaces": 90,
-          "with_task": 2,
-          "tasks": 4,
+          "with_task": 6,
+          "tasks": 10,
           "covered": 87,
           "uncovered": 3
         },
@@ -582,8 +582,8 @@
         },
         "internal/http": {
           "surfaces": 2,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 1
         },
@@ -603,8 +603,8 @@
         },
         "internal/reader": {
           "surfaces": 5,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 3,
           "uncovered": 2
         },
@@ -617,22 +617,22 @@
         },
         "internal/systemd": {
           "surfaces": 4,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 0,
           "uncovered": 4
         },
         "internal/ui": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 4,
           "uncovered": 8
         },
         "internal/validator": {
           "surfaces": 29,
-          "with_task": 1,
-          "tasks": 1,
+          "with_task": 3,
+          "tasks": 3,
           "covered": 24,
           "uncovered": 5
         }
