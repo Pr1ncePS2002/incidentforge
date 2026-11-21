@@ -150,7 +150,7 @@ Findings:
 - gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 46 main-run failures, 25 used every turn and 21 stopped before the cap.
 - gemini/gemini-3.8-flash with 60 turns instead of 30: 31% -> 75% on 16 tasks; of its 49 main-run failures, 45 used every turn and 4 stopped before the cap.
 
-Generated 2026-11-22T01:11:20+0530. Full per-family breakdown: `reports/index.html`.
+Generated 2026-11-22T01:14:53+0530. Full per-family breakdown: `reports/index.html`.
 <!-- results:end -->
 
 Refresh this block with `uv run python scripts/readme_results.py` after `forge report`.

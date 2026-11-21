@@ -8,6 +8,7 @@ origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
 fault_cases = ["inverted-range: CategoryTitleLimits with MinLength 50 greater than MaxLength 20 is rejected naming both fields", "negative-or-zero: MinLength or MaxLength set to zero or a negative value is rejected naming the offending field", "boundary-equal: MinLength == MaxLength is allowed and only titles of exactly that length pass"]
+map_node = "internal/validator/category.go::ValidateCategoryCreation"
 blast_radius = 1
 fix_scope = "1 file"
 

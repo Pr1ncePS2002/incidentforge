@@ -281,6 +281,7 @@
 {"difficulty":"medium","family":"fail-fast-config","node_id":"backend/app/core/config.py::Settings","task_id":"fastapi-template/ff-005-create-engine-7"},
 {"difficulty":"easy","family":"fail-fast-config","node_id":"backend/app/core/config.py::Settings","task_id":"fastapi-template/ff-006-settings"},
 {"difficulty":"medium","family":"hot-reload-config","node_id":"backend/app/core/config.py::Settings","task_id":"fastapi-template/hr-001-settings"},
+{"difficulty":"medium","family":"hot-reload-config","node_id":"backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES","task_id":"fastapi-template/hr-002-access-token-expire"},
 {"difficulty":"medium","family":"hot-reload-config","node_id":"backend/app/core/config.py::Settings","task_id":"fastapi-template/hr-003-email-reset-token"},
 {"difficulty":"medium","family":"idempotent-consumer","node_id":"backend/app/crud.py::create_user#handler","task_id":"fastapi-template/ic-001-create-user"},
 {"difficulty":"medium","family":"idempotent-consumer","node_id":"backend/app/crud.py::update_user#handler","task_id":"fastapi-template/ic-002-update-user"},
@@ -291,6 +292,9 @@
 {"difficulty":"medium","family":"resource-aware-defaults","node_id":"backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES","task_id":"fastapi-template/rd-001-access-token-expire"},
 {"difficulty":"medium","family":"resource-aware-defaults","node_id":"backend/app/core/db.py","task_id":"fastapi-template/rd-003-create-engine-7"},
 {"difficulty":"medium","family":"resource-aware-defaults","node_id":"backend/app/core/config.py::Settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS","task_id":"fastapi-template/rd-004-email-reset-token"},
+{"difficulty":"medium","family":"config-round-trip","node_id":"backend/app/core/config.py::Settings","task_id":"fastapi-template/rt-001-settings"},
+{"difficulty":"medium","family":"config-round-trip","node_id":"backend/app/models.py::UserBase","task_id":"fastapi-template/rt-002-userbase"},
+{"difficulty":"medium","family":"config-round-trip","node_id":"backend/app/models.py::UserCreate","task_id":"fastapi-template/rt-003-usercreate"},
 {"difficulty":"easy","family":"tolerant-typed-config","node_id":"backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES","task_id":"fastapi-template/tt-001-settings"},
 {"difficulty":"medium","family":"tolerant-typed-config","node_id":"backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES","task_id":"fastapi-template/tt-002-access-token-expire"},
 {"difficulty":"medium","family":"tolerant-typed-config","node_id":"backend/app/core/config.py::Settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS","task_id":"fastapi-template/tt-003-email-reset-token"}
