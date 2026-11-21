@@ -8,6 +8,7 @@ import shlex
 import shutil
 from pathlib import Path, PurePosixPath
 
+from incidentforge.failmap.difficulty import fix_scope
 from incidentforge.models import Language, TaskSpec
 
 REPO_ROOT = "/app"
@@ -63,6 +64,7 @@ def render_task_toml(spec: TaskSpec) -> str:
         "source_url": spec.source_url,
         "map_node": spec.surface.node_id if spec.surface else None,
         "blast_radius": spec.surface.blast_radius if spec.surface else None,
+        "fix_scope": fix_scope(spec.surface.blast_radius) if spec.surface and spec.surface.blast_radius else None,
     }
     meta.update({k: v for k, v in optional.items() if v is not None})
     lines = ['schema_version = "1.4"', "", "[metadata]"]

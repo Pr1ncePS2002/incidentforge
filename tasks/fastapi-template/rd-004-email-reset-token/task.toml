@@ -3,14 +3,15 @@ schema_version = "1.4"
 [metadata]
 title = "derive the password-reset token lifetime from configured bounds instead of a fixed fallback"
 family = "resource-aware-defaults"
-difficulty = "hard"
+difficulty = "medium"
 origin = "postmortem"
 target = "fastapi-template"
 base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
 fault_cases = ["unset-limit: EMAIL_RESET_TOKEN_EXPIRE_HOURS is blanked or removed by a config change; the lifetime must be ACCESS_TOKEN_EXPIRE_MINUTES // 240 clamped to [MIN, MAX], not a fixed constant", "hardcoded-size: EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS=24 or a shorter ACCESS_TOKEN_EXPIRE_MINUTES is configured, but the lifetime stays at the fixed 48 hours", "min-over-max: EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS=72 is above EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS=24", "exceeds-limit: an explicit EMAIL_RESET_TOKEN_EXPIRE_HOURS is above EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS or below EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS", "zero-or-negative: EMAIL_RESET_TOKEN_EXPIRE_HOURS, EMAIL_RESET_TOKEN_MIN_EXPIRE_HOURS or EMAIL_RESET_TOKEN_MAX_EXPIRE_HOURS is zero or negative"]
-source_url = "https://aws.amazon.com/message/74876-2/"
 map_node = "backend/app/core/config.py::Settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS"
 blast_radius = 1
+fix_scope = "1 file"
+source_url = "https://aws.amazon.com/message/74876-2/"
 classifier_family = "fail-fast-config"
 
 [verifier]

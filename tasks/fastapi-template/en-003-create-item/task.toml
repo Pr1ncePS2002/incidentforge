@@ -3,11 +3,14 @@ schema_version = "1.4"
 [metadata]
 title = "scope item-created event names by the configured deployment environment"
 family = "env-aware-naming"
-difficulty = "hard"
+difficulty = "medium"
 origin = "llm"
 target = "fastapi-template"
 base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
 fault_cases = ["unscoped-key: the item-created event name is built without the DEPLOYMENT_ENV prefix, so staging and production events collide", "wrong-env-source: the name uses a hardcoded 'local' or default environment instead of the configured DEPLOYMENT_ENV", "unknown-env: DEPLOYMENT_ENV is empty or not local/staging/production; settings construction, scoped_name and create_item must fail fast with an error naming DEPLOYMENT_ENV", "separator-injection: a name part containing ':' would make ('a:b','c') and ('a','b:c') produce the same name, so it must be rejected"]
+map_node = "backend/app/crud.py::create_item"
+blast_radius = 3
+fix_scope = "2-3 files"
 
 [verifier]
 timeout_sec = 900.0

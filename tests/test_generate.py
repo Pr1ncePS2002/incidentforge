@@ -198,11 +198,7 @@ def test_family_language_filter(target: Target, tmp_path: Path, monkeypatch: pyt
 def test_helpers(tmp_path: Path) -> None:
     assert slugify("Fail Fast: on SMTP host!") == "fail-fast-on-smtp"
     assert slugify("!!!") == "task"
-    one = "diff --git a/x b/x\n"
-    assert difficulty(one, 2) == "easy"
-    assert difficulty(one * 2, 2) == "medium"
-    assert difficulty(one * 3, 1) == "hard"
-    assert difficulty(one, 4) == "hard"
+    assert [difficulty(n) for n in (2, 3, 4, 5, 6)] == ["easy", "easy", "medium", "medium", "hard"]
     report = ValidationReport(task_id="t", accepted=False, gates=[], mutants_total=4, mutants_killed=0)
     text = describe_failure(report)
     assert "without a failing gate" in text and "0 of 4 mutants" in text

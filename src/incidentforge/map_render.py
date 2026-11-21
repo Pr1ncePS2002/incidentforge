@@ -122,11 +122,12 @@ def tasks_from_dir(target_dir: Path) -> list[dict[str, str]]:
             meta = tomllib.loads(toml_path.read_text()).get("metadata") or {}
         except tomllib.TOMLDecodeError:
             continue
-        if meta.get("node_id"):
+        # package.render_task_toml writes the node as map_node (F-58)
+        if meta.get("map_node"):
             out.append(
                 {
                     "task_id": f"{target_dir.name}/{toml_path.parent.name}",
-                    "node_id": str(meta["node_id"]),
+                    "node_id": str(meta["map_node"]),
                     "family": _str(meta.get("family")),
                     "difficulty": _str(meta.get("difficulty")),
                 }

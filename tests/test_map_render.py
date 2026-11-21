@@ -25,9 +25,9 @@ USERCREATE = "backend/app/models.py::UserCreate"
 def write_tasks(root: Path) -> Path:
     tasks = root / "tasks" / T
     for name, meta in [
-        ("ff-001-settings", f'node_id = "{SETTINGS}"\nfamily = "fail-fast-config"\ndifficulty = "easy"'),
-        ("cf-003-usercreate", f'node_id = "{USERCREATE}"\nfamily = "cross-field-validation"'),
-        ("xx-001-gone", 'node_id = "backend/app/gone.py::f"\nfamily = "fail-fast-config"'),
+        ("ff-001-settings", f'map_node = "{SETTINGS}"\nfamily = "fail-fast-config"\ndifficulty = "easy"'),
+        ("cf-003-usercreate", f'map_node = "{USERCREATE}"\nfamily = "cross-field-validation"'),
+        ("xx-001-gone", 'map_node = "backend/app/gone.py::f"\nfamily = "fail-fast-config"'),
         ("xx-002-plain", 'family = "fail-fast-config"'),
         ("bad", "= not toml"),
     ]:

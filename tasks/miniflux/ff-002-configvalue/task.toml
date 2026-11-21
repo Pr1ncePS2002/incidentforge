@@ -3,11 +3,14 @@ schema_version = "1.4"
 [metadata]
 title = "reject missing or placeholder admin bootstrap and database settings at startup"
 family = "fail-fast-config"
-difficulty = "hard"
+difficulty = "medium"
 origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
 fault_cases = ["conditional-missing: CREATE_ADMIN enabled while ADMIN_USERNAME or ADMIN_PASSWORD is absent", "empty: CREATE_ADMIN enabled with ADMIN_USERNAME set to whitespace only", "placeholder: ADMIN_PASSWORD left as changethis/TODO (also via ADMIN_PASSWORD_FILE), ADMIN_USERNAME left as <fill-me>, DATABASE_URL left as todo", "several-bad: CREATE_ADMIN on with ADMIN_USERNAME missing, ADMIN_PASSWORD=changeme and DATABASE_URL=<fill-me>; one error names all three keys"]
+map_node = "internal/config/parser.go::configParser"
+blast_radius = 3
+fix_scope = "2-3 files"
 
 [verifier]
 timeout_sec = 900.0

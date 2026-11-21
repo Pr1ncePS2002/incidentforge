@@ -3,11 +3,14 @@ schema_version = "1.4"
 [metadata]
 title = "make user updates idempotent on redelivery and retry"
 family = "idempotent-consumer"
-difficulty = "hard"
+difficulty = "medium"
 origin = "llm"
 target = "fastapi-template"
 base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
 fault_cases = ["duplicate-delivery: the same password+name update is delivered twice with one key; the stored hash must not change and the repeat returns the user", "duplicate-delivery: a late redelivery of an older keyed update arrives after a newer update and must not undo it", "retry-after-partial: the commit raises after the change was flushed; the change must be rolled back and the key left unrecorded, so the retry applies once and a third delivery does nothing", "distinct-events: two different keys for the same user both apply, and one key used for two different users applies to each"]
+map_node = "backend/app/crud.py::update_user#handler"
+blast_radius = 4
+fix_scope = "4+ files"
 
 [verifier]
 timeout_sec = 900.0

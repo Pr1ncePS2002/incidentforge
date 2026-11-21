@@ -206,6 +206,20 @@ def map_build(
     typer.echo("timings " + " ".join(f"{k}={v}s" for k, v in s.timings.items()))
 
 
+@map_app.command("backfill")
+def map_backfill(
+    tasks: str = typer.Option("tasks", help="tasks root"),
+    work: str = typer.Option("work", help="work root holding <target>/map.sqlite"),
+) -> None:
+    """add map node, blast radius, fix scope and fault-based difficulty to existing tasks. owner: lead."""
+    from pathlib import Path
+
+    from incidentforge.failmap.backfill import backfill
+
+    for b in backfill(Path(tasks), Path(work)):
+        typer.echo(f"{b.task_id}\t{b.difficulty}\t{b.fix_scope or '-'}\t{b.map_node or '-'}")
+
+
 @map_app.command("render")
 def map_render(
     target: list[str] = typer.Option(..., help="target name(s); reads work/<target>/map.json"),
