@@ -1,0 +1,245 @@
+{
+ "clusters": [
+  {
+   "families": [
+    "config-round-trip",
+    "cross-field-validation",
+    "env-aware-naming",
+    "fail-fast-config",
+    "hot-reload-config",
+    "resource-aware-defaults",
+    "tolerant-typed-config"
+   ],
+   "files": [
+    "backend/app/core/config.py"
+   ],
+   "id": "c006",
+   "modules": [
+    "app/core"
+   ],
+   "nodes": [
+    "backend/app/core/config.py::Settings",
+    "backend/app/core/config.py::Settings.ACCESS_TOKEN_EXPIRE_MINUTES",
+    "backend/app/core/config.py::Settings.DATABASE_URL",
+    "backend/app/core/config.py::Settings.EMAILS_FROM_EMAIL",
+    "backend/app/core/config.py::Settings.EMAILS_FROM_NAME",
+    "backend/app/core/config.py::Settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS",
+    "backend/app/core/config.py::Settings.EMAIL_TEST_USER",
+    "backend/app/core/config.py::Settings.FASTAPI_ENV",
+    "backend/app/core/config.py::Settings.FIRST_SUPERUSER",
+    "backend/app/core/config.py::Settings.PROJECT_NAME",
+    "backend/app/core/config.py::Settings.SENTRY_DSN",
+    "backend/app/core/config.py::Settings.SMTP_PORT",
+    "backend/app/core/config.py::Settings.SMTP_SSL",
+    "backend/app/core/config.py::Settings.SMTP_TLS"
+   ]
+  }
+ ],
+ "commit": "77e550a73bb49dd2967622c5ed11bf7a49603c93",
+ "coverage": "run",
+ "edges": [
+  {
+   "kind": "CALLS",
+   "source": "backend/app/core/config.py",
+   "target": "backend/app/core/config.py::Settings"
+  },
+  {
+   "kind": "CALLS",
+   "source": "backend/app/core/db.py::init_db",
+   "target": "backend/app/models.py::UserCreate"
+  },
+  {
+   "kind": "CONTAINS",
+   "source": "backend/app/core/config.py",
+   "target": "backend/app/core/config.py::Settings"
+  },
+  {
+   "kind": "CONTAINS",
+   "source": "backend/app/core/db.py",
+   "target": "backend/app/core/db.py::init_db"
+  },
+  {
+   "kind": "IMPORTS_FROM",
+   "source": "backend/app/core/db.py",
+   "target": "backend/app/core/config.py"
+  },
+  {
+   "kind": "READS_CONFIG",
+   "source": "backend/app/core/config.py::Settings",
+   "target": "backend/app/core/config.py::Settings.DATABASE_URL"
+  },
+  {
+   "kind": "READS_CONFIG",
+   "source": "backend/app/core/config.py::Settings",
+   "target": "backend/app/core/config.py::Settings.SMTP_PORT"
+  }
+ ],
+ "graph_hash": "c07e1bf9704fcb05d99f94bd9719c6e6338ee46851cab1d917448188f820bda1",
+ "language": "python",
+ "nodes": [
+  {
+   "blast_radius": null,
+   "cluster": null,
+   "covered": null,
+   "difficulty": null,
+   "families": [],
+   "file": "backend/app/core/config.py",
+   "id": "backend/app/core/config.py",
+   "kind": "File",
+   "line": 1,
+   "module": "app/core",
+   "name": "backend/app/core/config.py",
+   "risk_score": null,
+   "surface_kinds": []
+  },
+  {
+   "blast_radius": 3,
+   "cluster": "c007",
+   "covered": true,
+   "difficulty": "hard",
+   "families": [
+    "resource-aware-defaults"
+   ],
+   "file": "backend/app/core/db.py",
+   "id": "backend/app/core/db.py",
+   "kind": "File",
+   "line": 1,
+   "module": "app/core",
+   "name": "backend/app/core/db.py",
+   "risk_score": 1.7,
+   "surface_kinds": [
+    "pool-config"
+   ]
+  },
+  {
+   "blast_radius": 1,
+   "cluster": "c006",
+   "covered": true,
+   "difficulty": "easy",
+   "families": [
+    "config-round-trip",
+    "cross-field-validation",
+    "fail-fast-config",
+    "hot-reload-config"
+   ],
+   "file": "backend/app/core/config.py",
+   "id": "backend/app/core/config.py::Settings",
+   "kind": "Class",
+   "line": 15,
+   "module": "app/core",
+   "name": "Settings",
+   "risk_score": 1.543,
+   "surface_kinds": [
+    "settings-class"
+   ]
+  },
+  {
+   "blast_radius": 1,
+   "cluster": "c006",
+   "covered": true,
+   "difficulty": "easy",
+   "families": [
+    "env-aware-naming",
+    "tolerant-typed-config"
+   ],
+   "file": "backend/app/core/config.py",
+   "id": "backend/app/core/config.py::Settings.DATABASE_URL",
+   "kind": "config_read",
+   "line": 31,
+   "module": "app/core",
+   "name": "DATABASE_URL",
+   "risk_score": 1.543,
+   "surface_kinds": []
+  },
+  {
+   "blast_radius": 1,
+   "cluster": "c006",
+   "covered": true,
+   "difficulty": "easy",
+   "families": [
+    "tolerant-typed-config"
+   ],
+   "file": "backend/app/core/config.py",
+   "id": "backend/app/core/config.py::Settings.SMTP_PORT",
+   "kind": "config_read",
+   "line": 44,
+   "module": "app/core",
+   "name": "SMTP_PORT",
+   "risk_score": 1.543,
+   "surface_kinds": []
+  },
+  {
+   "blast_radius": 1,
+   "cluster": "c010",
+   "covered": false,
+   "difficulty": "easy",
+   "families": [
+    "config-round-trip"
+   ],
+   "file": "scripts/prepare_release.py",
+   "id": "scripts/prepare_release.py::prepare_release",
+   "kind": "Function",
+   "line": 91,
+   "module": "scripts",
+   "name": "prepare_release",
+   "risk_score": 2.5,
+   "surface_kinds": [
+    "config-writer"
+   ]
+  },
+  {
+   "blast_radius": 4,
+   "cluster": "c008",
+   "covered": true,
+   "difficulty": "hard",
+   "families": [
+    "idempotent-consumer"
+   ],
+   "file": "backend/app/crud.py",
+   "id": "backend/app/crud.py::create_user#handler",
+   "kind": "handler",
+   "line": 10,
+   "module": "app",
+   "name": "create_user",
+   "risk_score": 1.0,
+   "surface_kinds": []
+  },
+  {
+   "blast_radius": 3,
+   "cluster": "c009",
+   "covered": true,
+   "difficulty": "hard",
+   "families": [
+    "cross-field-validation"
+   ],
+   "file": "backend/app/models.py",
+   "id": "backend/app/models.py::UserCreate",
+   "kind": "Class",
+   "line": 21,
+   "module": "app",
+   "name": "UserCreate",
+   "risk_score": 1.0,
+   "surface_kinds": [
+    "validator"
+   ]
+  },
+  {
+   "blast_radius": null,
+   "cluster": null,
+   "covered": null,
+   "difficulty": null,
+   "families": [],
+   "file": "backend/app/core/db.py",
+   "id": "backend/app/core/db.py::init_db",
+   "kind": "Function",
+   "line": 15,
+   "module": "app/core",
+   "name": "init_db",
+   "risk_score": null,
+   "surface_kinds": []
+  }
+ ],
+ "schema": 1,
+ "source_root": "backend",
+ "target": "fastapi-template"
+}

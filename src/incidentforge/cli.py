@@ -163,5 +163,35 @@ def map_build(
     typer.echo("timings " + " ".join(f"{k}={v}s" for k, v in s.timings.items()))
 
 
+@map_app.command("render")
+def map_render(
+    target: list[str] = typer.Option(..., help="target name(s); reads work/<target>/map.json"),
+    work: str = typer.Option("work", help="dir holding <target>/map.json"),
+    reports: str = typer.Option("reports", help="reports root; writes map.html and map/<target>.json"),
+    tasks: str = typer.Option("tasks", help="tasks root, for tasks whose metadata names a map node"),
+    png: str = typer.Option(None, help="also save a static png of the map here (needs chrome)"),
+) -> None:
+    """render reports/map.html from the failure map. owner: v2-viz."""
+    import subprocess
+    from pathlib import Path
+
+    from incidentforge import map_render as mr
+
+    page = None
+    for name in target:
+        try:
+            page = mr.build(name, Path(work), Path(reports), Path(tasks))
+        except FileNotFoundError as e:
+            typer.echo(str(e))
+            raise typer.Exit(1) from None
+    typer.echo(f"wrote {page}")
+    if png and page:
+        try:
+            typer.echo(f"wrote {mr.export_png(page, Path(png))}")
+        except (RuntimeError, OSError, subprocess.SubprocessError) as e:
+            typer.echo(f"png export failed: {e}")
+            raise typer.Exit(1) from None
+
+
 if __name__ == "__main__":
     app()
