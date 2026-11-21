@@ -32,6 +32,12 @@ class Surface(BaseModel):
     symbol: str  # class/function name
     kind: str  # settings-class | env-read | validator | consumer | cache-key | config-writer | pool-config
     excerpt: str = ""  # short code excerpt for the generator prompt
+    # failure map fields (v0.2); none means the surface came from the flat ast scan
+    node_id: str | None = None  # qualified name of the node in work/<target>/map.sqlite
+    blast_radius: int | None = None  # files a fix would touch, via call/import edges
+    difficulty: str | None = None  # easy | medium | hard, derived from blast_radius
+    covered: bool | None = None  # reached by the repo's own tests (static edges + coverage run)
+    risk_score: float | None = None  # sampling weight; uncovered surfaces rank higher
 
 
 class TaskSpec(BaseModel):
@@ -48,6 +54,7 @@ class TaskSpec(BaseModel):
     difficulty: str = "medium"  # easy | medium | hard
     origin: str = "llm"  # llm | feature-removal | hand-written
     surface: Surface | None = None
+    source_url: str | None = None  # public postmortem a task was derived from
 
 
 class GateResult(BaseModel):

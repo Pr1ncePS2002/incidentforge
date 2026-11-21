@@ -8,9 +8,12 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "code-review-graph==2.3.9",
     "google-genai==3.5.0",
     "pydantic==2.14.3",
     "pyyaml==6.0.3",
+    "tree-sitter==0.26.1",
+    "tree-sitter-language-pack==0.13.0",
     "typer==0.29.1",
 ]
 

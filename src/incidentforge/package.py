@@ -49,7 +49,7 @@ def _toml_value(v: object) -> str:
 
 
 def render_task_toml(spec: TaskSpec) -> str:
-    meta = {
+    meta: dict[str, object] = {
         "title": spec.title,
         "family": spec.family,
         "difficulty": spec.difficulty,
@@ -58,6 +58,13 @@ def render_task_toml(spec: TaskSpec) -> str:
         "base_commit": spec.target.commit,
         "fault_cases": spec.fault_cases,
     }
+    # optional keys are left out when unset so v0.1 task.toml files render byte-identical
+    optional = {
+        "source_url": spec.source_url,
+        "map_node": spec.surface.node_id if spec.surface else None,
+        "blast_radius": spec.surface.blast_radius if spec.surface else None,
+    }
+    meta.update({k: v for k, v in optional.items() if v is not None})
     lines = ['schema_version = "1.4"', "", "[metadata]"]
     lines += [f"{k} = {_toml_value(v)}" for k, v in meta.items()]
     lines += [
