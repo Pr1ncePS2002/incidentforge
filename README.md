@@ -9,6 +9,10 @@ and is kept only after six automatic validation gates pass.
 
 > Innodata AI Hackathon 2026 · Track 1 (Coding Task Factory) · Team CHAOS · MIT licence
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Pr1ncePS2002/incidentforge?quickstart=1)
+· **Live report:** [pr1nceps2002.github.io/incidentforge](https://pr1nceps2002.github.io/incidentforge/)
+· **Failure map:** [map.html](https://pr1nceps2002.github.io/incidentforge/map.html)
+
 ## The problem
 
 Most generated coding benchmarks ask a model to "invent a feature for this repo". The resulting tasks
@@ -55,6 +59,18 @@ Details and a sample task per family: [docs/families.md](docs/families.md).
    HTML report and `reports/summary.json`.
 
 Module map and data flow: [docs/architecture.md](docs/architecture.md).
+
+## Try it in 5 minutes
+
+Open the repo in Codespaces with the badge above. The container comes with Docker, uv and Harbor installed,
+and needs no API key for these steps:
+
+```bash
+uv run pytest -q                                              # unit tests
+harbor run -p tasks/fastapi-template/cf-001-settings -a oracle   # reference solution scores 1.0
+harbor run -p tasks/fastapi-template/cf-001-settings -a nop      # doing nothing scores 0.0
+uv run forge report                                           # rebuilds reports/index.html and map.html
+```
 
 ## Quickstart
 
