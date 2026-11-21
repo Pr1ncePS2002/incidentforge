@@ -39,8 +39,8 @@ surface finder) without touching the others as long as it returns these types.
 ## Backends
 
 - **Claude Code headless** (`backends/claude_code.py`): `claude -p --output-format json`, used for generation.
-- **Gemini** (`backends/gemini.py`): free key first; a paid fallback key only under the hard cap in
-  `budget.py`, checked before every call against an append-only spend ledger.
+- **Gemini** (`backends/gemini.py`): metered calls run only under the hard cap in `budget.py`, checked
+  before every call against an append-only spend ledger.
 
 Both implement `Backend.generate_json(prompt, schema)`, so families and the generator do not know which
 model produced a task.

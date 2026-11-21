@@ -98,7 +98,7 @@ Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), Docker, and the Har
 ```bash
 git clone https://github.com/Pr1ncePS2002/incidentforge && cd incidentforge
 uv sync
-cp .env.example .env            # add GEMINI_API_KEY (free tier is enough to generate)
+cp .env.example .env            # add GEMINI_API_KEY
 
 # build the failure map (code graph, family tags, coverage from one real test run)
 uv run forge map build --target fastapi-template --coverage --image incidentforge/fastapi-template-env:dev
@@ -189,9 +189,8 @@ before anything reaches `main`, and nightly on `develop`.
 
 ## Cost control
 
-All Gemini calls go through one backend that tries the free key first. The paid key is used only under a
-hard spend cap checked **before** each call against a local ledger; `forge budget` shows spend against the
-cap and whether the remaining evaluation fits.
+All metered API calls go through one backend under a hard spend cap, checked **before** each call against a
+local ledger; `forge budget` shows spend against the cap and whether the remaining evaluation fits.
 
 ## Limitations
 

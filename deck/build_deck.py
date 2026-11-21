@@ -437,8 +437,8 @@ def build_html(d: dict[str, Any]) -> str:
     slides.append(
         slide(
             "Cost",
-            "<ul><li>Generation on a Claude Code subscription and the Gemini free tier: <b>$0</b> marginal.</li>"
-            f"<li>Paid Gemini fallback only under a <b>$70 hard cap</b>, checked before every call; "
+            "<ul><li>Generation on a Claude Code subscription: <b>$0</b> marginal.</li>"
+            f"<li>Gemini API use only under a <b>$70 hard cap</b>, checked before every call; "
             f"total paid spend for generation and evaluation: <b>{_v(spend, '${:.2f}')}</b>.</li>"
             "<li>Everything else is open source and runs on one laptop.</li></ul>",
         )
