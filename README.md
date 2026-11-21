@@ -7,6 +7,10 @@ evaluating AI coding systems. Each task asks the model to add the protection tha
 recurring class of production outage, ships in [Harbor](https://github.com/harbor-framework/harbor) format,
 and is kept only after six automatic validation gates pass.
 
+A **Failure Map** of the repo (a code graph tagged by failure family, with blast radius and test coverage)
+decides where tasks go: untested risky code first, one parallel worker per independent cluster. Tasks can
+also start from a public postmortem, and every failed model run is explained by exactly one cause.
+
 > Innodata AI Hackathon 2026 · Track 1 (Coding Task Factory) · Team CHAOS · MIT licence
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Pr1ncePS2002/incidentforge?quickstart=1)
@@ -46,17 +50,31 @@ Details and a sample task per family: [docs/families.md](docs/families.md).
 
 1. **Target**: a repo URL + pinned commit + an environment template (Dockerfile and a `run_tests` helper) in
    `src/incidentforge/targets/`.
-2. **Surface finder**: locates code a family can attach to (settings classes, env reads, validators,
-   message handlers, cache keys, config writers, pool settings), for Python and Go.
+2. **Failure map**: a code graph of the repo (from [code-review-graph](https://github.com/tirth8205/code-review-graph)
+   plus our own config-read, env-read and handler nodes), each node tagged with the failure families that can
+   attach to it, its blast radius, and whether a real test run covers it. Surfaces are ranked so untested
+   code comes first. The flat AST surface finder for Python and Go stays as the fallback.
 3. **Generator**: a family prompt plus the surface go to a backend (Claude Code headless or Gemini), which
-   returns the instruction, a reference patch, feature tests and the fault cases.
+   returns the instruction, a reference patch, feature tests and the fault cases. With `--workers N`, one
+   worker runs per map cluster (no two clusters share a file) under a shared cap of Docker containers.
 4. **Validation gates**: the task is accepted only if the tests fail on the base commit, pass with the
    reference patch, the repo's own suite stays green, mutated reference patches are caught, the
    instruction does not leak the solution, and the tests are stable across reruns. A rejected task gets
    one retry with the failure reason fed back.
 5. **Package**: a complete Harbor task directory (see [docs/task-format.md](docs/task-format.md)).
 6. **Evaluate and report**: Harbor runs each model on every task in Docker; `forge report` writes a static
-   HTML report and `reports/summary.json`.
+   HTML report, `reports/summary.json` and the failure map page `reports/map.html`. Each failed run gets one
+   cause: it ran out of turns, broke the repo's own tests, missed an injected fault, or wrote wrong code.
+
+**From a postmortem:** `forge from-postmortem <url> --target <name>` classifies a public incident report into
+a family and a trigger, picks the best surface from the map, and runs the same generator and gates. The
+report's URL is kept in the task's `source_url`. Three tasks in the dataset come from public postmortems
+(Cloudflare, Heroku, AWS).
+
+**Difficulty** is labelled by the number of injected fault cases (easy ≤ 3, medium 4–5, hard ≥ 6). The size
+of the fix is a separate `fix_scope` label (1 file, 2–3 files, 4+ files) taken from the blast radius.
+
+![failure map](deck/failure-map.png)
 
 Module map and data flow: [docs/architecture.md](docs/architecture.md).
 
@@ -82,8 +100,15 @@ git clone https://github.com/Pr1ncePS2002/incidentforge && cd incidentforge
 uv sync
 cp .env.example .env            # add GEMINI_API_KEY (free tier is enough to generate)
 
-# generate, validate and keep tasks for a target
+# build the failure map (code graph, family tags, coverage from one real test run)
+uv run forge map build --target fastapi-template --coverage --image incidentforge/fastapi-template-env:dev
+
+# generate, validate and keep tasks for a target; --workers runs one worker per map cluster
 uv run forge run --target fastapi-template --family fail-fast-config --n 2
+uv run forge run --target fastapi-template --n 8 --workers 4
+
+# one task from a public postmortem
+uv run forge from-postmortem https://aws.amazon.com/message/74876-2/ --target fastapi-template
 
 # re-run every validation gate on the dataset
 uv run forge validate tasks
@@ -94,7 +119,7 @@ harbor run -p tasks/fastapi-template -a nop
 
 # evaluate models and build the report
 uv run forge eval --tasks tasks --model gemini/gemini-3.8-flash
-uv run forge report             # writes reports/index.html
+uv run forge report             # writes reports/index.html and reports/map.html
 
 # paid-key spend against the hard cap
 uv run forge budget
@@ -113,7 +138,8 @@ playbook is in [docs/finale-playbook.md](docs/finale-playbook.md).
 
 ## Results
 
-Two target repos: `fastapi-template` (Python, 24 tasks) and `miniflux` (Go, 10 tasks). On a repo the pipeline
+Two target repos: `fastapi-template` (Python, 33 tasks, 3 of them from public postmortems) and `miniflux`
+(Go, 19 tasks). On a repo the pipeline
 had never seen (python-dotenv), `scripts/finale_dry_run.sh` produced 3 accepted tasks in 20 minutes.
 
 <!-- results:start (generated by scripts/readme_results.py from reports/summary.json) -->
@@ -176,6 +202,8 @@ cap and whether the remaining evaluation fits.
   per family.
 - Model results are from single runs (k=1) on the full set plus k=3 on a subset, so small differences are
   within noise.
+- Difficulty labels come from fault-case counts; blast radius alone did not track pass rate, so it is kept
+  as a separate fix-scope label rather than a difficulty.
 - The two evaluated agents differ (Claude Code vs terminus-2), so pass rates compare models only within one
   agent. terminus-2 results depend on its turn budget (30 turns in the main run; see the ablation above).
 
@@ -187,7 +215,7 @@ uv lock --check && uv run ruff check src tests && uv run ruff format --check src
 ```
 
 Branches: `ftr/*` → `develop` → `main`. CI gates: lint (ruff, mypy strict), unit tests (branch coverage
-≥ 75%), security (secret scan, dependency audit), and a Docker integration stage before `main`.
+≥ 90%), security (secret scan, dependency audit), and a Docker integration stage before `main`.
 
 ## Licence
 

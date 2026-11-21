@@ -1,71 +1,91 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560" width="1400" height="560" font-family="Helvetica, Arial, sans-serif">
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#52606d"/></marker></defs>
-<rect width="1200" height="560" fill="#ffffff"/>
-<text x="600.0" y="34" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2933">IncidentForge architecture</text>
-<rect x="420" y="56" width="360" height="60" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="600.0" y="80.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">forge CLI (typer)</text>
-<text x="600.0" y="100.0" text-anchor="middle" font-size="12" fill="#52606d">run · validate · eval · report · budget</text>
-<rect x="35.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="120.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">targets/</text>
-<text x="120.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">repo + commit +</text>
-<text x="120.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">env template</text>
-<line x1="600" y1="116" x2="120.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
-<rect x="227.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="312.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">surfaces/</text>
-<text x="312.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">python + go</text>
-<text x="312.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">surface finders</text>
-<line x1="600" y1="116" x2="312.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
-<rect x="419.0" y="170" width="170" height="80" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
-<text x="504.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">families/</text>
-<text x="504.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">8 failure-class</text>
-<text x="504.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">prompts + sampling</text>
-<line x1="600" y1="116" x2="504.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
-<rect x="611.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="696.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">generate.py</text>
-<text x="696.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">backend call,</text>
-<text x="696.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">1 retry on reject</text>
-<line x1="600" y1="116" x2="696.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
-<rect x="803.0" y="170" width="170" height="80" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
-<text x="888.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">validate/</text>
-<text x="888.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">6 gates +</text>
-<text x="888.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">mutation</text>
-<line x1="600" y1="116" x2="888.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
-<rect x="995.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="1080.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">package.py</text>
-<text x="1080.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">harbor task</text>
-<text x="1080.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">writer</text>
-<line x1="600" y1="116" x2="1080.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
-<rect x="81.0" y="310" width="190" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="176.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">backends/</text>
-<text x="176.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">claude code headless,</text>
-<text x="176.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">gemini (budgeted)</text>
-<rect x="293.0" y="310" width="190" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="388.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">harbor.py</text>
-<text x="388.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">run jobs,</text>
-<text x="388.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">read rewards</text>
-<rect x="505.0" y="310" width="190" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="600.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">evaluate.py</text>
-<text x="600.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">models x tasks,</text>
-<text x="600.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">cap check per batch</text>
-<rect x="717.0" y="310" width="190" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="812.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">report.py</text>
-<text x="812.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">static html +</text>
-<text x="812.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">summary.json</text>
-<rect x="929.0" y="310" width="190" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
-<text x="1024.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">budget.py</text>
-<text x="1024.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">spend ledger,</text>
-<text x="1024.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">$70 hard cap</text>
-<rect x="127.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="237.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Claude Code CLI</text>
-<text x="237.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">task generation</text>
-<rect x="369.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="479.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Gemini API</text>
-<text x="479.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">generation + eval</text>
-<rect x="611.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="721.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Harbor</text>
-<text x="721.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">docker task runner</text>
-<rect x="853.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
-<text x="963.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Docker</text>
-<text x="963.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">target images</text>
+<rect width="1400" height="560" fill="#ffffff"/>
+<text x="700.0" y="34" text-anchor="middle" font-size="18" font-weight="700" fill="#1f2933">IncidentForge architecture</text>
+<rect x="440.0" y="56" width="520" height="60" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="700.0" y="80.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">forge CLI (typer)</text>
+<text x="700.0" y="100.0" text-anchor="middle" font-size="12" fill="#52606d">run · validate · eval · report · budget · map · from-postmortem</text>
+<rect x="39.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="124.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">targets/</text>
+<text x="124.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">repo + commit +</text>
+<text x="124.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">env template</text>
+<line x1="700.0" y1="116" x2="124.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="231.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="316.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">surfaces/</text>
+<text x="316.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">python + go</text>
+<text x="316.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">surface finders</text>
+<line x1="700.0" y1="116" x2="316.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="423.0" y="170" width="170" height="80" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
+<text x="508.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">failmap/</text>
+<text x="508.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">graph, tags, radius,</text>
+<text x="508.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">clusters, coverage</text>
+<line x1="700.0" y1="116" x2="508.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="615.0" y="170" width="170" height="80" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
+<text x="700.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">families/</text>
+<text x="700.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">8 failure-class</text>
+<text x="700.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">prompts + sampling</text>
+<line x1="700.0" y1="116" x2="700.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="807.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="892.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">generate.py</text>
+<text x="892.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">backend call,</text>
+<text x="892.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">1 retry on reject</text>
+<line x1="700.0" y1="116" x2="892.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="999.0" y="170" width="170" height="80" rx="10" fill="#fdf0e4" stroke="#e07b24" stroke-width="2"/>
+<text x="1084.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">validate/</text>
+<text x="1084.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">6 gates +</text>
+<text x="1084.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">mutation</text>
+<line x1="700.0" y1="116" x2="1084.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="1191.0" y="170" width="170" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="1276.0" y="204.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">package.py</text>
+<text x="1276.0" y="224.0" text-anchor="middle" font-size="12" fill="#52606d">harbor task</text>
+<text x="1276.0" y="239.0" text-anchor="middle" font-size="12" fill="#52606d">writer</text>
+<line x1="700.0" y1="116" x2="1276.0" y2="168" stroke="#52606d" stroke-width="2" marker-end="url(#a)"/>
+<rect x="23.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="98.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">backends/</text>
+<text x="98.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">claude code headless,</text>
+<text x="98.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">gemini (budgeted)</text>
+<rect x="195.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="270.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">harbor.py</text>
+<text x="270.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">run jobs,</text>
+<text x="270.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">read rewards</text>
+<rect x="367.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="442.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">evaluate.py</text>
+<text x="442.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">models x tasks,</text>
+<text x="442.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">cap check per batch</text>
+<rect x="539.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="614.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">report.py</text>
+<text x="614.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">static html +</text>
+<text x="614.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">summary.json</text>
+<rect x="711.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="786.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">budget.py</text>
+<text x="786.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">spend ledger,</text>
+<text x="786.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">$70 hard cap</text>
+<rect x="883.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="958.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">parallel.py</text>
+<text x="958.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">workers, docker</text>
+<text x="958.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">slots, id merge</text>
+<rect x="1055.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="1130.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">postmortem.py</text>
+<text x="1130.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">incident report</text>
+<text x="1130.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">-&gt; family + trigger</text>
+<rect x="1227.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
+<text x="1302.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">map_render.py</text>
+<text x="1302.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">offline d3</text>
+<text x="1302.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">failure map page</text>
+<rect x="106.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="216.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Claude Code CLI</text>
+<text x="216.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">task generation</text>
+<rect x="348.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="458.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Gemini API</text>
+<text x="458.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">generation + eval</text>
+<rect x="590.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="700.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Harbor</text>
+<text x="700.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">docker task runner</text>
+<rect x="832.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="942.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">Docker</text>
+<text x="942.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">target images</text>
+<rect x="1074.0" y="450" width="220" height="64" rx="10" fill="#f5f7fa" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="1184.0" y="478" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">code-review-graph</text>
+<text x="1184.0" y="497" text-anchor="middle" font-size="12" fill="#52606d">base code graph</text>
 <text x="20" y="436" font-size="12" fill="#52606d">external tools (dashed) · orange = where the failure-class knowledge lives</text>
 </svg>
