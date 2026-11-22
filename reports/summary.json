@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T21:33:13+0530",
+  "generated_at": "2026-11-22T01:45:58+0530",
   "tasks_total": 52,
   "tasks_by_family": {
     "config-round-trip": 7,
@@ -22,34 +22,31 @@
       "model": "claude-code",
       "agent": "claude-code",
       "k": 3,
-      "pass_rate": 0.9815,
-      "n": 54,
-      "tasks": 34,
-      "input_tokens": 5883658,
-      "output_tokens": 122370,
-      "billed_usd": 0.0
+      "pass_rate": 0.9857,
+      "n": 70,
+      "tasks": 50,
+      "input_tokens": 7594460,
+      "output_tokens": 157964
     },
     {
       "model": "gemini/gemini-2.5-flash",
       "agent": "terminus-2",
       "k": 3,
-      "pass_rate": 0.3333,
-      "n": 54,
-      "tasks": 34,
-      "input_tokens": 19937970,
-      "output_tokens": 1636360,
-      "billed_usd": 6.1093
+      "pass_rate": 0.3611,
+      "n": 72,
+      "tasks": 52,
+      "input_tokens": 27851970,
+      "output_tokens": 2173190
     },
     {
       "model": "gemini/gemini-3.8-flash",
       "agent": "terminus-2",
       "k": 3,
-      "pass_rate": 0.2778,
-      "n": 54,
-      "tasks": 34,
-      "input_tokens": 28269016,
-      "output_tokens": 925624,
-      "billed_usd": 22.0659
+      "pass_rate": 0.3194,
+      "n": 72,
+      "tasks": 52,
+      "input_tokens": 38469900,
+      "output_tokens": 1268533
     }
   ],
   "by_family": [
@@ -57,73 +54,73 @@
       "family": "config-round-trip",
       "model": "claude-code",
       "pass_rate": 1.0,
-      "n": 7
+      "n": 9
     },
     {
       "family": "config-round-trip",
       "model": "gemini/gemini-2.5-flash",
       "pass_rate": 0.0,
-      "n": 7
+      "n": 9
     },
     {
       "family": "config-round-trip",
       "model": "gemini/gemini-3.8-flash",
       "pass_rate": 0.0,
-      "n": 7
+      "n": 9
     },
     {
       "family": "cross-field-validation",
       "model": "claude-code",
       "pass_rate": 1.0,
-      "n": 5
+      "n": 11
     },
     {
       "family": "cross-field-validation",
       "model": "gemini/gemini-2.5-flash",
-      "pass_rate": 0.0,
-      "n": 5
+      "pass_rate": 0.3846,
+      "n": 13
     },
     {
       "family": "cross-field-validation",
       "model": "gemini/gemini-3.8-flash",
-      "pass_rate": 0.8,
-      "n": 5
+      "pass_rate": 0.6923,
+      "n": 13
     },
     {
       "family": "env-aware-naming",
       "model": "claude-code",
       "pass_rate": 1.0,
-      "n": 7
+      "n": 8
     },
     {
       "family": "env-aware-naming",
       "model": "gemini/gemini-2.5-flash",
-      "pass_rate": 0.8571,
-      "n": 7
+      "pass_rate": 0.875,
+      "n": 8
     },
     {
       "family": "env-aware-naming",
       "model": "gemini/gemini-3.8-flash",
-      "pass_rate": 0.7143,
-      "n": 7
+      "pass_rate": 0.625,
+      "n": 8
     },
     {
       "family": "fail-fast-config",
       "model": "claude-code",
-      "pass_rate": 0.9091,
-      "n": 11
+      "pass_rate": 0.9286,
+      "n": 14
     },
     {
       "family": "fail-fast-config",
       "model": "gemini/gemini-2.5-flash",
-      "pass_rate": 0.3636,
-      "n": 11
+      "pass_rate": 0.2857,
+      "n": 14
     },
     {
       "family": "fail-fast-config",
       "model": "gemini/gemini-3.8-flash",
-      "pass_rate": 0.0,
-      "n": 11
+      "pass_rate": 0.0714,
+      "n": 14
     },
     {
       "family": "hot-reload-config",
@@ -147,37 +144,37 @@
       "family": "idempotent-consumer",
       "model": "claude-code",
       "pass_rate": 1.0,
-      "n": 5
+      "n": 8
     },
     {
       "family": "idempotent-consumer",
       "model": "gemini/gemini-2.5-flash",
-      "pass_rate": 0.6,
-      "n": 5
+      "pass_rate": 0.5,
+      "n": 8
     },
     {
       "family": "idempotent-consumer",
       "model": "gemini/gemini-3.8-flash",
-      "pass_rate": 0.6,
-      "n": 5
+      "pass_rate": 0.625,
+      "n": 8
     },
     {
       "family": "resource-aware-defaults",
       "model": "claude-code",
       "pass_rate": 1.0,
-      "n": 5
+      "n": 6
     },
     {
       "family": "resource-aware-defaults",
       "model": "gemini/gemini-2.5-flash",
-      "pass_rate": 0.6,
-      "n": 5
+      "pass_rate": 0.6667,
+      "n": 6
     },
     {
       "family": "resource-aware-defaults",
       "model": "gemini/gemini-3.8-flash",
-      "pass_rate": 0.6,
-      "n": 5
+      "pass_rate": 0.5,
+      "n": 6
     },
     {
       "family": "tolerant-typed-config",
@@ -206,16 +203,16 @@
       "unknown": 0
     },
     "gemini/gemini-2.5-flash": {
-      "fault": 23,
-      "happy": 9,
-      "regression": 13,
-      "unknown": 12
-    },
-    "gemini/gemini-3.8-flash": {
       "fault": 26,
       "happy": 12,
-      "regression": 1,
-      "unknown": 12
+      "regression": 20,
+      "unknown": 18
+    },
+    "gemini/gemini-3.8-flash": {
+      "fault": 32,
+      "happy": 17,
+      "regression": 3,
+      "unknown": 16
     }
   },
   "failure_causes": {
@@ -233,13 +230,13 @@
         "wrong_code": 0
       },
       "gemini/gemini-2.5-flash": {
-        "turn_budget": 17,
+        "turn_budget": 25,
         "regression": 1,
         "fault_path_missed": 11,
-        "wrong_code": 7
+        "wrong_code": 9
       },
       "gemini/gemini-3.8-flash": {
-        "turn_budget": 35,
+        "turn_budget": 45,
         "regression": 0,
         "fault_path_missed": 1,
         "wrong_code": 3
@@ -247,25 +244,25 @@
     },
     "by_family": {
       "config-round-trip": {
-        "turn_budget": 8,
+        "turn_budget": 12,
         "regression": 1,
         "fault_path_missed": 0,
         "wrong_code": 5
       },
       "cross-field-validation": {
-        "turn_budget": 1,
+        "turn_budget": 6,
         "regression": 0,
         "fault_path_missed": 5,
-        "wrong_code": 0
+        "wrong_code": 1
       },
       "env-aware-naming": {
-        "turn_budget": 2,
+        "turn_budget": 3,
         "regression": 0,
         "fault_path_missed": 0,
         "wrong_code": 1
       },
       "fail-fast-config": {
-        "turn_budget": 17,
+        "turn_budget": 22,
         "regression": 0,
         "fault_path_missed": 2,
         "wrong_code": 0
@@ -277,13 +274,13 @@
         "wrong_code": 2
       },
       "idempotent-consumer": {
-        "turn_budget": 3,
+        "turn_budget": 5,
         "regression": 0,
         "fault_path_missed": 0,
-        "wrong_code": 1
+        "wrong_code": 2
       },
       "resource-aware-defaults": {
-        "turn_budget": 3,
+        "turn_budget": 4,
         "regression": 0,
         "fault_path_missed": 1,
         "wrong_code": 0
@@ -346,25 +343,24 @@
       "more_turns": 60,
       "base_pass_rate": 0.3,
       "more_pass_rate": 0.4,
-      "base_failures": 36,
-      "failures_turn_exhausted": 17,
-      "failures_wrong_code": 19,
+      "base_failures": 46,
+      "failures_turn_exhausted": 25,
+      "failures_wrong_code": 21,
       "failures_no_turn_data": 0
     },
     {
       "model": "gemini/gemini-3.8-flash",
-      "tasks": 10,
+      "tasks": 16,
       "base_turns": 30,
       "more_turns": 60,
-      "base_pass_rate": 0.3,
-      "more_pass_rate": 0.8,
-      "base_failures": 39,
-      "failures_turn_exhausted": 35,
+      "base_pass_rate": 0.3125,
+      "more_pass_rate": 0.75,
+      "base_failures": 49,
+      "failures_turn_exhausted": 45,
       "failures_wrong_code": 4,
       "failures_no_turn_data": 0
     }
   ],
-  "spend_usd": 43.962,
   "excluded_models": [
     {
       "model": "gemini/gemini-4-hydrogen",
@@ -375,13 +371,13 @@
   ],
   "findings": [
     "52 of 52 tasks with a validation report passed every gate; accepted tasks' tests killed 276 of 309 injected mutants (89%).",
-    "pass rate by model: claude-code 98% (54 runs), gemini/gemini-2.5-flash 33% (54 runs), gemini/gemini-3.8-flash 28% (54 runs) (agents differ: claude-code, terminus-2; compare models within one agent).",
-    "hardest family is config-round-trip (33% of 21 runs across all models); easiest is env-aware-naming (86% of 21 runs).",
-    "of failed runs with per-test detail, 50 failed at least one injected fault-case test and 21 at least one happy-path test.",
-    "each of the 76 failed runs has one cause: 52 used every turn, 1 broke the repo's own tests, 13 missed an injected fault, 10 wrong code.",
+    "pass rate by model: claude-code 99% (70 runs), gemini/gemini-2.5-flash 36% (72 runs), gemini/gemini-3.8-flash 32% (72 runs) (agents differ: claude-code, terminus-2; compare models within one agent).",
+    "hardest family is config-round-trip (33% of 27 runs across all models); easiest is env-aware-naming (83% of 24 runs).",
+    "of failed runs with per-test detail, 59 failed at least one injected fault-case test and 29 at least one happy-path test.",
+    "each of the 96 failed runs has one cause: 70 used every turn, 1 broke the repo's own tests, 13 missed an injected fault, 12 wrong code.",
     "gemini/gemini-4-hydrogen was left out of scoring: through terminus-2 (litellm) nearly every turn came back empty or unparseable, so the agent barely acted; a 0% would measure the harness, not the model.",
-    "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 36 main-run failures, 17 used every turn and 19 stopped before the cap.",
-    "gemini/gemini-3.8-flash with 60 turns instead of 30: 30% -> 80% on 10 tasks; of its 39 main-run failures, 35 used every turn and 4 stopped before the cap."
+    "gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 46 main-run failures, 25 used every turn and 21 stopped before the cap.",
+    "gemini/gemini-3.8-flash with 60 turns instead of 30: 31% -> 75% on 16 tasks; of its 49 main-run failures, 45 used every turn and 4 stopped before the cap."
   ],
   "map_coverage": {
     "fastapi-template": {
@@ -389,7 +385,7 @@
       "total": {
         "surfaces": 40,
         "with_task": 15,
-        "tasks": 29,
+        "tasks": 33,
         "covered": 39,
         "uncovered": 1
       },
@@ -397,8 +393,8 @@
       "by_family": {
         "config-round-trip": {
           "surfaces": 2,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 3,
           "covered": 1,
           "uncovered": 1
         },
@@ -426,7 +422,7 @@
         "hot-reload-config": {
           "surfaces": 1,
           "with_task": 1,
-          "tasks": 2,
+          "tasks": 3,
           "covered": 1,
           "uncovered": 0
         },
@@ -456,7 +452,7 @@
         "app": {
           "surfaces": 13,
           "with_task": 6,
-          "tasks": 9,
+          "tasks": 11,
           "covered": 13,
           "uncovered": 0
         },
@@ -470,7 +466,7 @@
         "app/core": {
           "surfaces": 15,
           "with_task": 5,
-          "tasks": 16,
+          "tasks": 18,
           "covered": 15,
           "uncovered": 0
         },
@@ -487,8 +483,8 @@
       "nodes": 1935,
       "total": {
         "surfaces": 157,
-        "with_task": 3,
-        "tasks": 6,
+        "with_task": 14,
+        "tasks": 19,
         "covered": 128,
         "uncovered": 29
       },
@@ -496,36 +492,36 @@
       "by_family": {
         "config-round-trip": {
           "surfaces": 7,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 4,
+          "tasks": 4,
           "covered": 0,
           "uncovered": 7
         },
         "cross-field-validation": {
           "surfaces": 66,
-          "with_task": 1,
-          "tasks": 1,
+          "with_task": 6,
+          "tasks": 6,
           "covered": 43,
           "uncovered": 23
         },
         "env-aware-naming": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 1,
+          "with_task": 1,
+          "tasks": 2,
           "covered": 12,
           "uncovered": 0
         },
         "fail-fast-config": {
           "surfaces": 40,
-          "with_task": 1,
-          "tasks": 3,
+          "with_task": 2,
+          "tasks": 4,
           "covered": 29,
           "uncovered": 11
         },
         "hot-reload-config": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 11
         },
@@ -538,8 +534,8 @@
         },
         "resource-aware-defaults": {
           "surfaces": 21,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 20,
           "uncovered": 1
         },
@@ -554,8 +550,8 @@
       "by_module": {
         "client": {
           "surfaces": 1,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 0
         },
@@ -568,8 +564,8 @@
         },
         "internal/config": {
           "surfaces": 90,
-          "with_task": 2,
-          "tasks": 4,
+          "with_task": 6,
+          "tasks": 10,
           "covered": 87,
           "uncovered": 3
         },
@@ -582,8 +578,8 @@
         },
         "internal/http": {
           "surfaces": 2,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 1,
           "uncovered": 1
         },
@@ -603,8 +599,8 @@
         },
         "internal/reader": {
           "surfaces": 5,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 3,
           "uncovered": 2
         },
@@ -617,22 +613,22 @@
         },
         "internal/systemd": {
           "surfaces": 4,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 0,
           "uncovered": 4
         },
         "internal/ui": {
           "surfaces": 12,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 4,
           "uncovered": 8
         },
         "internal/validator": {
           "surfaces": 29,
-          "with_task": 1,
-          "tasks": 1,
+          "with_task": 3,
+          "tasks": 3,
           "covered": 24,
           "uncovered": 5
         }

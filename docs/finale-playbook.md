@@ -10,7 +10,6 @@ generated from it, checked by Harbor, with at least one model evaluated.
       `ghcr.io/astral-sh/uv:0.9.26`.
 - [ ] Harbor installed (`uv tool install harbor==0.26.0`), `harbor agent list` works.
 - [ ] Claude Code logged in (`claude -p "ok"`) and/or `GEMINI_API_KEY` in `.env`.
-- [ ] `uv run forge budget` shows headroom under the cap.
 - [ ] Rehearse: `scripts/finale_dry_run.sh <some small repo> <sha> python` end to end.
 
 ## On the day

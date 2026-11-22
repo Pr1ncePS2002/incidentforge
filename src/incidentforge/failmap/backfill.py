@@ -50,7 +50,16 @@ def pick_node(
     if cands:
         return sorted(cands, key=rank)[0].id
     existing = [s for s in seeds if s in graph.nodes]
-    return existing[0] if existing else None
+    if existing:
+        return existing[0]
+    # a patch that only adds files: the slug names the surface it came from, so look in the same package (F-61)
+    dirs = {f.rpartition("/")[0] for f in files}
+    near = [n for n in graph.nodes.values() if n.file.rpartition("/")[0] in dirs and rank(n)[0] is False]
+    if not near:
+        return None
+    return sorted(near, key=lambda n: (_norm(_short(n.id)) != subject, family not in tags.get(n.id, []), *rank(n)))[
+        0
+    ].id
 
 
 def plan(task_dir: Path, graph: Graph | None, tags: dict[str, list[str]]) -> Backfill:
@@ -74,8 +83,8 @@ def apply(task_dir: Path, b: Backfill) -> bool:
     """rewrites only [metadata] lines so the rest of task.toml stays byte-identical; true if it changed."""
     text = (task_dir / "task.toml").read_text()
     # never drop map keys that could not be recomputed (F-60)
-    strip = b.mapped
-    lines = [ln for ln in text.splitlines() if not (strip and re.match(rf"^({'|'.join(MAP_KEYS)}) = ", ln))]
+    strip = [k for k in MAP_KEYS if b.mapped and (k != "map_node" or b.map_node is not None)]
+    lines = [ln for ln in text.splitlines() if not (strip and re.match(rf"^({'|'.join(strip)}) = ", ln))]
     out: list[str] = []
     for ln in lines:
         if ln.startswith("difficulty = "):

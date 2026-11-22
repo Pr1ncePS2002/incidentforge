@@ -51,13 +51,13 @@ def _svg(w: int, h: int, body: list[str]) -> str:
 
 
 def pipeline() -> str:
-    """left-to-right flow: repo -> surfaces -> generate -> gates -> package -> eval -> report."""
-    w, h = 1200, 300
+    """left-to-right flow: repo -> failure map -> generate -> gates -> package -> eval -> report."""
+    w, h = 1200, 340
     bw, bh, y = 140, 78, 70
     steps = [
         ("target repo", "url + pinned\ncommit", BLUE),
-        ("surface finder", "config loaders,\nconsumers, keys", BLUE),
-        ("task generator", "family prompt +\nclaude / gemini", ORANGE),
+        ("failure map", "code graph, family\ntags, untested risk", ORANGE),
+        ("task generator", "one worker per\ncluster, in parallel", ORANGE),
         ("validation gates", "6 automatic\nchecks", ORANGE),
         ("harbor package", "instruction, tests,\nsolution, env", BLUE),
         ("evaluate", "models x tasks\nin docker", BLUE),
@@ -82,6 +82,10 @@ def pipeline() -> str:
         f'<text x="{(gx + vx + bw) / 2}" y="{y + bh + 76}" text-anchor="middle" font-size="12" '
         f'fill="{ORANGE}">rejected: 1 retry with the failure reason</text>'
     )
+    # a public postmortem enters through the map: its family picks the surface
+    mx = 20 + 1 * (bw + gap)
+    body.append(_box(mx, y + bh + 60, bw, 56, "postmortem", "public incident report", ORANGE))
+    body.append(_arrow(mx + bw / 2, y + bh + 58, mx + bw / 2, y + bh + 2))
     gates = "fails on base · passes with reference · repo suite green · kills mutants · no leak · not flaky"
     body.append(
         f'<text x="{w / 2}" y="{h - 26}" text-anchor="middle" font-size="13" fill="{INK}">gates: {escape(gates)}</text>'
@@ -95,15 +99,25 @@ def pipeline() -> str:
 
 def architecture() -> str:
     """module map: cli on top, core modules in the middle, external tools at the bottom."""
-    w, h = 1200, 560
+    w, h = 1400, 560
     body: list[str] = [
         f'<text x="{w / 2}" y="34" text-anchor="middle" font-size="18" font-weight="700" fill="{INK}">'
         f"IncidentForge architecture</text>"
     ]
-    body.append(_box(420, 56, 360, 60, "forge CLI (typer)", "run · validate · eval · report · budget"))
+    body.append(
+        _box(
+            (w - 520) / 2,
+            56,
+            520,
+            60,
+            "forge CLI (typer)",
+            "run · validate · eval · report · map · from-postmortem",
+        )
+    )
     row = [
         ("targets/", "repo + commit +\nenv template"),
         ("surfaces/", "python + go\nsurface finders"),
+        ("failmap/", "graph, tags, radius,\nclusters, coverage"),
         ("families/", "8 failure-class\nprompts + sampling"),
         ("generate.py", "backend call,\n1 retry on reject"),
         ("validate/", "6 gates +\nmutation"),
@@ -113,17 +127,19 @@ def architecture() -> str:
     x0 = (w - (bw * len(row) + gap * (len(row) - 1))) / 2
     for i, (title, sub) in enumerate(row):
         x = x0 + i * (bw + gap)
-        accent = ORANGE if title in ("families/", "validate/") else BLUE
+        accent = ORANGE if title in ("families/", "failmap/", "validate/") else BLUE
         body.append(_box(x, y, bw, 80, title, sub, accent))
-        body.append(_arrow(600, 116, x + bw / 2, y - 2))
+        body.append(_arrow(w / 2, 116, x + bw / 2, y - 2))
     row2 = [
-        ("backends/", "claude code headless,\ngemini (budgeted)"),
+        ("backends/", "claude code headless,\ngemini api"),
         ("harbor.py", "run jobs,\nread rewards"),
         ("evaluate.py", "models x tasks,\ncap check per batch"),
         ("report.py", "static html +\nsummary.json"),
-        ("budget.py", "spend ledger,\n$70 hard cap"),
+        ("parallel.py", "workers, docker\nslots, id merge"),
+        ("postmortem.py", "incident report\n-> family + trigger"),
+        ("map_render.py", "offline d3\nfailure map page"),
     ]
-    bw2, y2 = 190, 310
+    bw2, y2 = 150, 310
     x02 = (w - (bw2 * len(row2) + gap * (len(row2) - 1))) / 2
     for i, (title, sub) in enumerate(row2):
         body.append(_box(x02 + i * (bw2 + gap), y2, bw2, 80, title, sub))
@@ -132,6 +148,7 @@ def architecture() -> str:
         ("Gemini API", "generation + eval"),
         ("Harbor", "docker task runner"),
         ("Docker", "target images"),
+        ("code-review-graph", "base code graph"),
     ]
     bw3, y3 = 220, 450
     x03 = (w - (bw3 * len(ext) + gap * (len(ext) - 1))) / 2

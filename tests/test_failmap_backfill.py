@@ -2,11 +2,12 @@
 
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from failmap_repos import py_repo
 
-from incidentforge.failmap.backfill import apply, backfill
+from incidentforge.failmap.backfill import apply, backfill, pick_node
 from incidentforge.failmap.build import build
 from incidentforge.failmap.tag import tag
 from incidentforge.models import Language
@@ -85,3 +86,34 @@ def test_backfill_without_map_keeps_existing_map_keys(layout: tuple[Path, Path])
     (work / "demo" / "map.sqlite").unlink()
     [b] = [b for b in backfill(tasks, work) if b.task_id == "demo/ic-001-create-user"]
     assert not b.mapped and toml.read_text() == before
+
+
+def test_new_file_patch_pins_the_named_node_in_its_package(layout: tuple[Path, Path]) -> None:
+    tasks, work = layout
+    patch = PATCH_NEW.replace("fresh.py", "user_drafts.py")
+    _task(tasks / "demo", "ic-002-create-user", "idempotent-consumer", 3, patch)
+    [b] = [b for b in backfill(tasks, work) if b.task_id == "demo/ic-002-create-user"]
+    assert b.map_node is not None and b.map_node.startswith("app/crud.py::create_user")
+
+
+def test_exact_name_wins_over_prefix_in_package_fallback() -> None:
+    # rt-002-userbase used to land on User because "userbase" starts with "user"
+    nodes = {
+        i: SimpleNamespace(id=i, file="app/models.py", kind="Class")
+        for i in ("app/models.py::User", "app/models.py::UserBase")
+    }
+    graph = SimpleNamespace(nodes=nodes)
+    got = pick_node("rt-002-userbase", "config-round-trip", ["app/user_record.py"], ("app/user_record.py",), graph, {})  # type: ignore[arg-type]
+    assert got == "app/models.py::UserBase"
+
+
+def test_existing_pin_survives_when_no_node_is_found(layout: tuple[Path, Path]) -> None:
+    tasks, work = layout
+    toml = tasks / "demo" / "rt-001-fresh" / "task.toml"
+    toml.write_text(
+        toml.read_text().replace(
+            'fault_cases = ["f0", "f1"]', 'fault_cases = ["f0", "f1"]\nmap_node = "app/crud.py::create_user"'
+        )
+    )
+    backfill(tasks, work)
+    assert 'map_node = "app/crud.py::create_user"' in toml.read_text()
