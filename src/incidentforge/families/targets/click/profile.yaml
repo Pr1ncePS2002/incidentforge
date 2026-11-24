@@ -1,0 +1,27 @@
+# click is a cli library, not a service: only families with a real surface in it are offered
+families:
+  - tolerant-typed-config
+  - cross-field-validation
+  - env-aware-naming
+  - fail-fast-config
+  - resource-aware-defaults
+# kind order per family on this target; converters and constructor checks are where click validates input
+surface_kinds:
+  tolerant-typed-config: [validator, env-read]
+  cross-field-validation: [validator]
+  env-aware-naming: [env-read]
+  fail-fast-config: [env-read, validator]
+  resource-aware-defaults: [pool-config]
+# symbols tried first, in this order; the rest follow in file order
+prefer:
+  tolerant-typed-config: ['^_NumberParamTypeBase\.', '^BoolParamType\.', '^DateTime\.', '^Choice\.', '^Tuple\.', '\.convert$']
+  cross-field-validation: ['^Option\._validate$', '^_NumberRangeBase\.', '^Parameter\.__init__$', '^Option\.__init__$']
+  env-aware-naming: ['resolve_envvar_value$', '_main_shell_completion$', '^get_app_dir$']
+  fail-fast-config: ['resolve_envvar_value$', '^Editor\.get_editor$']
+# terminal rendering and the shell completion wire protocol cannot be tested through CliRunner
+skip_symbols:
+  - '^ProgressBar\.'
+  - 'get_completion_args$'
+  - '^_pipepager$'
+  - '^_pager_contextmanager$'
+  - '^_Option\.'
