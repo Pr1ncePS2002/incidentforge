@@ -163,6 +163,11 @@ harbor run -p <task_dir> -a oracle -k 1 -o <out_dir> --no-delete -y   # expected
 - 1.0 if every feature test passes;
 - otherwise the share of feature tests that pass.
 
+Feature tests that already pass on the base commit (happy-path checks such as "shipped defaults still
+validate") are treated SWE-bench style: they are listed in `pass_to_pass.json` as guards rather than in
+`fail_to_pass.json`, so a no-op scores exactly 0.0 and breaking a guard scores 0.0 like any regression.
+The `fail_on_base` gate does this split automatically from the per-test results of the no-op run.
+
 A null reward means the environment crashed and the run is retried, not scored. The fastapi-template and
 miniflux numbers in the README were measured earlier with an all-or-nothing reward and Harbor 0.26.0;
 the click numbers use the rule above and Harbor 0.25.0.
