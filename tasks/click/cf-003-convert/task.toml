@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject a number range whose min exceeds its max or whose equal bounds are open"
+family = "cross-field-validation"
+difficulty = "easy"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["inverted-range: click.IntRange(10, 1), click.FloatRange(2.5, -1.0), FloatRange(1, 0.5) and IntRange(min=7, max=3, clamp=True) raise ValueError whose message names min and max along with both values", "inverted-range: declaring @click.option('--n', type=click.IntRange(5, 2)) fails at decorator time with a ValueError naming min and max", "boundary-equal: IntRange(3, 3) with min_open and/or max_open, and FloatRange(1.0, 1.0, max_open=True), raise ValueError naming min and max; closed IntRange(3, 3) is still accepted and allows only 3"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

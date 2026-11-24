@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject empty, blank or placeholder environment values for strict parameters"
+family = "fail-fast-config"
+difficulty = "easy"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["empty: APP_TOKEN set to an empty string, or to whitespace only, for a strict --token option is rejected with exit code 2 and the error names APP_TOKEN and --token", "placeholder: APP_TOKEN set to changethis, TODO, <fill-me>, xxx and similar values is rejected naming APP_TOKEN and --token; a strict argument with APP_NAME=<fill-me> is rejected naming APP_NAME and NAME", "several-bad: with envvar=[APP_TOKEN_A, APP_TOKEN_B, APP_TOKEN_C] where A is empty and B is 'todo', one BadParameter names both APP_TOKEN_A and APP_TOKEN_B but not the valid APP_TOKEN_C"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

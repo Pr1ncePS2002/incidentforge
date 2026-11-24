@@ -1,0 +1,154 @@
+{
+  "harbor_version": "0.25.0",
+  "expected": {
+    "nop": 0.0,
+    "oracle": 1.0
+  },
+  "tasks": [
+    {
+      "id": "cf-001-init",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 14
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 20
+      },
+      "ok": true
+    },
+    {
+      "id": "cf-002-validate",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 14
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    },
+    {
+      "id": "cf-003-convert",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    },
+    {
+      "id": "en-001-resolve-envvar-value",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    },
+    {
+      "id": "en-002-resolve-envvar-value",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 14
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 14
+      },
+      "ok": true
+    },
+    {
+      "id": "en-003-main-shell-completion",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    },
+    {
+      "id": "ff-001-resolve-envvar-value",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 12
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 12
+      },
+      "ok": true
+    },
+    {
+      "id": "rd-001-init",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    },
+    {
+      "id": "tt-001-convert",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 12
+      },
+      "ok": true
+    },
+    {
+      "id": "tt-002-convert",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    },
+    {
+      "id": "tt-003-convert",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 12
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 12
+      },
+      "ok": true
+    },
+    {
+      "id": "tt-004-convert",
+      "nop": {
+        "reward": 0.0,
+        "duration_sec": 13
+      },
+      "oracle": {
+        "reward": 1.0,
+        "duration_sec": 13
+      },
+      "ok": true
+    }
+  ],
+  "all_ok": true
+}

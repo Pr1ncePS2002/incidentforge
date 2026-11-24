@@ -1,0 +1,45 @@
+diff --git a/src/click/types.py b/src/click/types.py
+index b6e98a9..c2660f2 100644
+--- a/src/click/types.py
++++ b/src/click/types.py
+@@ -563,6 +563,40 @@ class DateTime(ParamType[datetime]):
+         except ValueError:
+             return None
+ 
++    def split_envvar_value(self, rv: str) -> cabc.Sequence[str]:
++        """Split an environment variable value into datetime strings.
++
++        A value that starts with ``[`` is parsed as a JSON array of
++        strings. A value that contains a comma is split on commas and
++        each item is stripped of surrounding whitespace. Any other value
++        is split on whitespace, as before.
++        """
++        stripped = rv.strip()
++
++        if stripped.startswith("["):
++            import json
++
++            try:
++                items = json.loads(stripped)
++            except ValueError:
++                items = None
++
++            if not isinstance(items, list) or not all(
++                isinstance(item, str) for item in items
++            ):
++                self.fail(
++                    _("{value!r} is not a valid JSON list of strings.").format(
++                        value=rv
++                    )
++                )
++
++            return [item.strip() for item in items]
++
++        if "," in stripped:
++            return [item.strip() for item in stripped.split(",")]
++
++        return super().split_envvar_value(rv)
++
+     def convert(
+         self, value: t.Any, param: Parameter | None, ctx: Context | None
+     ) -> datetime:

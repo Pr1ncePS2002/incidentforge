@@ -1,0 +1,56 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index e4b6b57..040d6ba 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -1616,6 +1616,32 @@ class Command:
+ 
+             sys.exit(exit_code)
+ 
++    def get_complete_var(self, prog_name: str) -> str:
++        """Return the name of the environment variable that holds the
++        shell completion instruction for this command when it is run as
++        ``prog_name``. Override this in a subclass to use a different
++        name.
++
++        Every character that is not an ASCII letter, digit or underscore
++        is replaced with an underscore and the result is upper-cased, so
++        ``foo-bar.baz`` becomes ``_FOO_BAR_BAZ_COMPLETE``.
++
++        :param prog_name: Name of the executable in the shell.
++        :raises ValueError: if ``prog_name`` does not contain at least
++            one ASCII letter or digit.
++        """
++        import re
++
++        if re.search(r"[A-Za-z0-9]", prog_name) is None:
++            raise ValueError(
++                f"prog_name {prog_name!r} cannot be used to build the shell"
++                " completion variable name, it must contain at least one"
++                " ASCII letter or digit."
++            )
++
++        complete_name = re.sub(r"[^A-Za-z0-9_]", "_", prog_name)
++        return f"_{complete_name}_COMPLETE".upper()
++
+     def _main_shell_completion(
+         self,
+         ctx_args: cabc.MutableMapping[str, t.Any],
+@@ -1634,9 +1660,16 @@ class Command:
+         .. versionchanged:: 8.2.0
+             Dots (``.``) in ``prog_name`` are replaced with underscores (``_``).
+         """
++        import re
++
+         if complete_var is None:
+-            complete_name = prog_name.replace("-", "_").replace(".", "_")
+-            complete_var = f"_{complete_name}_COMPLETE".upper()
++            complete_var = self.get_complete_var(prog_name)
++        elif re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", complete_var) is None:
++            raise ValueError(
++                f"complete_var {complete_var!r} is not a valid environment"
++                " variable name, it must contain only ASCII letters, digits"
++                " and underscores and must not start with a digit."
++            )
+ 
+         instruction = os.environ.get(complete_var)
+ 

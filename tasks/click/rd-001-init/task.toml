@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "add a configurable min_width floor to the help formatter and reject impossible widths"
+family = "resource-aware-defaults"
+difficulty = "medium"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["hardcoded-size: with COLUMNS=40 and min_width=30 the width is 38 instead of the hardcoded floor of 50; min_width=60 raises the floor to 60", "unset-limit: with no max_width, min_width=20 uses the default max of 80 (COLUMNS=200 -> 78) and the floor still applies on a tiny terminal (COLUMNS=10 -> 20)", "zero-or-negative: width/max_width/min_width of 0 or a negative value raise ValueError naming the argument and value, including max_content_width=-5 via context_settings", "min-over-max: min_width=100 with max_width=80 (or min_width=90 with the default max of 80) raises ValueError naming min_width, max_width and both values"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

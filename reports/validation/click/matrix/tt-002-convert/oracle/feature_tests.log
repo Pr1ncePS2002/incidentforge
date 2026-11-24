@@ -1,0 +1,33 @@
+.............................                                            [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[1,000-1000]
+PASSED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[12,345,678-12345678]
+PASSED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[-1,000--1000]
+PASSED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[+2,500-2500]
+PASSED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[ 9,999 -9999]
+PASSED tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators[1,000-1000.0]
+PASSED tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators[1,234.5-1234.5]
+PASSED tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators[-12,345.25--12345.25]
+PASSED tests/test_number_digit_grouping.py::test_grouped_value_matches_canonical
+PASSED tests/test_number_digit_grouping.py::test_int_range_uses_grouped_value
+PASSED tests/test_number_digit_grouping.py::test_int_range_clamps_grouped_value
+PASSED tests/test_number_digit_grouping.py::test_int_range_rejects_grouped_value_out_of_range
+PASSED tests/test_number_digit_grouping.py::test_envvar_grouped_value
+PASSED tests/test_number_digit_grouping.py::test_envvar_multiple_grouped_values
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_0-42-42]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_1- 7 -7]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_2-1_000-1000]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_3--3--3]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_4-2.5-2.5]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_5-1e3-1000.0]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,00]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,0000]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1234,567]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[,100]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[100,]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,,000]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,0a0]
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_int_with_fraction
+PASSED tests/test_number_digit_grouping.py::test_fault_garbage_float_comma_in_fraction
+29 passed in 0.02s

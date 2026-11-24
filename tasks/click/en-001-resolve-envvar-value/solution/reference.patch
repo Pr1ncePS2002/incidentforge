@@ -1,0 +1,26 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index e4b6b57..7a7e6b2 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -2727,6 +2727,21 @@ class Parameter(ABC):
+         if not self.envvar:
+             return None
+ 
++        names = [self.envvar] if isinstance(self.envvar, str) else self.envvar
++
++        for envvar_name in names:
++            if (
++                not envvar_name
++                or "=" in envvar_name
++                or "\x00" in envvar_name
++                or any(c.isspace() for c in envvar_name)
++            ):
++                raise ValueError(
++                    f"Invalid envvar {envvar_name!r} for parameter {self.name!r}:"
++                    " environment variable names must not be empty and must not"
++                    " contain '=', whitespace or NUL characters."
++                )
++
+         if isinstance(self.envvar, str):
+             rv = os.environ.get(self.envvar)
+ 

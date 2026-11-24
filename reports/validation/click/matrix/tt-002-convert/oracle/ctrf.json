@@ -1,0 +1,17 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 14, "passed": 14, "failed": 0, "pending": 0, "skipped": 0, "other": 0, "start": 1795522560000, "stop": 1795522560000},
+  "tests": [
+    {"name": "feature_tests", "status": "passed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_grouped_value_matches_canonical", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_int_range_uses_grouped_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_int_range_clamps_grouped_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_int_range_rejects_grouped_value_out_of_range", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_envvar_grouped_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_envvar_multiple_grouped_values", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_fault_garbage_int_with_fraction", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_fault_garbage_float_comma_in_fraction", "status": "passed", "duration": 0},
+    {"name": "tests/test_number_digit_grouping.py::test_plain_numbers_still_parse", "status": "passed", "duration": 0}]}}

@@ -1,0 +1,21 @@
+diff --git a/src/click/types.py b/src/click/types.py
+index b6e98a9..28475bf 100644
+--- a/src/click/types.py
++++ b/src/click/types.py
+@@ -871,6 +871,16 @@ class BoolParamType(ParamType[bool]):
+         self, value: t.Any, param: Parameter | None, ctx: Context | None
+     ) -> bool:
+         normalized = self.str_to_bool(value)
++        if normalized is None and isinstance(value, str):
++            # Values copied from env files or config often keep their quotes,
++            # e.g. DEBUG="true". Accept a single matching pair of quotes.
++            unquoted = value.strip()
++            if (
++                len(unquoted) >= 2
++                and unquoted[0] == unquoted[-1]
++                and unquoted[0] in {'"', "'"}
++            ):
++                normalized = self.str_to_bool(unquoted[1:-1])
+         if normalized is None:
+             self.fail(
+                 _(

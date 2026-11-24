@@ -1,0 +1,19 @@
+...............                                                          [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_range_combinations.py::test_fault_inverted_range_int
+PASSED tests/test_range_combinations.py::test_fault_inverted_range_float
+PASSED tests/test_range_combinations.py::test_fault_inverted_range_mixed_numbers
+PASSED tests/test_range_combinations.py::test_fault_inverted_range_keywords_and_clamp
+PASSED tests/test_range_combinations.py::test_fault_inverted_range_at_declaration
+PASSED tests/test_range_combinations.py::test_fault_boundary_equal_open_int[kwargs0]
+PASSED tests/test_range_combinations.py::test_fault_boundary_equal_open_int[kwargs1]
+PASSED tests/test_range_combinations.py::test_fault_boundary_equal_open_int[kwargs2]
+PASSED tests/test_range_combinations.py::test_fault_boundary_equal_open_float
+PASSED tests/test_range_combinations.py::test_equal_closed_bounds_accept_single_value
+PASSED tests/test_range_combinations.py::test_equal_closed_bounds_clamp
+PASSED tests/test_range_combinations.py::test_equal_closed_float_bounds
+PASSED tests/test_range_combinations.py::test_single_and_no_bounds_still_work
+PASSED tests/test_range_combinations.py::test_valid_ranges_unchanged
+PASSED tests/test_range_combinations.py::test_float_clamp_open_still_type_error
+15 passed in 0.02s

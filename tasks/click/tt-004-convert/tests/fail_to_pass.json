@@ -1,0 +1,12 @@
+[
+  "tests/test_datetime_envvar_lists.py::test_fault_csv_list_matches_canonical",
+  "tests/test_datetime_envvar_lists.py::test_fault_csv_list_with_spaced_datetimes",
+  "tests/test_datetime_envvar_lists.py::test_fault_csv_list_nargs",
+  "tests/test_datetime_envvar_lists.py::test_fault_csv_list_split_direct",
+  "tests/test_datetime_envvar_lists.py::test_fault_json_list",
+  "tests/test_datetime_envvar_lists.py::test_fault_json_list_empty",
+  "tests/test_datetime_envvar_lists.py::test_fault_json_list_split_direct",
+  "tests/test_datetime_envvar_lists.py::test_fault_garbage_csv_item_named",
+  "tests/test_datetime_envvar_lists.py::test_fault_garbage_invalid_json",
+  "tests/test_datetime_envvar_lists.py::test_fault_garbage_json_non_strings"
+]

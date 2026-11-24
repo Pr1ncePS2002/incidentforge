@@ -1,0 +1,590 @@
+FFFFFFFFFFFFFFFFFFFF...................                                  [100%]
+=================================== FAILURES ===================================
+__________ test_fault_bool_words_quoted_on_command_line["true"-True] ___________
+
+runner = <click.testing.CliRunner object at 0xffff83b2c6b0>, raw = '"true"'
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"true"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line['YES'-True] ___________
+
+runner = <click.testing.CliRunner object at 0xffff83b2d400>, raw = "'YES'"
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "'YES'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line["On"-True] ____________
+
+runner = <click.testing.CliRunner object at 0xffff83b2e090>, raw = '"On"'
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"On"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line[" 1 "-True] ___________
+
+runner = <click.testing.CliRunner object at 0xffff83b2ea50>, raw = '" 1 "'
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '" 1 "' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+____________ test_fault_bool_words_quoted_on_command_line['t'-True] ____________
+
+runner = <click.testing.CliRunner object at 0xffff83b2ff20>, raw = "'t'"
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "'t'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line[ "y" -True] ___________
+
+runner = <click.testing.CliRunner object at 0xffff83b30830>, raw = ' "y" '
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': ' "y" ' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line["no"-False] ___________
+
+runner = <click.testing.CliRunner object at 0xffff83b32840>, raw = '"no"'
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"no"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+__________ test_fault_bool_words_quoted_on_command_line['OFF'-False] ___________
+
+runner = <click.testing.CliRunner object at 0xffff83b32d80>, raw = "'OFF'"
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "'OFF'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line["0"-False] ____________
+
+runner = <click.testing.CliRunner object at 0xffff83b39670>, raw = '"0"'
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"0"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+_________ test_fault_bool_words_quoted_on_command_line["False"-False] __________
+
+runner = <click.testing.CliRunner object at 0xffff83b38ad0>, raw = '"False"'
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"False"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+___________ test_fault_bool_words_quoted_on_command_line['n'-False] ____________
+
+runner = <click.testing.CliRunner object at 0xffff83b3a5d0>, raw = "'n'"
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ('"true"', True),
+            ("'YES'", True),
+            ('"On"', True),
+            ('" 1 "', True),
+            ("'t'", True),
+            (' "y" ', True),
+            ('"no"', False),
+            ("'OFF'", False),
+            ('"0"', False),
+            ('"False"', False),
+            ("'n'", False),
+        ],
+    )
+    def test_fault_bool_words_quoted_on_command_line(runner, raw, expected):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "'n'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:33: AssertionError
+____________ test_fault_bool_words_quoted_from_envvar["true"-True] _____________
+
+runner = <click.testing.CliRunner object at 0xffff83b31010>, raw = '"true"'
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [('"true"', True), ("'Yes'", True), ('"off"', False), ("'0'", False)],
+    )
+    def test_fault_bool_words_quoted_from_envvar(runner, raw, expected):
+        result = runner.invoke(_make_cli(), [], env={"APP_DEBUG": raw})
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"true"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:44: AssertionError
+_____________ test_fault_bool_words_quoted_from_envvar['Yes'-True] _____________
+
+runner = <click.testing.CliRunner object at 0xffff83b32960>, raw = "'Yes'"
+expected = True
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [('"true"', True), ("'Yes'", True), ('"off"', False), ("'0'", False)],
+    )
+    def test_fault_bool_words_quoted_from_envvar(runner, raw, expected):
+        result = runner.invoke(_make_cli(), [], env={"APP_DEBUG": raw})
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "'Yes'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:44: AssertionError
+____________ test_fault_bool_words_quoted_from_envvar["off"-False] _____________
+
+runner = <click.testing.CliRunner object at 0xffff83ce7e60>, raw = '"off"'
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [('"true"', True), ("'Yes'", True), ('"off"', False), ("'0'", False)],
+    )
+    def test_fault_bool_words_quoted_from_envvar(runner, raw, expected):
+        result = runner.invoke(_make_cli(), [], env={"APP_DEBUG": raw})
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '"off"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:44: AssertionError
+_____________ test_fault_bool_words_quoted_from_envvar['0'-False] ______________
+
+runner = <click.testing.CliRunner object at 0xffff83b2df70>, raw = "'0'"
+expected = False
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [('"true"', True), ("'Yes'", True), ('"off"', False), ("'0'", False)],
+    )
+    def test_fault_bool_words_quoted_from_envvar(runner, raw, expected):
+        result = runner.invoke(_make_cli(), [], env={"APP_DEBUG": raw})
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "'0'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_bool_quoted_values.py:44: AssertionError
+_______________ test_fault_bool_words_quoted_empty_is_false[""] ________________
+
+runner = <click.testing.CliRunner object at 0xffff83b2caa0>, raw = '""'
+
+    @pytest.mark.parametrize("raw", ['""', "''", ' "" '])
+    def test_fault_bool_words_quoted_empty_is_false(runner, raw):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': '""' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_bool_quoted_values.py:52: AssertionError
+_______________ test_fault_bool_words_quoted_empty_is_false[''] ________________
+
+runner = <click.testing.CliRunner object at 0xffff83b2e690>, raw = "''"
+
+    @pytest.mark.parametrize("raw", ['""', "''", ' "" '])
+    def test_fault_bool_words_quoted_empty_is_false(runner, raw):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': "''" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_bool_quoted_values.py:52: AssertionError
+______________ test_fault_bool_words_quoted_empty_is_false[ "" ] _______________
+
+runner = <click.testing.CliRunner object at 0xffff83b38aa0>, raw = ' "" '
+
+    @pytest.mark.parametrize("raw", ['""', "''", ' "" '])
+    def test_fault_bool_words_quoted_empty_is_false(runner, raw):
+        result = runner.invoke(_make_cli(), ["--debug", raw])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--debug': ' "" ' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_bool_quoted_values.py:52: AssertionError
+____________________ test_fault_bool_words_quoted_argument _____________________
+
+runner = <click.testing.CliRunner object at 0xffff83b3afc0>
+
+    def test_fault_bool_words_quoted_argument(runner):
+        @click.command()
+        @click.argument("flag", type=click.BOOL)
+        def cli(flag):
+            click.echo(repr(flag))
+    
+        result = runner.invoke(cli, ["'ON'"])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS] FLAG
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for 'FLAG': "'ON'" is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_bool_quoted_values.py:63: AssertionError
+_________________ test_fault_bool_words_type_converts_directly _________________
+
+    def test_fault_bool_words_type_converts_directly():
+>       assert click.BOOL.convert('"yes"', None, None) is True
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_bool_quoted_values.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/click/types.py:875: in convert
+    self.fail(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = BOOL
+message = '\'"yes"\' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes'
+param = None, ctx = None
+
+    def fail(
+        self,
+        message: str,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
+    ) -> t.NoReturn:
+        """Helper method to fail with an invalid value message."""
+>       raise BadParameter(message, ctx=ctx, param=param)
+E       click.exceptions.BadParameter: '"yes"' is not a valid boolean. Recognized values: , 0, 1, f, false, n, no, off, on, t, true, y, yes
+
+src/click/types.py:222: BadParameter
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_quoted_word_names_option_and_value
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected[""yes""]
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected["true']
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected["]
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected[']
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected["yes]
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected[no']
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_from_envvar_names_value
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_direct_convert_raises
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[yes-True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[TRUE-True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[ on -True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[1-True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[no-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[Off-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[0-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_garbage_still_rejected
+PASSED tests/test_bool_quoted_values.py::test_native_bool_passthrough
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["true"-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['YES'-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["On"-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line[" 1 "-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['t'-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line[ "y" -True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["no"-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['OFF'-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["0"-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["False"-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['n'-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar["true"-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar['Yes'-True]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar["off"-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar['0'-False]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false[""]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false['']
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false[ "" ]
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_argument
+FAILED tests/test_bool_quoted_values.py::test_fault_bool_words_type_converts_directly
+20 failed, 19 passed in 0.06s
