@@ -117,15 +117,25 @@ implementations:
 
 | Model | Agent | Notes |
 |---|---|---|
-| Claude Code | Harbor `claude-code` agent | account default model, no turn cap set by us |
+| Claude Code (default) | Harbor `claude-code` agent | account default model, no turn cap set by us |
+| `anthropic/claude-opus-5-5` | Harbor `claude-code` agent | pinned with `-m`; click only |
+| `anthropic/claude-sonnet-5-5` | Harbor `claude-code` agent | pinned with `-m`; click only |
+| `anthropic/claude-haiku-5-5` | Harbor `claude-code` agent | pinned with `-m`; click only |
+| `anthropic/claude-fable-5-2` | Harbor `claude-code` agent | pinned with `-m`; click only |
 | `gemini/gemini-2.5-flash` | Harbor `terminus-2` | 30 turns per run; 60-turn ablation on a subset |
 | `gemini/gemini-3.8-flash` | Harbor `terminus-2` | 30 turns per run; 60-turn ablation on a subset |
 | `gemini/gemini-4-hydrogen` | Harbor `terminus-2` | tried and excluded from scoring: through terminus-2 nearly every turn came back empty or unparseable, so a 0% would measure the harness, not the model (`reports/eval/excluded.json`) |
 
 The two agents differ, so pass rates compare models only within one agent.
 
-<!-- click: fill after eval — models, k and turn caps used for the click run -->
-Click evaluation: TBD (click run).
+Click evaluation: every model above except `gemini-4-hydrogen` ran once (k=1) on each of the 10 click
+tasks with Harbor 0.25.0: the two Gemini models through terminus-2 with a 30-turn cap, and five Claude
+models through the claude-code agent with no turn cap (the account default plus four pinned with
+`forge eval --agent claude-code --model anthropic/<id>`, which passes `-m` to Harbor). All five Claude
+models solved 10 of 10; gemini-3.8-flash solved 4 and gemini-2.5-flash 2. 13 of the 14 failed runs used
+all 30 turns. Runs that ended without a verifier reward (provider limits, network failures while building
+the image or installing the agent) are re-run, not scored. Every click run scored 0.0 or 1.0, so mean
+reward equals pass rate here.
 
 ## Task variation strategy
 
@@ -143,6 +153,13 @@ Near-duplicates are dropped rather than kept as variants. The prompt lists every
 family on the same target, `forge run --workers` rejects a title whose word set overlaps a kept one by 80%
 or more, and tasks are reviewed by hand for same-behaviour-different-title cases (see
 [Manual fixes](#manual-fixes)).
+
+**On click** the 10 tasks cover five of the eight families: tolerant-typed 4, cross-field 2,
+env-aware-naming 2, fail-fast 1, resource-aware-defaults 1. The other three were not applied to click
+because a CLI library has no natural surface for them: hot-reload would tag every environment read (click
+reads env vars once per invocation, there is no long-running process to reload), and click has no config
+writer for a round-trip or message handler for an idempotent consumer. The click target profile
+(`src/incidentforge/families/targets/click/profile.yaml`) leaves them out so the generator is never asked for them.
 
 Difficulty is labelled by the number of fault cases (easy ≤ 3, medium 4–5, hard ≥ 6); the size of the fix
 is a separate `fix_scope` label (1 file, 2–3 files, 4+ files) from the blast radius.
@@ -172,8 +189,8 @@ A null reward means the environment crashed and the run is retried, not scored. 
 miniflux numbers in the README were measured earlier with an all-or-nothing reward and Harbor 0.26.0;
 the click numbers use the rule above and Harbor 0.25.0.
 
-<!-- click: fill after eval — nop/oracle matrix result for every click task -->
-Click nop/oracle matrix: TBD (click run).
+Click nop/oracle matrix (Harbor 0.25.0, one run per agent per task, `reports/validation/click/matrix.json`):
+the no-op agent scored 0.0 on 10 of 10 tasks and the oracle scored 1.0 on 10 of 10.
 
 ## Mutation testing
 
@@ -187,8 +204,7 @@ is run through Harbor's oracle agent; a task is kept only if its tests catch at 
 are kept in the validation log. On the 52 tasks of the other repositories the accepted tasks' tests killed
 276 of 309 mutants (89%).
 
-<!-- click: fill after eval — mutants killed / total on click tasks -->
-Click mutants killed: TBD (click run).
+On the 10 click tasks the tests killed 55 of 56 mutants (98%).
 
 **Our own code.** mutmut runs nightly over the modules listed in `[tool.mutmut]` in `pyproject.toml`
 (the gate code in `validate/`, `ci_checks.py`, `budget.py`); a surviving mutant
@@ -214,9 +230,13 @@ why. Tasks dropped by the gates are not listed; only human decisions are.
 | fastapi-template/rd-004-email-reset-token | family set with `--family resource-aware-defaults` | the classifier answered fail-fast-config; recorded as above |
 | fastapi-template/ff-005-create-engine-7 | `classifier_family` line added after generation | generated before the classifier's answer was written automatically |
 | `gemini/gemini-4-hydrogen` (evaluation) | excluded from scoring | harness incompatibility, see Model choices |
-| click: TBD (click run) <!-- click: fill after review --> | | |
+| click (all tasks) | none: no click task was hand-edited | 4 candidates were dropped: 2 near-duplicates at generation (ff-002, cf-004) and 2 after independent review (cf-001: one rule already enforced on base so its tests only checked wording; en-002: reference applied the new env-var naming to value lookup but not to the `--help` display) |
 
 Dropped tasks are not committed; ids are not reused, which is why some ids are missing from the sequence.
+
+Known limitations kept as generated (no hand edits): `click/tt-001-convert` has no zero-duration test case,
+and `click/tt-003-convert` has four `test_fault_garbage_*` tests that already pass on the base commit, so
+they are listed in `pass_to_pass.json` and act as guards rather than fault tests.
 
 ## Where the evidence lives
 

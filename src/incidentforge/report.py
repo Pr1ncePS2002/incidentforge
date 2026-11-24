@@ -7,7 +7,7 @@ import json
 import statistics
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +35,15 @@ class Data:
     ablation: list[EvalResult] = field(default_factory=list)  # runs at a non-default turn cap, kept off the main table
     ablation_trials: list[dict[str, Any]] = field(default_factory=list)
     maps: list[dict[str, Any]] = field(default_factory=list)  # failure map snapshots under reports/map/
+    matrices: dict[str, dict[str, Any]] = field(default_factory=dict)  # target -> validation/<target>/matrix.json
+    generation: dict[str, dict[str, Any]] = field(default_factory=dict)  # target -> validation/<target>/generation.json
+
+
+# the hackathon starter repo leads every report; the others are kept as evidence the factory is not repo-bound
+PRIMARY_TARGET = "click"
+EXTRA_TARGETS = ("fastapi-template", "miniflux")
+MATRIX_NAME = "matrix.json"
+GENERATION_NAME = "generation.json"
 
 
 def _jsonl(path: Path) -> list[dict[str, Any]]:
@@ -49,10 +58,19 @@ def load(tasks_root: Path, reports_root: Path) -> Data:
     for t in tasks:
         p = tasks_root / t.task_id / "instruction.md"
         instructions[t.task_id] = p.read_text() if p.exists() else ""
-    validation = [
-        ValidationReport.model_validate_json(p.read_text())
-        for p in sorted((reports_root / "validation").rglob("*.json"))
-    ]
+    validation: list[ValidationReport] = []
+    matrices: dict[str, dict[str, Any]] = {}
+    generation: dict[str, dict[str, Any]] = {}
+    for p in sorted((reports_root / "validation").rglob("*.json")):
+        raw = json.loads(p.read_text())
+        rel = p.relative_to(reports_root / "validation").parts
+        if p.name == MATRIX_NAME and len(rel) == 2:
+            matrices[rel[0]] = raw
+        elif p.name == GENERATION_NAME and len(rel) == 2:
+            generation[rel[0]] = raw
+        elif isinstance(raw, dict) and "task_id" in raw and "gates" in raw:
+            # harbor verifier output kept next to the matrix (ctrf.json, reward.json) is not a gate report
+            validation.append(ValidationReport.model_validate(raw))
     eval_dir = reports_root / "eval"
     results = ResultsStore(eval_dir / "results.jsonl").load()
     trials = _jsonl(eval_dir / TRIALS_NAME)
@@ -69,7 +87,19 @@ def load(tasks_root: Path, reports_root: Path) -> Data:
     ablation_trials = [t for t in trials if t.get("max_turns") not in main_caps]
     trials = [t for t in trials if t.get("max_turns") in main_caps]
     maps = map_render.load_snapshots(reports_root)
-    return Data(tasks, validation, results, trials, instructions, excluded, ablation, ablation_trials, maps)
+    return Data(
+        tasks,
+        validation,
+        results,
+        trials,
+        instructions,
+        excluded,
+        ablation,
+        ablation_trials,
+        maps,
+        matrices,
+        generation,
+    )
 
 
 def classify_failure(test_name: str, feature_files: tuple[str, ...]) -> str:
@@ -159,50 +189,153 @@ def _family_of(data: Data) -> dict[str, str]:
     return fam
 
 
+def label(model: str, agent: str) -> str:
+    """display name: an unpinned claude-code row ran the account's default model."""
+    if agent == model == "claude-code":
+        return "claude-code (default)"
+    return model if agent in {"terminus-2", "", model} else f"{agent}:{model}"
+
+
 def model_label(r: EvalResult) -> str:
-    return r.model if r.agent in {"terminus-2", "", r.model} else f"{r.agent}:{r.model}"
+    return label(r.model, r.agent)
+
+
+def _mean(rs: list[EvalResult]) -> float:
+    return sum(r.reward for r in rs) / len(rs) if rs else 0.0
+
+
+def target_of(task_id: str) -> str:
+    """dataset dir a task id starts with, e.g. click for click/tt-001-convert."""
+    return task_id.split("/", 1)[0]
+
+
+def model_rows(results: list[EvalResult]) -> list[dict[str, Any]]:
+    """one row per (model, agent); pass_rate counts reward 1.0 only, mean_reward keeps partial credit."""
+    by_model: dict[tuple[str, str], list[EvalResult]] = defaultdict(list)
+    for r in results:
+        by_model[(r.model, r.agent)].append(r)
+    return [
+        {
+            "model": m,
+            "agent": a,
+            "label": label(m, a),
+            "k": max(r.attempt for r in rs),
+            "pass_rate": round(_rate(rs), 4),
+            "mean_reward": round(_mean(rs), 4),
+            "n": len(rs),
+            "tasks": len({r.task_id for r in rs}),
+            "input_tokens": sum(r.input_tokens for r in rs),
+            "output_tokens": sum(r.output_tokens for r in rs),
+        }
+        for (m, a), rs in sorted(by_model.items())
+    ]
+
+
+def family_rows(results: list[EvalResult]) -> list[dict[str, Any]]:
+    by_fam: dict[tuple[str, str], list[EvalResult]] = defaultdict(list)
+    for r in results:
+        by_fam[(r.family, r.model)].append(r)
+    return [
+        {"family": f, "model": m, "pass_rate": round(_rate(rs), 4), "mean_reward": round(_mean(rs), 4), "n": len(rs)}
+        for (f, m), rs in sorted(by_fam.items())
+    ]
+
+
+def validation_block(reports: list[ValidationReport]) -> dict[str, int]:
+    return {
+        "candidates": len(reports),
+        "accepted": sum(v.accepted for v in reports),
+        "mutants_total": sum(v.mutants_total for v in reports),
+        "mutants_killed": sum(v.mutants_killed for v in reports),
+    }
+
+
+def matrix_block(matrix: dict[str, Any]) -> dict[str, Any]:
+    """nop/oracle counts from the guide's matrix: a task is ok for an agent when it got the expected reward."""
+    expected = matrix.get("expected") or {"nop": 0.0, "oracle": 1.0}
+    rows = matrix.get("tasks") or []
+    out: dict[str, Any] = {"harbor_version": matrix.get("harbor_version", "")}
+    for agent in ("nop", "oracle"):
+        ok = sum(
+            1
+            for t in rows
+            if (t.get(agent) or {}).get("reward") is not None and float(t[agent]["reward"]) == float(expected[agent])
+        )
+        out[agent] = {"ok": ok, "total": len(rows)}
+    return out
+
+
+def _families(tasks: list[TaskInfo]) -> dict[str, int]:
+    fam_count: dict[str, int] = defaultdict(int)
+    for t in tasks:
+        fam_count[t.family] += 1
+    return dict(sorted(fam_count.items()))
+
+
+def target_data(data: Data, target: str) -> Data:
+    """the slice of data whose task ids sit under one dataset dir."""
+
+    def mine(task_id: object) -> bool:
+        return target_of(str(task_id)) == target
+
+    return replace(
+        data,
+        tasks=[t for t in data.tasks if mine(t.task_id)],
+        validation=[v for v in data.validation if mine(v.task_id)],
+        results=[r for r in data.results if mine(r.task_id)],
+        trials=[t for t in data.trials if mine(t.get("task_id"))],
+        ablation=[r for r in data.ablation if mine(r.task_id)],
+        ablation_trials=[t for t in data.ablation_trials if mine(t.get("task_id"))],
+        excluded=[],
+        maps=[m for m in data.maps if m.get("target") == target],
+        matrices={k: v for k, v in data.matrices.items() if k == target},
+        generation={k: v for k, v in data.generation.items() if k == target},
+    )
+
+
+def target_summary(data: Data, target: str) -> dict[str, Any]:
+    """per-target block of summary.json; keys here are read by the deck builder, so keep them stable."""
+    sub = target_data(data, target)
+    validation: dict[str, Any] = validation_block(sub.validation)
+    gen = data.generation.get(target) or {}
+    # generations attempted and gate-passing pairs come from the run log when the reports only hold kept tasks
+    for key in ("candidates", "passed_gates", "accepted", "dropped"):
+        if key in gen:
+            validation[key] = gen[key]
+    matrix = data.matrices.get(target)
+    return {
+        "tasks_total": len(sub.tasks),
+        "tasks_by_family": _families(sub.tasks),
+        "validation": validation,
+        "harbor_matrix": matrix_block(matrix) if matrix else None,
+        "models": model_rows(sub.results),
+        "by_family": family_rows(sub.results),
+        "failure_causes": failure_causes(sub),
+        "findings": findings(sub),
+    }
+
+
+def by_target(data: Data) -> dict[str, Any]:
+    """click first, then the extra repos; any other dataset dir found is listed after them."""
+    seen = sorted({target_of(t.task_id) for t in data.tasks} | {target_of(r.task_id) for r in data.results})
+    names = [PRIMARY_TARGET, *EXTRA_TARGETS]
+    names += [n for n in seen if n not in names]
+    out: dict[str, Any] = {"primary": PRIMARY_TARGET, "extra": list(EXTRA_TARGETS)}
+    for name in names:
+        if name in seen or name in data.matrices:
+            out[name] = target_summary(data, name)
+    return out
 
 
 def summarize(data: Data) -> dict[str, Any]:
-    """machine-readable summary read by scripts/readme_results.py."""
-    fam_count: dict[str, int] = defaultdict(int)
-    for t in data.tasks:
-        fam_count[t.family] += 1
-    by_model: dict[tuple[str, str], list[EvalResult]] = defaultdict(list)
-    by_fam: dict[tuple[str, str], list[EvalResult]] = defaultdict(list)
-    for r in data.results:
-        by_model[(r.model, r.agent)].append(r)
-        by_fam[(r.family, r.model)].append(r)
-    models = []
-    for (m, a), rs in sorted(by_model.items()):
-        models.append(
-            {
-                "model": m,
-                "agent": a,
-                "k": max(r.attempt for r in rs),
-                "pass_rate": round(_rate(rs), 4),
-                "n": len(rs),
-                "tasks": len({r.task_id for r in rs}),
-                "input_tokens": sum(r.input_tokens for r in rs),
-                "output_tokens": sum(r.output_tokens for r in rs),
-            }
-        )
-    accepted = sum(v.accepted for v in data.validation)
+    """machine-readable summary read by scripts/readme_results.py; top-level keys cover every target."""
     return {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "tasks_total": len(data.tasks),
-        "tasks_by_family": dict(sorted(fam_count.items())),
-        "validation": {
-            "candidates": len(data.validation),
-            "accepted": accepted,
-            "mutants_total": sum(v.mutants_total for v in data.validation),
-            "mutants_killed": sum(v.mutants_killed for v in data.validation),
-        },
-        "models": models,
-        "by_family": [
-            {"family": f, "model": m, "pass_rate": round(_rate(rs), 4), "n": len(rs)}
-            for (f, m), rs in sorted(by_fam.items())
-        ],
+        "tasks_by_family": _families(data.tasks),
+        "validation": validation_block(data.validation),
+        "models": model_rows(data.results),
+        "by_family": family_rows(data.results),
         "failures": failure_breakdown(data),
         "failure_causes": failure_causes(data),
         "variance": variance(data),
@@ -210,6 +343,7 @@ def summarize(data: Data) -> dict[str, Any]:
         "excluded_models": data.excluded,
         "findings": findings(data),
         "map_coverage": map_render.by_target(data.maps),
+        "by_target": by_target(data),
     }
 
 
@@ -436,28 +570,148 @@ def _causes_html(fc: dict[str, Any]) -> str:
     return "\n".join(out)
 
 
+def _models_table(models: list[dict[str, Any]]) -> str:
+    rows = []
+    for m in models:
+        listed = cost_usd(bare_model(m["model"]), m["input_tokens"], m["output_tokens"])
+        rows.append(
+            [
+                _esc(m.get("label", m["model"])),
+                _esc(m["agent"]),
+                str(m["tasks"]),
+                str(m["n"]),
+                _bar(m["pass_rate"]),
+                f"{m.get('mean_reward', m['pass_rate']):.2f}",
+                f"{m['input_tokens']:,} / {m['output_tokens']:,}",
+                f"${listed:.2f}",
+            ]
+        )
+    head = ["model", "agent", "tasks", "runs", "pass rate", "mean reward", "tokens in / out", "at list price"]
+    return _table(head, rows)
+
+
+def _family_table(by_family: list[dict[str, Any]]) -> str:
+    fams = sorted({r["family"] for r in by_family})
+    mnames = sorted({r["model"] for r in by_family})
+    cell = {(r["family"], r["model"]): r for r in by_family}
+    rows = []
+    for f in fams:
+        row = [_esc(f)]
+        for m in mnames:
+            c = cell.get((f, m))
+            row.append(f"{_bar(c['pass_rate'])} <span class='muted'>n={c['n']}</span>" if c else "-")
+        rows.append(row)
+    return _table(["family", *mnames], rows)
+
+
+def _cards(items: list[tuple[str, object]]) -> str:
+    cards = "".join(f'<div class="card"><span class="muted">{_esc(k)}</span><b>{_esc(v)}</b></div>' for k, v in items)
+    return f'<div class="cards">{cards}</div>'
+
+
+def _primary_html(name: str, ts: dict[str, Any]) -> str:
+    """the lead section: dataset, validation matrix and model results on the primary target."""
+    v = ts["validation"]
+    hm = ts.get("harbor_matrix")
+    items: list[tuple[str, object]] = [
+        ("tasks", ts["tasks_total"]),
+        ("families", len(ts["tasks_by_family"])),
+    ]
+    if v["candidates"]:
+        items.append(("accepted", f"{v['accepted']}/{v['candidates']}"))
+    if v["mutants_total"]:
+        items.append(("mutants killed", f"{v['mutants_killed']}/{v['mutants_total']}"))
+    if hm:
+        items += [
+            ("nop = 0.0", f"{hm['nop']['ok']}/{hm['nop']['total']}"),
+            ("oracle = 1.0", f"{hm['oracle']['ok']}/{hm['oracle']['total']}"),
+        ]
+    items.append(("eval runs", sum(m["n"] for m in ts["models"])))
+    out = [f"<h2 id='primary'>Results on {_esc(name)}</h2>", _cards(items)]
+    fams = ", ".join(f"{_esc(f)} {n}" for f, n in ts["tasks_by_family"].items())
+    out.append(f"<p>tasks per family: {fams or '-'}.</p>")
+    if "passed_gates" in v:
+        out.append(
+            f"<p class='muted'>{v['candidates']} generations, {v['passed_gates']} passed every gate, "
+            f"{v['accepted']} kept in the dataset.</p>"
+        )
+    drops = [d for d in v.get("dropped") or [] if isinstance(d, dict)]
+    if drops:
+        lis = "".join(f"<li>{_esc(d.get('task', ''))}: {_esc(d.get('why', ''))}</li>" for d in drops)
+        out.append(f"<p>dropped candidates (no task was hand-edited):</p><ul>{lis}</ul>")
+    if hm:
+        out.append(
+            f"<p class='muted'>harbor {_esc(hm.get('harbor_version', ''))} matrix from the guide: no-op agent "
+            "expected 0.0, oracle expected 1.0, one run each per task.</p>"
+        )
+    out.append("<h3>Headline findings</h3>")
+    if ts["findings"]:
+        out.append("<ul>" + "".join(f"<li>{_esc(f)}</li>" for f in ts["findings"]) + "</ul>")
+    else:
+        out.append('<p class="muted">no results yet.</p>')
+    if ts["models"]:
+        out.append(
+            "<p>pass rate = share of runs with reward 1.0; mean reward also counts partial credit "
+            "(share of feature tests passing, 0.0 on any regression).</p>"
+        )
+        out.append(_models_table(ts["models"]))
+        out.append("<p>pass rate per model and family:</p>")
+        out.append(_family_table(ts["by_family"]))
+        out.append(_causes_html(ts["failure_causes"]))
+    return "\n".join(out)
+
+
 def render_html(data: Data, summary: dict[str, Any]) -> str:
     s: list[str] = []
-    v = summary["validation"]
-    acc_rate = f"{v['accepted'] / v['candidates']:.0%}" if v["candidates"] else "-"
-    mut = f"{v['mutants_killed']}/{v['mutants_total']}" if v["mutants_total"] else "-"
-    runs = len(data.results)
-    s.append('<div class="cards">')
-    for label, val in [
-        ("tasks", summary["tasks_total"]),
-        ("families", len(summary["tasks_by_family"])),
-        ("acceptance", acc_rate),
-        ("mutants killed", mut),
-        ("eval runs", runs),
-    ]:
-        s.append(f'<div class="card"><span class="muted">{_esc(label)}</span><b>{_esc(val)}</b></div>')
-    s.append("</div>")
-
-    s.append("<h2>Headline findings</h2>")
-    if summary["findings"]:
-        s.append("<ul>" + "".join(f"<li>{_esc(f)}</li>" for f in summary["findings"]) + "</ul>")
+    bt = summary.get("by_target") or {}
+    primary = bt.get("primary", PRIMARY_TARGET)
+    if primary in bt:
+        s.append(_primary_html(primary, bt[primary]))
     else:
-        s.append('<p class="muted">no results yet.</p>')
+        v = summary["validation"]
+        acc_rate = f"{v['accepted'] / v['candidates']:.0%}" if v["candidates"] else "-"
+        mut = f"{v['mutants_killed']}/{v['mutants_total']}" if v["mutants_total"] else "-"
+        s.append(
+            _cards(
+                [
+                    ("tasks", summary["tasks_total"]),
+                    ("families", len(summary["tasks_by_family"])),
+                    ("acceptance", acc_rate),
+                    ("mutants killed", mut),
+                    ("eval runs", len(data.results)),
+                ]
+            )
+        )
+        s.append("<h2>Headline findings</h2>")
+        if summary["findings"]:
+            s.append("<ul>" + "".join(f"<li>{_esc(f)}</li>" for f in summary["findings"]) + "</ul>")
+        else:
+            s.append('<p class="muted">no results yet.</p>')
+
+    extras = [n for n in bt.get("extra", []) if n in bt]
+    if extras:
+        s.append("<h2 id='extra'>Also runs on other repositories</h2>")
+        s.append(
+            "<p>extra evidence that the factory is not tied to one repo; these tasks are not part of the "
+            f"{_esc(primary)} dataset and stay out of its numbers above.</p>"
+        )
+        rows = []
+        for n in extras:
+            ts = bt[n]
+            v = ts["validation"]
+            rates = ", ".join(
+                f"{_esc(m.get('label', m['model']))} {m['pass_rate']:.0%} ({m['n']} runs)" for m in ts["models"]
+            )
+            mut = f"{v['mutants_killed']}/{v['mutants_total']}" if v["mutants_total"] else "-"
+            rows.append([_esc(n), str(ts["tasks_total"]), str(len(ts["tasks_by_family"])), mut, rates or "-"])
+        s.append(_table(["repository", "tasks", "families", "mutants killed", "pass rate"], rows))
+        for n in extras:
+            ts = bt[n]
+            if ts["models"]:
+                s.append(f"<h3>{_esc(n)}</h3>")
+                s.append(_models_table(ts["models"]))
+                s.append(_family_table(ts["by_family"]))
+                s.append(_causes_html(ts["failure_causes"]).replace(" id='causes'", ""))
 
     if data.excluded:
         s.append("<h2>Models left out</h2>")
@@ -502,37 +756,9 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
             )
         )
 
-    s.append("<h2>Results</h2>")
-    models = summary["models"]
-    if models:
-        rows = []
-        for m in models:
-            listed = cost_usd(bare_model(m["model"]), m["input_tokens"], m["output_tokens"])
-            rows.append(
-                [
-                    _esc(m["model"]),
-                    _esc(m["agent"]),
-                    str(m["tasks"]),
-                    str(m["n"]),
-                    _bar(m["pass_rate"]),
-                    f"{m['input_tokens']:,} / {m['output_tokens']:,}",
-                    f"${listed:.2f}",
-                ]
-            )
-        s.append(_table(["model", "agent", "tasks", "runs", "pass rate", "tokens in / out", "at list price"], rows))
-        fams = sorted({r["family"] for r in summary["by_family"]})
-        mnames = sorted({r["model"] for r in summary["by_family"]})
-        cell = {(r["family"], r["model"]): r for r in summary["by_family"]}
-        rows = []
-        for f in fams:
-            row = [_esc(f)]
-            for m in mnames:
-                c = cell.get((f, m))
-                row.append(f"{_bar(c['pass_rate'])} <span class='muted'>n={c['n']}</span>" if c else "-")
-            rows.append(row)
-        s.append("<p>pass rate per model and family:</p>")
-        s.append(_table(["family", *mnames], rows))
-        s.append(_causes_html(summary["failure_causes"]))
+    if summary["turn_ablation"] or summary["variance"]:
+        s.append("<h2>Earlier runs: turn budget and variance</h2>")
+        s.append('<p class="muted">from the extra repositories, with the earlier all-or-nothing reward.</p>')
         if summary["turn_ablation"]:
             s.append("<p>turn budget ablation (same tasks, first attempt):</p>")
             rows = [
@@ -561,9 +787,6 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
                 for x in summary["variance"]
             ]
             s.append(_table(["model", "tasks", "k", "pass rate per attempt", "stdev", "tasks that flip"], rows))
-    else:
-        s.append('<p class="muted">no eval results yet; run <code>forge eval</code>.</p>')
-
     if data.maps:
         s.append("<h2 id='map'>Failure map</h2>")
         s.append(

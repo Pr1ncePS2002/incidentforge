@@ -222,3 +222,131 @@ def test_failure_causes_cover_every_failed_run(tmp_path: Path) -> None:
     assert "Why failed runs failed" in page and 'class="stack"' in page and "c-turn_budget" in page
     assert "without per-test detail" in page
     assert any(f.startswith("each of the 5 failed runs has one cause") for f in summary["findings"])
+
+
+def seed_click(tmp: Path) -> tuple[Path, Path]:
+    """the fastapi-template seed plus two click tasks with a matrix, a generation log and fractional rewards."""
+    tasks, reports = seed(tmp)
+    make_task(tasks, "click", "tt-001-convert", "tolerant-typed-config")
+    make_task(tasks, "click", "cf-002-validate", "cross-field-validation")
+    vdir = reports / "validation" / "click"
+    (vdir / "matrix" / "tt-001-convert" / "nop").mkdir(parents=True)
+    # harbor verifier output next to the matrix is not a gate report and must be skipped
+    (vdir / "matrix" / "tt-001-convert" / "nop" / "ctrf.json").write_text('{"results": {}}')
+    (vdir / "matrix" / "tt-001-convert" / "nop" / "reward.json").write_text('{"reward": 0.0}')
+    for tid in ("click/tt-001-convert", "click/cf-002-validate"):
+        rep = ValidationReport(
+            task_id=tid,
+            accepted=True,
+            gates=[GateResult(gate="mutation", passed=True)],
+            mutants_total=6,
+            mutants_killed=5,
+        )
+        (vdir / f"{tid.split('/')[1]}.json").write_text(rep.model_dump_json())
+    matrix = {
+        "harbor_version": "0.25.0",
+        "expected": {"nop": 0.0, "oracle": 1.0},
+        "tasks": [
+            {"id": "tt-001-convert", "nop": {"reward": 0.0}, "oracle": {"reward": 1.0}},
+            {"id": "cf-002-validate", "nop": {"reward": 0.0}, "oracle": {"reward": 0.5}},
+        ],
+    }
+    (vdir / "matrix.json").write_text(json.dumps(matrix))
+    gen = {"candidates": 5, "passed_gates": 3, "accepted": 2, "dropped": [{"task": "click/x", "why": "<dup>"}]}
+    (vdir / "generation.json").write_text(json.dumps(gen))
+    rows = [
+        EvalResult(
+            task_id="click/tt-001-convert",
+            family="tolerant-typed-config",
+            agent="terminus-2",
+            model="m",
+            attempt=1,
+            reward=1.0,
+        ),
+        EvalResult(
+            task_id="click/cf-002-validate",
+            family="cross-field-validation",
+            agent="terminus-2",
+            model="m",
+            attempt=1,
+            reward=0.5,
+        ),
+    ]
+    side = [
+        {"task_id": "click/tt-001-convert", "model": "m", "attempt": 1, "failed_tests": []},
+        {
+            "task_id": "click/cf-002-validate",
+            "model": "m",
+            "attempt": 1,
+            "failed_tests": ["feature::tests/test_cf_002_validate.py::test_fault_x"],
+        },
+    ]
+    with (reports / "eval/results.jsonl").open("a") as f:
+        f.write("".join(r.model_dump_json() + "\n" for r in rows))
+    with (reports / "eval/trials.jsonl").open("a") as f:
+        f.write("".join(json.dumps(s) + "\n" for s in side))
+    return tasks, reports
+
+
+def test_by_target_puts_click_first(tmp_path: Path) -> None:
+    tasks, reports = seed_click(tmp_path)
+    out = build(reports / "index.html", tasks, reports)
+    summary = json.loads((reports / "summary.json").read_text())
+    bt = summary["by_target"]
+    assert bt["primary"] == "click" and bt["extra"] == ["fastapi-template", "miniflux"]
+    click = bt["click"]
+    assert {"tasks_total", "tasks_by_family", "validation", "harbor_matrix", "models", "failure_causes"} <= set(click)
+    assert click["tasks_total"] == 2
+    assert click["tasks_by_family"] == {"cross-field-validation": 1, "tolerant-typed-config": 1}
+    v = click["validation"]
+    assert (v["candidates"], v["passed_gates"], v["accepted"]) == (5, 3, 2)
+    assert (v["mutants_total"], v["mutants_killed"]) == (12, 10)
+    assert click["harbor_matrix"]["nop"] == {"ok": 2, "total": 2}
+    assert click["harbor_matrix"]["oracle"] == {"ok": 1, "total": 2}
+    [m] = click["models"]
+    assert (m["model"], m["n"], m["pass_rate"], m["mean_reward"]) == ("m", 2, 0.5, 0.75)
+    assert click["failure_causes"]["by_model"]["m"]["fault_path_missed"] == 1
+    # extra targets keep their own numbers and click stays out of them
+    ft = bt["fastapi-template"]
+    assert ft["tasks_total"] == 2 and all(r["model"] != "m" for r in ft["models"])
+    assert "miniflux" not in bt
+    # top-level keys still cover every target
+    assert summary["tasks_total"] == 4 and any(r["model"] == "m" for r in summary["models"])
+    page = out.read_text()
+    assert page.index("Results on click") < page.index("Also runs on other repositories")
+    assert "&lt;dup&gt;" in page and "mean reward" in page
+
+
+def test_matrix_without_expected_uses_guide_defaults() -> None:
+    from incidentforge.report import matrix_block
+
+    got = matrix_block({"tasks": [{"id": "a", "nop": {"reward": 0.0}, "oracle": {"reward": None}}]})
+    assert got["nop"] == {"ok": 1, "total": 1} and got["oracle"] == {"ok": 0, "total": 1}
+
+
+def test_cli_eval_only_selects_a_dataset(tmp_path: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    seed_click(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("FORGE_LEDGER", str(tmp_path / "l.jsonl"))
+    calls: dict[str, object] = {}
+
+    def fake_run_eval(root, models, agent, k, subset, **kw):  # type: ignore[no-untyped-def]
+        calls.update(subset=subset)
+        return []
+
+    monkeypatch.setattr("incidentforge.evaluate.run_eval", fake_run_eval)
+    r = CliRunner().invoke(app, ["eval", "--tasks", "tasks", "--only", "click/"])
+    assert r.exit_code == 0, r.output
+    assert calls["subset"] == ["click/cf-002-validate", "click/tt-001-convert"]
+    r = CliRunner().invoke(app, ["eval", "--tasks", "tasks", "--only", "click/tt-001-convert", "--subset", "1"])
+    assert r.exit_code != 0
+    r = CliRunner().invoke(app, ["eval", "--tasks", "tasks", "--only", "nope"])
+    assert r.exit_code != 0 and "no task" in r.output
+
+
+def test_unpinned_claude_code_is_labelled_default() -> None:
+    from incidentforge.report import label
+
+    assert label("claude-code", "claude-code") == "claude-code (default)"
+    assert label("anthropic/claude-opus-5-5", "claude-code") == "claude-code:anthropic/claude-opus-5-5"
+    assert label("gemini/gemini-2.5-flash", "terminus-2") == "gemini/gemini-2.5-flash"
