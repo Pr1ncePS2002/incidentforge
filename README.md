@@ -80,8 +80,8 @@ reused components, models and the variation strategy: [docs/technical-explanatio
 ## Setup
 
 Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), Docker (running), Git, and the Harbor CLI
-(`uv tool install harbor==0.25.0`). For generation, either the Claude Code CLI (logged in) or a Gemini API
-key in `.env`.
+(`uv tool install harbor==0.25.0`). For generation, any logged-in coding CLI (Claude Code, Codex, opencode,
+Gemini CLI or your own command, see below) or a Gemini API key in `.env`.
 
 ```bash
 git clone https://github.com/Pr1ncePS2002/incidentforge && cd incidentforge
@@ -114,6 +114,41 @@ uv run forge report             # writes reports/index.html, reports/summary.jso
 ```
 
 One task from a public postmortem: `uv run forge from-postmortem <url> --target click`.
+
+## Run it on your own repo with any coding CLI
+
+No LLM API key is needed: generation calls a coding CLI you are already logged in to, headless, with its
+tools turned off and an empty working directory, and parses one JSON object from its answer.
+
+| `--backend` | runs |
+|---|---|
+| `claude-code` (default) | `claude -p --output-format json --json-schema <schema> --tools ""` |
+| `codex` | `codex exec -s read-only -c approval_policy="never" --ignore-user-config -o <file> -` |
+| `opencode` | `opencode run --pure --format json`, every tool permission denied; `--model provider/model` |
+| `gemini-cli` | `gemini --output-format json -e none -p ...` (built from its documented flags, tested with a fake binary only) |
+| `command` | anything else: `--backend-command` or `FORGE_GEN_COMMAND`, prompt on stdin or in `{prompt_file}`, JSON on stdout |
+| `auto` | the first of `claude`, `codex`, `opencode`, `gemini` found on `PATH` (login is not checked) |
+
+```bash
+uv run forge run --target click --n 1 --backend codex
+# any cli that prints the answer to stdout; this one is the one we smoke-tested
+FORGE_GEN_COMMAND="claude -p --output-format text --tools ''" uv run forge run --target click --backend command
+```
+
+Validation, the six gates and Harbor's nop/oracle matrix need no LLM at all. For your own repo,
+`FORGE_BACKEND=<backend> scripts/finale_dry_run.sh <repo_url> <commit> <python|go>` scaffolds the target,
+checks its test suite in Docker and generates tasks (see [Adding a new target repo](#adding-a-new-target-repo)).
+If a CLI is logged out, each rejected pair prints the CLI's error under it.
+
+`forge eval` also runs your tasks against Harbor's CLI agents on your own login. Each job sees only that
+agent's credentials, never the Gemini keys: `claude-code` (`CLAUDE_CODE_OAUTH_TOKEN`), `codex`
+(`~/.codex/auth.json` or `OPENAI_API_KEY`), `gemini-cli` (`~/.gemini/oauth_creds.json`), `opencode`
+(provider keys) and `cursor-cli` (`CURSOR_API_KEY`). The committed results cover Claude Code and Gemini only.
+
+```bash
+uv run forge eval --agent codex --only click/                  # the CLI's default model
+uv run forge eval --agent codex --model openai/gpt-5.5 --only click/tt-001-convert
+```
 
 ## Task package
 

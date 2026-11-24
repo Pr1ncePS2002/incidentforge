@@ -102,7 +102,7 @@ makes the results explain where models fail rather than only how often.
 
 ## Model choices
 
-**Task generation.** Generation goes through a `Backend` interface (`backends/base.py`) with two
+**Task generation.** Generation goes through a `Backend` interface (`backends/base.py`). Supported
 implementations:
 
 - `claude-code` (`backends/claude_code.py`, the default): the Claude Code CLI in headless mode,
@@ -112,6 +112,18 @@ implementations:
   backend, and the postmortem classifier also runs on it.
 - `gemini` (`backends/gemini.py`): the Gemini API through google-genai, default model `gemini-3.8-flash`.
   It implements the same interface and is covered by tests, but no committed task was generated with it.
+- `codex`, `opencode`, `gemini-cli` and `command` (`backends/cli.py`): other coding CLIs on their own login,
+  headless with tools off (`codex exec -s read-only`, `opencode run` with every permission denied,
+  `gemini --output-format json`), or any user command that prints JSON (`--backend-command` /
+  `FORGE_GEN_COMMAND`). The JSON schema goes in the prompt and the answer is checked and retried once, as
+  for Gemini. They are unit-tested with fake executables; `gemini-cli` is built from its documented flags and
+  has not been run against the real binary. None of them generated a committed task: the committed dataset
+  is `claude-code` only.
+
+`forge eval --agent` also accepts Harbor's `codex`, `gemini-cli`, `opencode` and `cursor-cli` agents. They run
+on the user's own login, and each job's environment carries only that agent's credential variables
+(`evaluate.LOGIN_AGENT_VARS`), never the Gemini keys, so they never touch the spend cap. They are unit-tested
+only; no committed result uses them.
 
 **Evaluated models.** All evaluation runs go through Harbor (`forge eval`):
 

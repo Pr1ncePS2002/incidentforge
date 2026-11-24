@@ -445,6 +445,10 @@ def generate(
                 accepted += o.report.accepted
                 verdict = "accepted" if o.report.accepted else "rejected"
                 log(f"  {o.pair.task_id}: {verdict} after {o.attempts} attempt(s) in {o.seconds:.0f}s {o.title}")
+                # a logged-out or missing cli should say so here, not only in generate-log.jsonl
+                gen_fail = [g.detail for g in o.report.gates if g.gate == "generator" and not g.passed]
+                if gen_fail:
+                    log(f"    generator: {gen_fail[0][:200]}")
 
     attempts = sum(o.attempts for o in outcomes)
     rate = accepted / attempts if attempts else 0.0

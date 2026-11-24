@@ -19,10 +19,18 @@ from incidentforge.models import EvalResult
 
 # models the free key can serve (F-06); anything else needs the capped paid key
 FREE_MODELS = frozenset({"gemini-3.8-flash", "gemini-3.7-flash", "gemini-4-hydrogen"})
-# agents that bill a subscription login, never a gemini key
-SUBSCRIPTION_AGENTS = frozenset({"claude-code"})
+# harbor cli agents that run on the user's own login, never on our gemini keys; value = credential vars they may see
+# codex and gemini-cli also pick up ~/.codex/auth.json and ~/.gemini/oauth_creds.json on their own
+LOGIN_AGENT_VARS: dict[str, tuple[str, ...]] = {
+    "claude-code": ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"),
+    "codex": ("OPENAI_API_KEY", "CODEX_API_KEY"),
+    "gemini-cli": (),
+    "opencode": ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"),
+    "cursor-cli": ("CURSOR_API_KEY",),
+}
+SUBSCRIPTION_AGENTS = frozenset(LOGIN_AGENT_VARS)
 GEMINI_KEY_VARS = ("GEMINI_API_KEY", "GEMINI_API_KEY2", "GOOGLE_API_KEY")
-CLAUDE_TOKEN_VARS = ("CLAUDE_CODE_OAUTH_TOKEN",)
+LOGIN_VARS = tuple(dict.fromkeys(v for vs in LOGIN_AGENT_VARS.values() for v in vs))
 
 DEFAULT_RESULTS = Path("reports/eval/results.jsonl")
 # turn cap of the main comparison; rows written before max_turns was recorded ran at this cap
@@ -190,11 +198,11 @@ def route(model: str, agent: str) -> str:
     return "free" if bare_model(model) in FREE_MODELS else "paid"
 
 
-def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
-    """process env for one harbor job: exactly one gemini key, never both."""
-    env = {k: v for k, v in base.items() if k not in GEMINI_KEY_VARS and k not in CLAUDE_TOKEN_VARS}
+def key_env(key: str, base: Mapping[str, str], agent: str = "claude-code") -> dict[str, str]:
+    """process env for one harbor job: exactly one gemini key, or only the login vars of that cli agent."""
+    env = {k: v for k, v in base.items() if k not in GEMINI_KEY_VARS and k not in LOGIN_VARS}
     if key == "subscription":
-        env.update({k: base[k] for k in CLAUDE_TOKEN_VARS if base.get(k)})
+        env.update({k: base[k] for k in LOGIN_AGENT_VARS.get(agent, ()) if base.get(k)})
     if key == "free":
         if not base.get("GEMINI_API_KEY"):
             raise RuntimeError("free gemini key (GEMINI_API_KEY) is not set")
@@ -203,7 +211,7 @@ def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
         if not base.get("GEMINI_API_KEY2"):
             raise RuntimeError("paid gemini key (GEMINI_API_KEY2) is not set")
         env["GEMINI_API_KEY"] = base["GEMINI_API_KEY2"]
-    elif base.get("CLAUDE_CODE_OAUTH_TOKEN"):
+    elif agent == "claude-code" and base.get("CLAUDE_CODE_OAUTH_TOKEN"):
         # harbor's claude-code agent only uses the subscription token when forced (p1 spike)
         env["CLAUDE_FORCE_OAUTH"] = "1"
     return env
@@ -489,7 +497,7 @@ def run_eval(
                     jobs_dir=jobs_dir,
                     task_names=tuple(t.name for t in batch),
                     extra_args=("-k", "1", "-n", str(concurrency), *limits.agent_args(agent)),
-                    env=key_env(key, base_env),
+                    env=key_env(key, base_env, agent),
                 )
                 try:
                     job_dir = runner(req)

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 from typing import Any, Protocol
 
 
@@ -96,7 +98,21 @@ class GeminiJsonBackend:
             return self._once(retry, schema, max_output_tokens, tag)
 
 
-def get_backend(name: str, model: str | None = None) -> Backend:
+BACKENDS = ("claude-code", "codex", "opencode", "gemini-cli", "command", "gemini", "auto")
+# auto takes the first of these clis found on PATH; logins are not probed (codex reports a revoked one as fine)
+AUTO_ORDER = (("claude", "claude-code"), ("codex", "codex"), ("opencode", "opencode"), ("gemini", "gemini-cli"))
+
+
+def pick_auto() -> str:
+    for binary, name in AUTO_ORDER:
+        if shutil.which(binary):
+            return name
+    raise ValueError("--backend auto found none of claude, codex, opencode, gemini on PATH")
+
+
+def get_backend(name: str, model: str | None = None, command: str | None = None) -> Backend:
+    if name == "auto":
+        name = pick_auto()
     if name == "claude-code":
         from incidentforge.backends.claude_code import ClaudeCodeBackend
 
@@ -105,4 +121,18 @@ def get_backend(name: str, model: str | None = None) -> Backend:
         from incidentforge.backends.gemini import GeminiBackend
 
         return GeminiJsonBackend(GeminiBackend.from_env(), model or DEFAULT_GEMINI_MODEL)
-    raise ValueError(f"unknown backend {name!r}; use claude-code or gemini")
+    from incidentforge.backends import cli
+
+    if name == "command":
+        template = command or os.environ.get("FORGE_GEN_COMMAND", "")
+        if not template.strip():
+            raise ValueError("--backend command needs --backend-command or FORGE_GEN_COMMAND")
+        return cli.CommandBackend(model=model, template=template)
+    clis: dict[str, type[cli.CliBackend]] = {
+        "codex": cli.CodexBackend,
+        "opencode": cli.OpenCodeBackend,
+        "gemini-cli": cli.GeminiCliBackend,
+    }
+    if name in clis:
+        return clis[name](model=model)
+    raise ValueError(f"unknown backend {name!r}; use one of {', '.join(BACKENDS)}")

@@ -8,9 +8,12 @@ import pytest
 from incidentforge import evaluate
 from incidentforge.budget import Ledger
 from incidentforge.evaluate import (
+    GEMINI_KEY_VARS,
+    LOGIN_VARS,
     Limits,
     ResultsStore,
     RunRequest,
+    agent_model,
     discover_tasks,
     key_env,
     pick_subset,
@@ -395,3 +398,35 @@ def test_subscription_limits_are_retried_not_scored(tmp_path: Path) -> None:
         (trial / "result.json").write_text(json.dumps(result))
         [tr] = read_trials(tmp_path / exc)
         assert tr.reward is None
+
+
+@pytest.mark.parametrize(
+    ("agent", "visible"),
+    [
+        ("codex", {"OPENAI_API_KEY", "CODEX_API_KEY"}),
+        ("cursor-cli", {"CURSOR_API_KEY"}),
+        ("gemini-cli", set()),
+        ("opencode", {"OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"}),
+    ],
+)
+def test_login_agents_see_only_their_own_credentials(agent: str, visible: set[str]) -> None:
+    creds = {v: "x" for v in LOGIN_VARS}
+    base = {**ENV, **creds, "PATH": "/bin"}
+    env = key_env(route("whatever", agent), base, agent)
+    assert route("whatever", agent) == "subscription"
+    assert {k for k in env if k in creds} == visible
+    assert not set(env) & set(GEMINI_KEY_VARS)
+    assert "CLAUDE_FORCE_OAUTH" not in env
+    assert env["PATH"] == "/bin"
+
+
+def test_login_agents_take_no_turn_cap_and_run_unpinned_by_default() -> None:
+    for agent in ("codex", "gemini-cli", "opencode", "cursor-cli"):
+        assert Limits().agent_args(agent) == []
+        assert agent_model(agent, agent) is None
+    assert agent_model("codex", "openai/gpt-5.5") == "openai/gpt-5.5"
+
+
+def test_claude_code_still_forces_oauth_and_drops_other_cli_keys() -> None:
+    env = key_env("subscription", {"CLAUDE_CODE_OAUTH_TOKEN": "t", "OPENAI_API_KEY": "o"}, "claude-code")
+    assert env == {"CLAUDE_CODE_OAUTH_TOKEN": "t", "CLAUDE_FORCE_OAUTH": "1"}
