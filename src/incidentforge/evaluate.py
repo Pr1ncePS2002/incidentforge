@@ -139,6 +139,12 @@ def harbor_model(model: str) -> str:
     return model.removesuffix(PAID_SUFFIX)
 
 
+def select_tasks(tasks: list[TaskInfo], only: Iterable[str]) -> list[str]:
+    """task ids equal to an entry or under it as a dataset prefix (`click` or `click/`)."""
+    keys = [o.strip("/") for o in only if o.strip("/")]
+    return sorted(t.task_id for t in tasks if any(t.task_id == k or t.task_id.startswith(k + "/") for k in keys))
+
+
 DEFAULT_SUBSET = Path("reports/eval/subset.json")
 
 

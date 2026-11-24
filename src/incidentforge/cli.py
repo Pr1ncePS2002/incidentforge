@@ -126,15 +126,24 @@ def eval_(
     agent: str = typer.Option("terminus-2", help="harbor agent"),
     k: int = typer.Option(1, help="attempts per task"),
     subset: int = typer.Option(None, help="only a fixed seeded subset of this many tasks (>=1 per family)"),
+    only: list[str] = typer.Option(
+        None, help="task ids or dataset prefixes to run, e.g. click/ (ids stay relative to --tasks)"
+    ),
 ) -> None:
     """evaluate models on the dataset with the paid-key cap enforced. owner: phase 4."""
     from pathlib import Path
 
     from incidentforge.backends.gemini import load_env
-    from incidentforge.evaluate import frozen_subset, run_eval
+    from incidentforge.evaluate import discover_tasks, frozen_subset, run_eval, select_tasks
 
     root = Path(tasks)
+    if subset and only:
+        raise typer.BadParameter("--subset and --only don't combine")
     picked = frozen_subset(root, subset) if subset else None
+    if only:
+        picked = select_tasks(discover_tasks(root), only)
+        if not picked:
+            raise typer.BadParameter(f"no task under {root} matches {only}")
     models = model or ["gemini/gemini-3.8-flash"]
     # keys come from .env unless already exported; harbor only ever sees the routed one
     env = {**load_env(".env"), **os.environ}
