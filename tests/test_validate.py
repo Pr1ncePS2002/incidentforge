@@ -280,56 +280,106 @@ def _real_task(tmp_path: Path) -> tuple[Path, Target]:
         title="t",
         instruction="make the port strict",
         solution_patch=_patch(),
-        feature_tests={"test_forge.py": "def test_defaults():\n    pass\n\ndef test_fault_port():\n    pass\n"},
+        feature_tests={
+            "test_forge.py": "".join(f"def test_{n}():\n    pass\n\n" for n in ("defaults", "other", "fault_port"))
+        },
     )
     return write_task(spec, tmp_path / "tasks", regression_tests=["tests/test_a.py::test_a"]), target
 
 
 class SplitRunner(FakeRunner):
-    """first nop run: the happy test passes on base; after the split nop scores 0."""
+    """first nop run uses `first`; the nop run after a split uses `after_split`."""
 
-    def __init__(self, trial_dir: Path, after_split: dict[str, int]):
-        super().__init__(nop={"reward": 0.5, "feature_tests": 0.5, "repo_suite": 1})
+    def __init__(self, trial_dir: Path, after_split: dict[str, int], first: dict[str, float] | None = None):
+        super().__init__(nop=first or {"reward": 0.5, "feature_tests": 0.5, "repo_suite": 1})
         self.trial_dir, self.after_split = trial_dir, after_split
+        self.paths: list[Path] = []
 
     def __call__(self, task_path, agent, job_name, extra_args):
         if agent == "nop":
             self.calls.append((agent, job_name, extra_args))
+            self.paths.append(task_path)
             rewards = self.after_split if "-nop-split-" in job_name else self.nop
             return [Trial("x", "x__1", self.trial_dir, {k: float(x) for k, x in rewards.items()})]
         return super().__call__(task_path, agent, job_name, extra_args)
 
 
-def _ctrf(trial_dir: Path, passed: list[str]) -> None:
+def _ctrf(trial_dir: Path, passed: list[str], body: dict | None = None) -> None:
     (trial_dir / "verifier").mkdir(parents=True)
     tests = [{"name": "feature_tests", "status": "failed"}, {"name": "repo_suite", "status": "passed"}]
     tests += [{"name": n, "status": "passed"} for n in passed]
-    (trial_dir / "verifier" / "ctrf.json").write_text(json.dumps({"results": {"tests": tests}}))
+    tests.append({"name": "tests/test_forge.py::test_fault_port", "status": "failed"})
+    (trial_dir / "verifier" / "ctrf.json").write_text(
+        json.dumps(body if body is not None else {"results": {"tests": tests}})
+    )
+
+
+DEFAULTS, OTHER, FAULT = (f"tests/test_forge.py::{n}" for n in ("test_defaults", "test_other", "test_fault_port"))
+
+
+def _demo_target(target):
+    def load(name):
+        assert name == "demo"
+        return target
+
+    return load
 
 
 def test_fail_on_base_moves_base_passing_tests_to_pass_to_pass(tmp_path, monkeypatch):
     task, target = _real_task(tmp_path)
-    monkeypatch.setattr(v, "load_target", lambda name: target)
-    _ctrf(tmp_path / "trial", ["tests/test_forge.py::test_defaults", "not/a/feature::test"])
+    monkeypatch.setattr(v, "load_target", _demo_target(target))
+    _ctrf(tmp_path / "trial", [DEFAULTS, OTHER, "not/a/feature::test"])
     runner = SplitRunner(tmp_path / "trial", {"reward": 0, "feature_tests": 0, "repo_suite": 1})
     r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
     assert r.accepted, r.gates
-    assert "moved to pass_to_pass: tests/test_forge.py::test_defaults" in r.gates[0].detail
-    assert json.loads((task / "tests" / "fail_to_pass.json").read_text()) == ["tests/test_forge.py::test_fault_port"]
+    assert r.gates[0].detail.endswith(f"2 feature test(s) passed on base, moved to pass_to_pass: {DEFAULTS}, {OTHER}")
+    assert json.loads((task / "tests" / "fail_to_pass.json").read_text()) == [FAULT]
     assert json.loads((task / "tests" / "pass_to_pass.json").read_text()) == [
         "tests/test_a.py::test_a",
-        "tests/test_forge.py::test_defaults",
+        DEFAULTS,
+        OTHER,
     ]
-    assert "GUARDS=(tests/test_forge.py::test_defaults)" in (task / "tests" / "test.sh").read_text()
+    assert f"GUARDS=({DEFAULTS} {OTHER})" in (task / "tests" / "test.sh").read_text()
+    # the second nop run is on the rewritten task with no extra args
+    assert runner.paths == [task.resolve(), task.resolve()] and runner.calls[-1][2] == []
 
 
 def test_fail_on_base_split_still_needs_a_zero_nop(tmp_path, monkeypatch):
     task, target = _real_task(tmp_path)
-    monkeypatch.setattr(v, "load_target", lambda name: target)
-    _ctrf(tmp_path / "trial", ["tests/test_forge.py::test_defaults"])
+    monkeypatch.setattr(v, "load_target", _demo_target(target))
+    _ctrf(tmp_path / "trial", [DEFAULTS])
     runner = SplitRunner(tmp_path / "trial", {"reward": 0.5, "feature_tests": 0.5, "repo_suite": 1})
     r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
     assert not r.accepted and "moved to pass_to_pass" in r.gates[0].detail
+
+
+@pytest.mark.parametrize(
+    ("first", "passed"),
+    [
+        # a broken repo suite on base is a bad env; nothing is split
+        ({"reward": 0, "feature_tests": 0.5, "repo_suite": 0}, [DEFAULTS]),
+        # every feature test passing on base means the feature is not missing
+        ({"reward": 1, "feature_tests": 1, "repo_suite": 1}, [DEFAULTS, OTHER, FAULT]),
+        # no reward key: still no split when nothing passed
+        ({"feature_tests": 0, "repo_suite": 1}, []),
+    ],
+)
+def test_fail_on_base_rejects_without_split(tmp_path, monkeypatch, first, passed):
+    task, target = _real_task(tmp_path)
+    monkeypatch.setattr(v, "load_target", _demo_target(target))
+    trial = tmp_path / "trial"
+    _ctrf(trial, passed)
+    if FAULT in passed:
+        body = json.loads((trial / "verifier" / "ctrf.json").read_text())
+        body["results"]["tests"] = [
+            t for t in body["results"]["tests"] if t["name"] != FAULT or t["status"] == "passed"
+        ]
+        (trial / "verifier" / "ctrf.json").write_text(json.dumps(body))
+    before = (task / "tests" / "fail_to_pass.json").read_text()
+    runner = SplitRunner(trial, {"reward": 0, "feature_tests": 0, "repo_suite": 1}, first)
+    r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
+    assert not r.accepted and r.gates[0].detail.startswith("reward=") and "moved" not in r.gates[0].detail
+    assert len(runner.calls) == 1 and (task / "tests" / "fail_to_pass.json").read_text() == before
 
 
 def test_fail_on_base_without_per_test_detail_rejects(tmp_path):
@@ -337,4 +387,19 @@ def test_fail_on_base_without_per_test_detail_rejects(tmp_path):
     runner = SplitRunner(tmp_path / "no-trial", {"reward": 0, "feature_tests": 0, "repo_suite": 1})
     r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
     assert not r.accepted and "moved" not in r.gates[0].detail
-    assert [c[1].split("-")[-3] for c in runner.calls] == ["nop"]
+    assert len(runner.calls) == 1
+
+
+@pytest.mark.parametrize("body", [{}, {"results": {}}, {"results": None}, {"results": {"tests": None}}])
+def test_passed_on_base_tolerates_sparse_ctrf(tmp_path, body):
+    task, _ = _real_task(tmp_path)
+    _ctrf(tmp_path / "trial", [], body)
+    assert v.passed_on_base(Trial("x", "x__1", tmp_path / "trial"), task) == []
+
+
+def test_passed_on_base_needs_the_fail_to_pass_list(tmp_path):
+    task, _ = _real_task(tmp_path)
+    _ctrf(tmp_path / "trial", [DEFAULTS])
+    assert v.passed_on_base(Trial("x", "x__1", tmp_path / "trial"), task) == [DEFAULTS]
+    (task / "tests" / "fail_to_pass.json").unlink()
+    assert v.passed_on_base(Trial("x", "x__1", tmp_path / "trial"), task) == []

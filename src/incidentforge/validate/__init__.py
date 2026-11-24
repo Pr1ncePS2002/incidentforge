@@ -80,23 +80,27 @@ def _nop_ok(r: dict[str, float]) -> tuple[bool, str]:
 def passed_on_base(trial: Trial, task_dir: Path) -> list[str]:
     """fail_to_pass ids the nop trial's ctrf reports as passed."""
     ctrf = trial.path / "verifier" / "ctrf.json"
-    f2p_file = task_dir / "tests" / F2P_FILE
-    if not ctrf.exists() or not f2p_file.exists():
+    if not ctrf.exists():
         return []
-    f2p = set(json.loads(f2p_file.read_text()))
-    tests = json.loads(ctrf.read_text()).get("results", {}).get("tests", [])
+    f2p = set(read_f2p(task_dir))
+    tests = (json.loads(ctrf.read_text()).get("results") or {}).get("tests") or []
     return [t["name"] for t in tests if t.get("name") in f2p and t.get("status") == "passed"]
+
+
+def read_f2p(task_dir: Path) -> list[str]:
+    f2p_file = task_dir / "tests" / F2P_FILE
+    return list(json.loads(f2p_file.read_text())) if f2p_file.exists() else []
 
 
 def gate_fail_on_base(ctx: _Ctx) -> tuple[bool, str]:
     t = _one(ctx.run(ctx.task_dir, "nop", ctx.job("nop"), []))
     ok, detail = _nop_ok(t.rewards)
-    r = t.rewards
-    if ok or r.get("repo_suite") != 1 or not 0 < float(r.get("feature_tests", 0)) < 1:
+    if ok or t.rewards.get("repo_suite") != 1:
         return ok, detail
     # tests that pass before and after the change are regression guards, not fail_to_pass (swe-bench rule)
     moved = passed_on_base(t, ctx.task_dir)
-    if not moved:
+    # nothing to split, or every feature test already passes: the feature is not missing
+    if not moved or len(moved) == len(read_f2p(ctx.task_dir)):
         return ok, detail
     current = spec_from_task_dir(ctx.task_dir, load_target(task_target(ctx.task_dir)))
     rerender_task(ctx.task_dir, current.spec.target, guards=[*current.guards, *moved])
