@@ -38,7 +38,15 @@ def test_go_contract_example_path_survives_packaging() -> None:
 
 
 def _packaged(name: str) -> str:
-    target = Target(name="t", repo_url="u", commit="c", language=Language.go, env_template=Path("."), test_command="x")
+    target = Target(
+        name="t",
+        repo_url="u",
+        commit="0123456789abcdef0123456789abcdef01234567",
+        licence="MIT",
+        language=Language.go,
+        env_template=Path("."),
+        test_command="x",
+    )
     spec = TaskSpec(
         task_id="t/x",
         family="f",

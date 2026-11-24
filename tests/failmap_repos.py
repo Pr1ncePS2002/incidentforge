@@ -184,7 +184,8 @@ def target(name: str, language: Language, env: Path | None = None) -> Target:
     return Target(
         name=name,
         repo_url="https://example.invalid/x.git",
-        commit="0123456789abcdef0123",
+        commit="0123456789abcdef0123456789abcdef01234567",
+        licence="MIT",
         language=language,
         env_template=env or Path("."),
         test_command="run_tests -q tests/" if language is Language.python else "run_tests ./...",

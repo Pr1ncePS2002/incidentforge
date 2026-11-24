@@ -30,7 +30,15 @@ def test_packaged_task_is_pinned_on_the_map(tmp_path: Path) -> None:
     env.mkdir()
     (env / "Dockerfile").write_text("FROM x\nARG REPO_URL=a\nARG REPO_COMMIT=b\n")
     (env / "run_tests.sh").write_text("#!/bin/bash\n")
-    target = Target(name="demo", repo_url="u", commit="c", language=Language.python, env_template=env, test_command="t")
+    target = Target(
+        name="demo",
+        repo_url="u",
+        commit="0123456789abcdef0123456789abcdef01234567",
+        licence="MIT",
+        language=Language.python,
+        env_template=env,
+        test_command="t",
+    )
     surface = Surface(file="a.py", symbol="S", kind="settings-class", node_id="a.py::S", blast_radius=2)
     spec = TaskSpec(
         task_id="demo/ff-001-x",

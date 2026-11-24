@@ -31,6 +31,8 @@ def make_task(root: Path, target: str, name: str, family: str) -> None:
     )
     (d / "instruction.md").write_text(f"do {name}")
     (d / "tests" / "test.sh").write_text("#!/bin/sh\n")
+    (d / "tests" / "fail_to_pass.json").write_text("[]\n")
+    (d / "tests" / "pass_to_pass.json").write_text("[]\n")
     (d / "tests" / f"test_{name.replace('-', '_')}.py").write_text("")
 
 

@@ -94,6 +94,31 @@ def validate(task_dirs: list[str] = typer.Argument(..., help="task dirs or a tas
         raise typer.Exit(1)
 
 
+@app.command()
+def rerender(
+    task_dirs: list[str] = typer.Argument(..., help="task dirs or a tasks root"),
+    nop_job: list[str] = typer.Option(
+        [], help="harbor nop job dir(s); feature tests that passed there move from fail_to_pass to pass_to_pass"
+    ),
+) -> None:
+    """rewrite committed tasks in the current package format (test.sh, test id lists, task.toml); content stays."""
+    from pathlib import Path
+
+    from incidentforge.harbor import read_trials
+    from incidentforge.package import rerender_task, spec_from_task_dir
+    from incidentforge.targets import load_target
+    from incidentforge.validate import find_task_dirs, passed_on_base, task_target
+
+    trials = {t.task_name: t for job in nop_job for t in read_trials(Path(job)) if not t.error}
+    for d in find_task_dirs([Path(p) for p in task_dirs]):
+        target = load_target(task_target(d))
+        trial = trials.get(d.name)
+        moved = passed_on_base(trial, d) if trial else []
+        guards = [*spec_from_task_dir(d, target).guards, *moved]
+        rerender_task(d, target, guards=guards)
+        typer.echo(f"rewrote {d}" + (f" ({len(moved)} base-passing test(s) moved to pass_to_pass)" if moved else ""))
+
+
 @app.command(name="eval")
 def eval_(
     tasks: str = typer.Option("tasks", help="tasks root"),
@@ -192,6 +217,7 @@ def map_build(
     commit: str = typer.Option(None, help="unseen repo: commit to pin"),
     language: str = typer.Option(None, help="unseen repo: python | go"),
     source_root: str = typer.Option(".", help="unseen repo: package dir inside the repo"),
+    licence: str = typer.Option("unknown", help="unseen repo: spdx licence id"),
     coverage: bool = typer.Option(False, help="run the suite once with coverage in the target image if not cached"),
     image: str = typer.Option(None, help="docker image for the coverage run"),
     work: str = typer.Option("work", help="work root; outputs go to <work>/<target>/"),
@@ -212,6 +238,7 @@ def map_build(
             name=target,
             repo_url=repo_url,
             commit=commit,
+            licence=licence,
             language=Language(language),
             env_template=Path("."),
             test_command="",

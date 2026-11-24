@@ -1,5 +1,5 @@
 """thin wrapper over the harbor cli. owner: phase 1 (used by validate and evaluate).
-harbor 0.26 trial dirs: <job>/<task>__<id>/{result.json, verifier/{ctrf.json,reward.json,*.log}}."""
+harbor 0.25 trial dirs: <job>/<task>__<id>/{result.json, verifier/{ctrf.json,reward.json,*.log}}."""
 
 from __future__ import annotations
 

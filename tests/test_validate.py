@@ -243,9 +243,98 @@ def test_repo_checkout_and_base_files(tmp_path, monkeypatch):
     sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=src, capture_output=True, text=True).stdout.strip()
     monkeypatch.setenv("FORGE_REPO_CACHE", str(tmp_path / "cache"))
     target = Target(
-        name="demo", repo_url=str(src), commit=sha, language=Language.python, env_template=tmp_path, test_command="t"
+        name="demo",
+        repo_url=str(src),
+        commit=sha,
+        licence="MIT",
+        language=Language.python,
+        env_template=tmp_path,
+        test_command="t",
     )
     files = mutation.parse_patch(_patch() + _patch(path="pkg/new.py", before=""))
     base = mutation.base_files(target, files)
     assert base == {"pkg/cfg.py": BASE_SRC, "pkg/new.py": ""}
     assert mutation.base_files(target, files[:1]) == {"pkg/cfg.py": BASE_SRC}  # cached clone reused
+
+
+def _real_task(tmp_path: Path) -> tuple[Path, Target]:
+    from incidentforge.models import TaskSpec
+    from incidentforge.package import write_task
+
+    env = tmp_path / "env"
+    env.mkdir()
+    (env / "Dockerfile").write_text("FROM x\n")
+    target = Target(
+        name="demo",
+        repo_url="u",
+        commit="0123456789abcdef0123456789abcdef01234567",
+        licence="MIT",
+        language=Language.python,
+        env_template=env,
+        test_command="run_tests -q tests/",
+    )
+    spec = TaskSpec(
+        task_id="demo/ff-001-x",
+        family="fail-fast-config",
+        target=target,
+        title="t",
+        instruction="make the port strict",
+        solution_patch=_patch(),
+        feature_tests={"test_forge.py": "def test_defaults():\n    pass\n\ndef test_fault_port():\n    pass\n"},
+    )
+    return write_task(spec, tmp_path / "tasks", regression_tests=["tests/test_a.py::test_a"]), target
+
+
+class SplitRunner(FakeRunner):
+    """first nop run: the happy test passes on base; after the split nop scores 0."""
+
+    def __init__(self, trial_dir: Path, after_split: dict[str, int]):
+        super().__init__(nop={"reward": 0.5, "feature_tests": 0.5, "repo_suite": 1})
+        self.trial_dir, self.after_split = trial_dir, after_split
+
+    def __call__(self, task_path, agent, job_name, extra_args):
+        if agent == "nop":
+            self.calls.append((agent, job_name, extra_args))
+            rewards = self.after_split if "-nop-split-" in job_name else self.nop
+            return [Trial("x", "x__1", self.trial_dir, {k: float(x) for k, x in rewards.items()})]
+        return super().__call__(task_path, agent, job_name, extra_args)
+
+
+def _ctrf(trial_dir: Path, passed: list[str]) -> None:
+    (trial_dir / "verifier").mkdir(parents=True)
+    tests = [{"name": "feature_tests", "status": "failed"}, {"name": "repo_suite", "status": "passed"}]
+    tests += [{"name": n, "status": "passed"} for n in passed]
+    (trial_dir / "verifier" / "ctrf.json").write_text(json.dumps({"results": {"tests": tests}}))
+
+
+def test_fail_on_base_moves_base_passing_tests_to_pass_to_pass(tmp_path, monkeypatch):
+    task, target = _real_task(tmp_path)
+    monkeypatch.setattr(v, "load_target", lambda name: target)
+    _ctrf(tmp_path / "trial", ["tests/test_forge.py::test_defaults", "not/a/feature::test"])
+    runner = SplitRunner(tmp_path / "trial", {"reward": 0, "feature_tests": 0, "repo_suite": 1})
+    r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
+    assert r.accepted, r.gates
+    assert "moved to pass_to_pass: tests/test_forge.py::test_defaults" in r.gates[0].detail
+    assert json.loads((task / "tests" / "fail_to_pass.json").read_text()) == ["tests/test_forge.py::test_fault_port"]
+    assert json.loads((task / "tests" / "pass_to_pass.json").read_text()) == [
+        "tests/test_a.py::test_a",
+        "tests/test_forge.py::test_defaults",
+    ]
+    assert "GUARDS=(tests/test_forge.py::test_defaults)" in (task / "tests" / "test.sh").read_text()
+
+
+def test_fail_on_base_split_still_needs_a_zero_nop(tmp_path, monkeypatch):
+    task, target = _real_task(tmp_path)
+    monkeypatch.setattr(v, "load_target", lambda name: target)
+    _ctrf(tmp_path / "trial", ["tests/test_forge.py::test_defaults"])
+    runner = SplitRunner(tmp_path / "trial", {"reward": 0.5, "feature_tests": 0.5, "repo_suite": 1})
+    r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
+    assert not r.accepted and "moved to pass_to_pass" in r.gates[0].detail
+
+
+def test_fail_on_base_without_per_test_detail_rejects(tmp_path):
+    task, _ = _real_task(tmp_path)
+    runner = SplitRunner(tmp_path / "no-trial", {"reward": 0, "feature_tests": 0, "repo_suite": 1})
+    r = _validate(task, tmp_path, runner, gates=("fail_on_base",))
+    assert not r.accepted and "moved" not in r.gates[0].detail
+    assert [c[1].split("-")[-3] for c in runner.calls] == ["nop"]

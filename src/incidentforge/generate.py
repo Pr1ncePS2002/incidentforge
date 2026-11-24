@@ -228,6 +228,8 @@ class Generator:
             surface=pair.surface,
             solution_patch=patch,
             origin="llm",
+            generator_backend=self.backend.name,
+            generator_model=getattr(self.backend, "model", None) or "default",
             **fields,
         )
 
