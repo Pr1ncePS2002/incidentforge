@@ -6,18 +6,6 @@
   },
   "tasks": [
     {
-      "id": "cf-001-init",
-      "nop": {
-        "reward": 0.0,
-        "duration_sec": 14
-      },
-      "oracle": {
-        "reward": 1.0,
-        "duration_sec": 20
-      },
-      "ok": true
-    },
-    {
       "id": "cf-002-validate",
       "nop": {
         "reward": 0.0,
@@ -50,18 +38,6 @@
       "oracle": {
         "reward": 1.0,
         "duration_sec": 13
-      },
-      "ok": true
-    },
-    {
-      "id": "en-002-resolve-envvar-value",
-      "nop": {
-        "reward": 0.0,
-        "duration_sec": 14
-      },
-      "oracle": {
-        "reward": 1.0,
-        "duration_sec": 14
       },
       "ok": true
     },
