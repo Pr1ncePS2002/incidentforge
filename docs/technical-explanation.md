@@ -242,7 +242,8 @@ why. Tasks dropped by the gates are not listed; only human decisions are.
 | fastapi-template/rd-004-email-reset-token | family set with `--family resource-aware-defaults` | the classifier answered fail-fast-config; recorded as above |
 | fastapi-template/ff-005-create-engine-7 | `classifier_family` line added after generation | generated before the classifier's answer was written automatically |
 | `gemini/gemini-4-hydrogen` (evaluation) | excluded from scoring | harness incompatibility, see Model choices |
-| click (all tasks) | none: no click task was hand-edited | 4 candidates were dropped: 2 near-duplicates at generation (ff-002, cf-004) and 2 after independent review (cf-001: one rule already enforced on base so its tests only checked wording; en-002: reference applied the new env-var naming to value lookup but not to the `--help` display) |
+| click/cf-003-convert, click/tt-001-convert | failure-map pin (`map_node`) set by hand after `forge map backfill` | the backfill ranks a node whose name matches the task slug (`convert`) above the node the patch touches, so both landed on `BoolParamType.convert`. cf-003 now points at the range constructor it changes; tt-001 adds a new type, so it points at `FuncParamType.convert`, the existing type its patch is inserted next to. Metadata only; reward is unaffected |
+| click (all tasks) | none: no task content was hand-edited | 4 candidates were dropped: 2 near-duplicates at generation (ff-002, cf-004) and 2 after independent review (cf-001: one rule already enforced on base so its tests only checked wording; en-002: reference applied the new env-var naming to value lookup but not to the `--help` display) |
 
 Dropped tasks are not committed; ids are not reused, which is why some ids are missing from the sequence.
 

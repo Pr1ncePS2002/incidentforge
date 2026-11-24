@@ -10,6 +10,9 @@ base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
 repo_url = "https://github.com/pallets/click.git"
 licence = "BSD-3-Clause"
 fault_cases = ["bool-words: --debug '\"true\"', \"'YES'\", '\" 1 \"' and APP_DEBUG='\"off\"' give the same value as true/yes/1/off, and a quoted empty value gives False", "garbage: --debug '\"maybe\"', doubly quoted '\"\"yes\"\"', mismatched '\"true\\'' and a lone quote are rejected with exit code 2, and the message names --debug and the bad value"]
+map_node = "src/click/types.py::BoolParamType.convert"
+blast_radius = 1
+fix_scope = "1 file"
 generator_backend = "claude-code"
 
 [verifier]
