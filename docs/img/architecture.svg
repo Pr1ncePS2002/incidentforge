@@ -51,7 +51,7 @@
 <rect x="453.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
 <text x="528.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">evaluate.py</text>
 <text x="528.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">models x tasks,</text>
-<text x="528.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">cap check per batch</text>
+<text x="528.0" y="379.0" text-anchor="middle" font-size="12" fill="#52606d">harbor trials per task</text>
 <rect x="625.0" y="310" width="150" height="80" rx="10" fill="#e8f1fb" stroke="#1565c0" stroke-width="2"/>
 <text x="700.0" y="344.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2933">report.py</text>
 <text x="700.0" y="364.0" text-anchor="middle" font-size="12" fill="#52606d">static html +</text>
