@@ -64,3 +64,40 @@ def test_repo_readme_has_markers() -> None:
     mod = _mod()
     text = (REPO / "README.md").read_text()
     assert mod.START in text and mod.END in text
+
+
+def test_primary_target_leads_the_block() -> None:
+    click = {
+        "tasks_total": 10,
+        "tasks_by_family": {"a": 4, "b": 6},
+        "validation": {
+            "candidates": 18,
+            "passed_gates": 14,
+            "accepted": 10,
+            "dropped": [{"task": "x"}],
+            "mutants_total": 50,
+            "mutants_killed": 45,
+        },
+        "harbor_matrix": {
+            "harbor_version": "0.25.0",
+            "nop": {"ok": 10, "total": 10},
+            "oracle": {"ok": 10, "total": 10},
+        },
+        "models": [
+            {"model": "m-low", "agent": "terminus-2", "k": 1, "pass_rate": 0.2, "mean_reward": 0.45, "n": 10},
+            {"model": "m-high", "agent": "claude-code", "k": 1, "pass_rate": 0.9, "mean_reward": 0.95, "n": 10},
+        ],
+        "failure_causes": {
+            "by_model": {"m-low": {"turn_budget": 3, "regression": 0, "fault_path_missed": 4, "wrong_code": 1}}
+        },
+        "findings": ["click finding."],
+    }
+    text = _mod().render(SUMMARY | {"by_target": {"primary": "click", "extra": [], "click": click}})
+    assert "| Tasks in the dataset | 10 across 2 families |" in text
+    assert "| Passing every gate | 14 of 18 |" in text and "| Kept in the dataset | 10 (1 dropped on review) |" in text
+    assert "| No-op agent scores 0.0 | 10 of 10 (Harbor 0.25.0) |" in text
+    assert "| m-high | claude-code | 10 (k=1) | 90% | 0.95 |" in text
+    assert text.index("m-high") < text.index("| m-low |")
+    assert "| m-low | 3 | 0 | 4 | 1 |" in text and "- click finding." in text
+    # the all-target numbers stay out of the click block
+    assert "40 across" not in text and "models miss" not in text
