@@ -1,0 +1,19 @@
+[
+  "tests/test_forge_user_record.py::test_error_type_is_value_error",
+  "tests/test_forge_user_record.py::test_roundtrip_without_change_is_identical",
+  "tests/test_forge_user_record.py::test_saving_unchanged_record_does_not_rewrite",
+  "tests/test_forge_user_record.py::test_save_creates_new_file",
+  "tests/test_forge_user_record.py::test_changing_one_field_changes_only_that_field",
+  "tests/test_forge_user_record.py::test_email_is_stored_verbatim",
+  "tests/test_forge_user_record.py::test_invalid_files_are_rejected",
+  "tests/test_forge_user_record.py::test_fault_dropped_field_unknown_keys_survive_update",
+  "tests/test_forge_user_record.py::test_fault_dropped_field_unset_fields_stay_unset",
+  "tests/test_forge_user_record.py::test_fault_default_overwrite_explicit_defaults_kept",
+  "tests/test_forge_user_record.py::test_fault_default_overwrite_explicit_empty_kept",
+  "tests/test_forge_user_record.py::test_fault_type_drift_values_keep_types",
+  "tests/test_forge_user_record.py::test_fault_type_drift_coerced_user_fields_rejected",
+  "tests/test_forge_user_record.py::test_fault_type_drift_non_json_values_rejected",
+  "tests/test_forge_user_record.py::test_fault_partial_write_replace_fails_keeps_previous",
+  "tests/test_forge_user_record.py::test_fault_partial_write_fsync_fails_keeps_previous",
+  "tests/test_forge_user_record.py::test_fault_partial_write_invalid_record_never_touches_file"
+]

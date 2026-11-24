@@ -1,0 +1,17 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 14, "passed": 14, "failed": 0, "pending": 0, "skipped": 0, "other": 0, "start": 1795522585000, "stop": 1795522585000},
+  "tests": [
+    {"name": "feature_tests", "status": "passed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_argument", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_bool_words_type_converts_directly", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_garbage_quoted_word_names_option_and_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_garbage_from_envvar_names_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_fault_garbage_direct_convert_raises", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_unquoted_values_still_parse", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_unquoted_garbage_still_rejected", "status": "passed", "duration": 0},
+    {"name": "tests/test_bool_quoted_values.py::test_native_bool_passthrough", "status": "passed", "duration": 0}]}}

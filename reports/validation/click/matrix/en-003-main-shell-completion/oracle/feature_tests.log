@@ -1,0 +1,20 @@
+................                                                         [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_complete_var_name.py::test_plain_names_stay_stable
+PASSED tests/test_complete_var_name.py::test_group_inherits_helper
+PASSED tests/test_complete_var_name.py::test_plain_invocation_without_completion_runs
+PASSED tests/test_complete_var_name.py::test_dashed_name_completion_still_triggers
+PASSED tests/test_complete_var_name.py::test_valid_explicit_complete_var_is_used
+PASSED tests/test_complete_var_name.py::test_fault_separator_injection_space_in_prog_name
+PASSED tests/test_complete_var_name.py::test_fault_separator_injection_helper_normalises
+PASSED tests/test_complete_var_name.py::test_fault_unscoped_key_distinct_programs
+PASSED tests/test_complete_var_name.py::test_fault_wrong_env_source_override_is_used
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name[]
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name[   ]
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name[---]
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[]
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[BAD VAR]
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[1ABC]
+PASSED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[A=B]
+16 passed in 0.02s

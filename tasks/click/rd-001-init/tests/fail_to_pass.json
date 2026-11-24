@@ -1,0 +1,12 @@
+[
+  "tests/test_formatter_width_limits.py::test_explicit_width_used_verbatim",
+  "tests/test_formatter_width_limits.py::test_fault_hardcoded_size_floor_follows_min_width",
+  "tests/test_formatter_width_limits.py::test_fault_hardcoded_size_floor_raised",
+  "tests/test_formatter_width_limits.py::test_fault_unset_limit_uses_default_max",
+  "tests/test_formatter_width_limits.py::test_fault_unset_limit_small_terminal",
+  "tests/test_formatter_width_limits.py::test_fault_zero_or_negative",
+  "tests/test_formatter_width_limits.py::test_fault_zero_or_negative_context_setting",
+  "tests/test_formatter_width_limits.py::test_fault_min_over_max_explicit",
+  "tests/test_formatter_width_limits.py::test_fault_min_over_max_default_max",
+  "tests/test_formatter_width_limits.py::test_min_equal_to_max_allowed"
+]

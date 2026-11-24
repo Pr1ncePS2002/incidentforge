@@ -1,0 +1,7 @@
+[
+  "tests/test_forge_required_settings.py::test_fault_empty_string",
+  "tests/test_forge_required_settings.py::test_fault_empty_whitespace_only",
+  "tests/test_forge_required_settings.py::test_fault_placeholder",
+  "tests/test_forge_required_settings.py::test_fault_several_bad_all_named",
+  "tests/test_forge_required_settings.py::test_fault_several_bad_two_of_three"
+]

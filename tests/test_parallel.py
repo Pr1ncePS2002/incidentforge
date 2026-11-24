@@ -60,6 +60,7 @@ def target(tmp_path: Path) -> Target:
         name="fixture",
         repo_url=str(repo),
         commit=_git(repo, "rev-parse", "HEAD").strip(),
+        licence="MIT",
         language=Language.python,
         env_template=env,
         test_command="run_tests -q tests/",
@@ -468,7 +469,7 @@ class AcceptAll:
 
 def cli_env(monkeypatch: pytest.MonkeyPatch, target: Target, backend: FileBackend) -> None:
     monkeypatch.setattr("incidentforge.targets.load_target", lambda _n: target)
-    monkeypatch.setattr("incidentforge.backends.base.get_backend", lambda _n: backend)
+    monkeypatch.setattr("incidentforge.backends.base.get_backend", lambda *_a: backend)
     monkeypatch.setattr("incidentforge.validate.validate_task", AcceptAll())
 
 

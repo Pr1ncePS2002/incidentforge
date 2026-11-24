@@ -8,7 +8,7 @@ IncidentForge is built in five phases. Each phase ends with a gate that must pas
 | 2. Factory core | pluggable generator backends (Claude Code headless, Gemini); Python code-surface finder; validation gates; families 1-4 | ≥12 accepted generated tasks, each with a validation log |
 | 3. Scale | families 5-8; frequency-weighted family sampling; Go target repo | ~40 accepted tasks across 8 families and 2 languages |
 | 4. Evaluation | `forge eval` over the dataset with one generic harness; `forge report` static HTML | report regenerates from a clean clone with one command |
-| 5. Packaging | README, architecture, deck, demo; dry run on an unseen repo | end-to-end run on a fresh repo succeeds |
+| 5. Packaging | README, architecture, technical explanation, demo; dry run on an unseen repo | end-to-end run on a fresh repo succeeds |
 
 ## Task families
 

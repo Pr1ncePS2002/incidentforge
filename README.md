@@ -2,34 +2,33 @@
 
 **A coding task factory whose tasks come from what actually breaks in production.**
 
-IncidentForge takes any repository pinned at a commit and turns it into feature-development tasks for
-evaluating AI coding systems. Each task asks the model to add the protection that would have prevented a
-recurring class of production outage, ships in [Harbor](https://github.com/harbor-framework/harbor) format,
-and is kept only after six automatic validation gates pass.
-
-A **Failure Map** of the repo (a code graph tagged by failure family, with blast radius and test coverage)
-decides where tasks go: untested risky code first, one parallel worker per independent cluster. Tasks can
-also start from a public postmortem, and every failed model run is explained by exactly one cause.
+IncidentForge reads a repository pinned at a commit and produces validated feature-development tasks in
+[Harbor](https://github.com/harbor-framework/harbor) format. Each task asks for the protection that would
+have prevented a recurring class of production outage, and is kept only after six automatic validation gates
+pass. The submission dataset is built on **[pallets/click](https://github.com/pallets/click) 8.5.1**
+(commit `cf19179e8e2fd54c601378cec9e0d21bb12b6fb1`).
 
 > Innodata AI Hackathon 2026 · Track 1 (Coding Task Factory) · Team CHAOS · MIT licence
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Pr1ncePS2002/incidentforge?quickstart=1)
 · **Live report:** [pr1nceps2002.github.io/incidentforge](https://pr1nceps2002.github.io/incidentforge/)
 · **Failure map:** [map.html](https://pr1nceps2002.github.io/incidentforge/map.html)
+· **Demo video:** <!-- demo: add video link --> TBD
+· **Technical explanation:** [docs/technical-explanation.md](docs/technical-explanation.md)
 
 ## The problem
 
-Most generated coding benchmarks ask a model to "invent a feature for this repo". The resulting tasks
-are generic, exercise the happy path, and say little about whether the code would survive production.
-In a large e-commerce microservice fleet, a small number of failure classes cause a large share of real
-outages: services that crash on a missing setting, configs written in a format the parser does not
-accept, impossible settings combinations, reloads that never take effect, and so on. These are exactly
-the paths AI-written code tends to skip.
+Most generated coding benchmarks ask a model to "invent a feature for this repo". The resulting tasks are
+generic, exercise the happy path, and say little about whether the code would survive production. In a large
+e-commerce platform's microservice fleet, a small number of failure classes cause a large share of real
+outages: services that crash on a missing setting, values written in a format the parser does not accept,
+impossible settings combinations, reloads that never take effect, and so on. These are exactly the paths
+AI-written code tends to skip.
 
 ## Task families
 
-Eight families, each derived from a recurring production failure class. Every task pairs feature tests
-with **fault-injection tests** that recreate the failure.
+Eight families, each derived from a recurring production failure class. Every task pairs feature tests with
+**fault-injection tests** that recreate the failure.
 
 | # | Family | The model must… | Fault the tests inject |
 |---|---|---|---|
@@ -42,7 +41,7 @@ with **fault-injection tests** that recreate the failure.
 | 7 | `resource-aware-defaults` | derive pool/worker sizes from limits, not constants | small container limit |
 | 8 | `config-round-trip` | regenerate config without dropping or defaulting fields | load → save → load diff |
 
-Details and a sample task per family: [docs/families.md](docs/families.md).
+Details and sample tasks per family: [docs/families.md](docs/families.md).
 
 ## How it works
 
@@ -68,78 +67,180 @@ Details and a sample task per family: [docs/families.md](docs/families.md).
 
 **From a postmortem:** `forge from-postmortem <url> --target <name>` classifies a public incident report into
 a family and a trigger, picks the best surface from the map, and runs the same generator and gates. The
-report's URL is kept in the task's `source_url`. Three tasks in the dataset come from public postmortems
-(Cloudflare, Heroku, AWS).
+report's URL is kept in the task's `source_url`.
 
 **Difficulty** is labelled by the number of injected fault cases (easy ≤ 3, medium 4–5, hard ≥ 6). The size
 of the fix is a separate `fix_scope` label (1 file, 2–3 files, 4+ files) taken from the blast radius.
 
-![failure map](deck/failure-map.png)
+![failure map of click: 10 tasks pinned to the surfaces they change](docs/img/failure-map.png)
 
-Module map and data flow: [docs/architecture.md](docs/architecture.md).
+Module map and data flow: [docs/architecture.md](docs/architecture.md). Design decisions, assumptions,
+reused components, models and the variation strategy: [docs/technical-explanation.md](docs/technical-explanation.md).
 
-## Try it in 5 minutes
+## Setup
 
-Open the repo in Codespaces with the badge above. The container comes with Docker, uv and Harbor installed,
-and needs no API key for these steps:
-
-```bash
-uv run pytest -q                                              # unit tests
-harbor run -p tasks/fastapi-template/cf-001-settings -a oracle   # reference solution scores 1.0
-harbor run -p tasks/fastapi-template/cf-001-settings -a nop      # doing nothing scores 0.0
-uv run forge report                                           # rebuilds reports/index.html and map.html
-```
-
-## Quickstart
-
-Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), Docker, and the Harbor CLI
-(`uv tool install harbor==0.26.0`). For generation, either the Claude Code CLI or a Gemini API key.
+Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), Docker (running), Git, and the Harbor CLI
+(`uv tool install harbor==0.25.0`). For generation, any logged-in coding CLI (Claude Code, Codex, opencode,
+Gemini CLI or your own command, see below) or a Gemini API key in `.env`.
 
 ```bash
 git clone https://github.com/Pr1ncePS2002/incidentforge && cd incidentforge
 uv sync
-cp .env.example .env            # add GEMINI_API_KEY
-
-# build the failure map (code graph, family tags, coverage from one real test run)
-uv run forge map build --target fastapi-template --coverage
-
-# generate, validate and keep tasks for a target; --workers runs one worker per map cluster
-uv run forge run --target fastapi-template --family fail-fast-config --n 2
-uv run forge run --target fastapi-template --n 8 --workers 4
-
-# one task from a public postmortem
-uv run forge from-postmortem https://aws.amazon.com/message/74876-2/ --target fastapi-template
-
-# re-run every validation gate on the dataset
-uv run forge validate tasks
-
-# check the tasks in Harbor: the reference solution scores 1.0, doing nothing scores 0.0
-harbor run -p tasks/fastapi-template -a oracle
-harbor run -p tasks/fastapi-template -a nop
-
-# evaluate models and build the report
-uv run forge eval --tasks tasks --model gemini/gemini-3.8-flash
-uv run forge report             # writes reports/index.html and reports/map.html
+cp .env.example .env            # add GEMINI_API_KEY if you use the gemini backend or gemini models
+uv run pytest -q                # unit tests, no docker needed
 ```
 
-## Adding a new target repo
+Or open the repo in Codespaces with the badge above: the container comes with Docker, uv and Harbor installed.
 
-1. Add `src/incidentforge/targets/<name>.yaml` with `repo_url`, `commit`, `language` (`python` | `go`),
-   `env_template`, `test_command` and `source_root`.
-2. Copy the closest env template under `src/incidentforge/targets/env/` and adjust the Dockerfile so the
-   repo's own test suite passes via `run_tests`.
-3. `uv run forge run --target <name> --n 3`.
+## Quickstart on click
 
-`scripts/finale_dry_run.sh <repo_url> <commit> <language>` does all three and prints timings; the event
-playbook is in [docs/finale-playbook.md](docs/finale-playbook.md).
+```bash
+# 1. failure map of click at the pinned commit (code graph, family tags, coverage from one real test run)
+uv run forge map build --target click --coverage
 
-## Results
+# 2. generate, validate and keep tasks; one worker per map cluster
+uv run forge run --target click --n 12 --workers 4
 
-Two target repos: `fastapi-template` (Python, 33 tasks, 3 of them from public postmortems) and `miniflux`
-(Go, 19 tasks). On a repo the pipeline
-had never seen (python-dotenv), `scripts/finale_dry_run.sh` produced 3 accepted tasks in 20 minutes.
+# 3. re-run every validation gate on the click tasks
+uv run forge validate tasks/click
+
+# 4. the validation matrix for one task: doing nothing scores 0.0, the reference solution scores 1.0
+harbor run -p tasks/click/<task-id> -a nop    -k 1 -o jobs/nop    --no-delete -y
+harbor run -p tasks/click/<task-id> -a oracle -k 1 -o jobs/oracle --no-delete -y
+
+# 5. evaluate models and build the report
+uv run forge eval --tasks tasks --only click/ --model gemini/gemini-3.8-flash
+uv run forge report             # writes reports/index.html, reports/summary.json and reports/map.html
+```
+
+One task from a public postmortem: `uv run forge from-postmortem <url> --target click`.
+
+## Run it on your own repo with any coding CLI
+
+No LLM API key is needed: generation calls a coding CLI you are already logged in to, headless, with its
+tools turned off and an empty working directory, and parses one JSON object from its answer.
+
+| `--backend` | runs |
+|---|---|
+| `claude-code` (default) | `claude -p --output-format json --json-schema <schema> --tools ""` |
+| `codex` | `codex exec -s read-only -c approval_policy="never" --ignore-user-config -o <file> -` |
+| `opencode` | `opencode run --pure --format json`, every tool permission denied; `--model provider/model` |
+| `gemini-cli` | `gemini --output-format json -e none -p ...` (built from its documented flags, tested with a fake binary only) |
+| `command` | anything else: `--backend-command` or `FORGE_GEN_COMMAND`, prompt on stdin or in `{prompt_file}`, JSON on stdout |
+| `auto` | the first of `claude`, `codex`, `opencode`, `gemini` found on `PATH` (login is not checked) |
+
+```bash
+uv run forge run --target click --n 1 --backend codex
+# any cli that prints the answer to stdout; this one is the one we smoke-tested
+FORGE_GEN_COMMAND="claude -p --output-format text --tools ''" uv run forge run --target click --backend command
+```
+
+Validation, the six gates and Harbor's nop/oracle matrix need no LLM at all. For your own repo,
+`FORGE_BACKEND=<backend> scripts/finale_dry_run.sh <repo_url> <commit> <python|go>` scaffolds the target,
+checks its test suite in Docker and generates tasks (see [Adding a new target repo](#adding-a-new-target-repo)).
+If a CLI is logged out, each rejected pair prints the CLI's error under it.
+
+`forge eval` also runs your tasks against Harbor's CLI agents on your own login. Each job sees only that
+agent's credentials, never the Gemini keys: `claude-code` (`CLAUDE_CODE_OAUTH_TOKEN`), `codex`
+(`~/.codex/auth.json` or `OPENAI_API_KEY`), `gemini-cli` (`~/.gemini/oauth_creds.json`), `opencode`
+(provider keys) and `cursor-cli` (`CURSOR_API_KEY`). The committed results cover Claude Code and Gemini only.
+
+```bash
+uv run forge eval --agent codex --only click/                  # the CLI's default model
+uv run forge eval --agent codex --model openai/gpt-5.5 --only click/tt-001-convert
+```
+
+## Task package
+
+Each task lives in `tasks/<target>/<task-id>/` and is tagged to its starting commit (`base_commit` in
+`task.toml`):
+
+```
+task.toml          # repo_url, base_commit, licence, family, difficulty, fault cases, timeouts
+instruction.md     # the only file the agent sees
+environment/       # Dockerfile building the repo at base_commit, run_tests helper
+solution/          # reference patch and solve.sh (used by the oracle agent)
+tests/             # feature + fault-injection tests, test.sh, fail_to_pass.json, pass_to_pass.json
+```
+
+Reward: 0.0 if any regression test fails, 1.0 if every feature test passes, otherwise the share of feature
+tests that pass. Full format: [docs/task-format.md](docs/task-format.md).
+
+## Validation evidence
+
+- **Gate logs**: every accepted task has `reports/validation/<target>/<task-id>.json` with the result,
+  detail and timing of each gate and the number of mutants killed.
+- **Evaluation logs**: one row per run in `reports/eval/results.jsonl` and `reports/eval/trials.jsonl`
+  (reward, turns, tokens, per-test failures); excluded models and why in `reports/eval/excluded.json`.
+- **Execution metrics and failure cases**: `reports/summary.json` and `reports/index.html` (pass rates,
+  failure causes per run, per-family breakdown, turn-budget ablation).
+- **Mutation testing**: the `mutation` gate per task, plus nightly mutmut over our own gate code.
+- **Manual fixes**: every hand change to the dataset is listed in
+  [docs/technical-explanation.md](docs/technical-explanation.md#manual-fixes).
+- **CI**: the `integration` job re-runs the oracle and no-op agents on every committed task before
+  anything reaches `main`, and nightly on `develop`.
+
+## Results on click
+
+Click dataset: 10 tasks over five families (tolerant-typed 4, cross-field 2, env-aware-naming 2, fail-fast 1,
+resource-aware-defaults 1) from 18 generations; 14 passed every gate and 4 were dropped on review, none
+hand-edited. On Harbor 0.25.0 the no-op agent scores 0.0 and the oracle 1.0 on all 10. Headline: five Claude
+models through the claude-code agent solved every task, while gemini-3.8-flash solved 4 of 10 and
+gemini-2.5-flash 2 of 10 through terminus-2, mostly by running out of turns.
 
 <!-- results:start (generated by scripts/readme_results.py from reports/summary.json) -->
+
+| | Value |
+|---|---|
+| Tasks in the dataset | 10 across 5 families |
+| Generated candidates | 18 |
+| Passing every gate | 14 of 18 |
+| Kept in the dataset | 10 (4 dropped on review) |
+| Mutants killed by accepted tasks' tests | 55 of 56 (98%) |
+| No-op agent scores 0.0 | 10 of 10 (Harbor 0.25.0) |
+| Oracle agent scores 1.0 | 10 of 10 (Harbor 0.25.0) |
+
+Models on the click tasks (pass rate = share of runs with reward 1.0; mean reward also counts partial credit):
+
+| Model | Agent | Runs | Pass rate | Mean reward |
+|---|---|---|---|---|
+| claude-code:anthropic/claude-fable-5-2 | claude-code | 10 (k=1) | 100% | 1.00 |
+| claude-code:anthropic/claude-haiku-5-5 | claude-code | 10 (k=1) | 100% | 1.00 |
+| claude-code:anthropic/claude-opus-5-5 | claude-code | 10 (k=1) | 100% | 1.00 |
+| claude-code:anthropic/claude-sonnet-5-5 | claude-code | 10 (k=1) | 100% | 1.00 |
+| claude-code (default) | claude-code | 10 (k=1) | 100% | 1.00 |
+| gemini/gemini-3.8-flash | terminus-2 | 10 (k=1) | 40% | 0.40 |
+| gemini/gemini-2.5-flash | terminus-2 | 10 (k=1) | 20% | 0.20 |
+
+Why failed runs failed (one cause per run):
+
+| Model | Used every turn | Broke the repo's own tests | Missed an injected fault | Wrong code |
+|---|---|---|---|---|
+| gemini/gemini-2.5-flash | 7 | 1 | 0 | 0 |
+| gemini/gemini-3.8-flash | 6 | 0 | 0 | 0 |
+
+Findings:
+
+- 10 of 10 tasks with a validation report passed every gate; accepted tasks' tests killed 55 of 56 injected mutants (98%).
+- pass rate by model: claude-code (default) 100% (10 runs), claude-code:anthropic/claude-sonnet-5-5 100% (10 runs), claude-code:anthropic/claude-haiku-5-5 100% (10 runs), claude-code:anthropic/claude-opus-5-5 100% (10 runs), claude-code:anthropic/claude-fable-5-2 100% (10 runs), gemini/gemini-3.8-flash 40% (10 runs), gemini/gemini-2.5-flash 20% (10 runs) (agents differ: claude-code, terminus-2; compare models within one agent).
+- hardest family is fail-fast-config (71% of 7 runs across all models); easiest is cross-field-validation (93% of 14 runs).
+- of failed runs with per-test detail, 14 failed at least one injected fault-case test and 7 at least one happy-path test.
+- each of the 14 failed runs has one cause: 13 used every turn, 1 broke the repo's own tests, 0 missed an injected fault, 0 wrong code.
+
+Generated 2026-11-24T20:52:17+0530. Full per-family breakdown: `reports/index.html`.
+<!-- results:end -->
+
+Refresh this block with `uv run python scripts/readme_results.py` after `forge report`.
+
+## Also runs on other repositories
+
+Extra evidence that the factory is not tied to one repo. These repositories are not starter repositories for
+the hackathon, so their tasks are **not** part of the submission dataset and are kept out of the headline
+numbers above. They were measured with the earlier all-or-nothing reward and Harbor 0.26.0.
+
+Two repos: `fastapi-template` (Python, 33 tasks, 3 of them from public postmortems by Cloudflare, Heroku and
+AWS) and `miniflux` (Go, 19 tasks), in `tasks/fastapi-template/` and `tasks/miniflux/`. On a repo the
+pipeline had never seen (python-dotenv), `scripts/finale_dry_run.sh` produced 3 accepted tasks in 20 minutes.
 
 | | Value |
 |---|---|
@@ -172,30 +273,32 @@ Findings:
 - gemini/gemini-2.5-flash with 60 turns instead of 30: 30% -> 40% on 10 tasks; of its 46 main-run failures, 25 used every turn and 21 stopped before the cap.
 - gemini/gemini-3.8-flash with 60 turns instead of 30: 31% -> 75% on 16 tasks; of its 49 main-run failures, 45 used every turn and 4 stopped before the cap.
 
-Generated 2026-11-22T01:45:58+0530. Full per-family breakdown: `reports/index.html`.
-<!-- results:end -->
+## Adding a new target repo
 
-Refresh this block with `uv run python scripts/readme_results.py` after `forge report`.
+1. Add `src/incidentforge/targets/<name>.yaml` with `repo_url`, `commit`, `language` (`python` | `go`),
+   `env_template`, `test_command` and `source_root`.
+2. Copy the closest env template under `src/incidentforge/targets/env/` and adjust the Dockerfile so the
+   repo's own test suite passes via `run_tests`.
+3. `uv run forge run --target <name> --n 3`.
 
-## Validation evidence
-
-Every accepted task has a JSON log in `reports/validation/<task_id>.json` with the result and timing of each
-gate and the number of mutants killed. CI re-runs the oracle and no-op agents on every committed task
-before anything reaches `main`, and nightly on `develop`.
+`scripts/finale_dry_run.sh <repo_url> <commit> <language>` does all three and prints timings; the event
+playbook is in [docs/finale-playbook.md](docs/finale-playbook.md).
 
 ## Limitations
 
-- Task families target configuration, startup and message-handling code; they do not cover UI or
-  performance work.
+- Task families target configuration, startup, input-validation and message-handling code; they do not
+  cover UI or performance work.
 - Targets need a Dockerised test suite that runs offline in a single container.
 - Generated tasks are only as diverse as the surfaces found in the repo; a small repo yields fewer tasks
   per family.
-- Model results are from single runs (k=1) on the full set plus k=3 on a subset, so small differences are
-  within noise.
+- Model results come from few runs per task, so small differences are within noise.
 - Difficulty labels come from fault-case counts; blast radius alone did not track pass rate, so it is kept
   as a separate fix-scope label rather than a difficulty.
-- The two evaluated agents differ (Claude Code vs terminus-2), so pass rates compare models only within one
-  agent. terminus-2 results depend on its turn budget (30 turns in the main run; see the ablation above).
+- The evaluated agents differ (Claude Code vs terminus-2), so pass rates compare models only within one
+  agent. terminus-2 results depend on its turn budget.
+- Two click tasks have known test gaps, kept as generated rather than hand-edited: `tt-001-convert` has no
+  zero-duration test case, and `tt-003-convert` has four `test_fault_garbage_*` tests that already pass on
+  the base commit (garbage input was already rejected), so they act as guards, not fault tests.
 
 ## Development
 
@@ -209,4 +312,6 @@ Branches: `ftr/*` → `develop` → `main`. CI gates: lint (ruff, mypy strict), 
 
 ## Licence
 
-[MIT](LICENSE)
+IncidentForge is [MIT](LICENSE) licensed. Generated task packages contain code and patches against the
+target repositories, which keep their own licences, recorded in each task's `task.toml`: pallets/click is
+BSD-3-Clause.

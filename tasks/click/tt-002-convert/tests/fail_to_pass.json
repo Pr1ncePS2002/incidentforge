@@ -1,0 +1,13 @@
+[
+  "tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators",
+  "tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators",
+  "tests/test_number_digit_grouping.py::test_grouped_value_matches_canonical",
+  "tests/test_number_digit_grouping.py::test_int_range_uses_grouped_value",
+  "tests/test_number_digit_grouping.py::test_int_range_clamps_grouped_value",
+  "tests/test_number_digit_grouping.py::test_int_range_rejects_grouped_value_out_of_range",
+  "tests/test_number_digit_grouping.py::test_envvar_grouped_value",
+  "tests/test_number_digit_grouping.py::test_envvar_multiple_grouped_values",
+  "tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value",
+  "tests/test_number_digit_grouping.py::test_fault_garbage_int_with_fraction",
+  "tests/test_number_digit_grouping.py::test_fault_garbage_float_comma_in_fraction"
+]

@@ -38,3 +38,6 @@ map_rules:
   - id: env-value-parsed
     node_kinds: [env_read]
     where: {parsed: true}
+  - id: value-converter
+    surface_kinds: [validator]
+    name_matches: "^(convert|coerce|to_python|parse_value|clean)$"

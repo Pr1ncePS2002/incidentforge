@@ -12,6 +12,7 @@ from pathlib import Path
 from incidentforge import harbor
 from incidentforge.harbor import Trial
 from incidentforge.models import GateResult, ValidationReport
+from incidentforge.package import F2P_FILE, rerender_task, spec_from_task_dir
 from incidentforge.targets import load_target
 from incidentforge.validate.leak import check_leak
 from incidentforge.validate.mutation import base_files, make_mutants, parse_patch
@@ -70,12 +71,45 @@ def gate_leak(ctx: _Ctx) -> tuple[bool, str]:
     return check_leak(instruction, (ctx.task_dir / "solution" / "reference.patch").read_text())
 
 
-def gate_fail_on_base(ctx: _Ctx) -> tuple[bool, str]:
-    t = _one(ctx.run(ctx.task_dir, "nop", ctx.job("nop"), []))
-    r = t.rewards
+def _nop_ok(r: dict[str, float]) -> tuple[bool, str]:
     detail = f"reward={r.get('reward')} feature_tests={r.get('feature_tests')} repo_suite={r.get('repo_suite')}"
     # the feature tests must be what fails; a broken repo suite on base means a bad env, not a good task
     return r.get("reward") == 0 and r.get("feature_tests") == 0 and r.get("repo_suite") == 1, detail
+
+
+def passed_on_base(trial: Trial, task_dir: Path) -> list[str]:
+    """fail_to_pass ids the nop trial's ctrf reports as passed."""
+    ctrf = trial.path / "verifier" / "ctrf.json"
+    if not ctrf.exists():
+        return []
+    f2p = set(read_f2p(task_dir))
+    tests = (json.loads(ctrf.read_text()).get("results") or {}).get("tests") or []
+    return [t["name"] for t in tests if t.get("name") in f2p and t.get("status") == "passed"]
+
+
+def read_f2p(task_dir: Path) -> list[str]:
+    f2p_file = task_dir / "tests" / F2P_FILE
+    return list(json.loads(f2p_file.read_text())) if f2p_file.exists() else []
+
+
+def gate_fail_on_base(ctx: _Ctx) -> tuple[bool, str]:
+    t = _one(ctx.run(ctx.task_dir, "nop", ctx.job("nop"), []))
+    ok, detail = _nop_ok(t.rewards)
+    if ok or t.rewards.get("repo_suite") != 1:
+        return ok, detail
+    # tests that pass before and after the change are regression guards, not fail_to_pass (swe-bench rule)
+    moved = passed_on_base(t, ctx.task_dir)
+    # nothing to split, or every feature test already passes: the feature is not missing
+    if not moved or len(moved) == len(read_f2p(ctx.task_dir)):
+        return ok, detail
+    current = spec_from_task_dir(ctx.task_dir, load_target(task_target(ctx.task_dir)))
+    rerender_task(ctx.task_dir, current.spec.target, guards=[*current.guards, *moved])
+    ok, detail = _nop_ok(_one(ctx.run(ctx.task_dir, "nop", ctx.job("nop-split"), [])).rewards)
+    return ok, f"{detail}; {len(moved)} feature test(s) passed on base, moved to pass_to_pass: {', '.join(moved)}"
+
+
+def task_target(task_dir: Path) -> str:
+    return str(tomllib.loads((task_dir / "task.toml").read_text())["metadata"]["target"])
 
 
 def gate_pass_on_reference(ctx: _Ctx) -> tuple[bool, str]:

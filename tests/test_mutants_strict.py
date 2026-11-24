@@ -37,11 +37,12 @@ def test_git_raises_on_failure(tmp_path: Path) -> None:
         mutation._git("definitely-not-a-git-command", cwd=tmp_path)
 
 
-def _target(name: str, commit: str = "0123456789abcdef0123") -> Target:
+def _target(name: str, commit: str = "0123456789abcdef0123456789abcdef01234567") -> Target:
     return Target(
         name=name,
         repo_url="https://x/r",
         commit=commit,
+        licence="MIT",
         language=Language.python,
         env_template=Path(),
         test_command="t",

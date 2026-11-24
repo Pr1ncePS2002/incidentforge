@@ -1,0 +1,26 @@
+schema_version = "1.4"
+
+[metadata]
+title = "add an overridable command helper that derives a valid shell completion variable name"
+family = "env-aware-naming"
+difficulty = "medium"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["separator-injection: a prog_name with a space, '+', '/' or a non-ASCII letter (e.g. 'my app') must map to a valid variable such as _MY_APP_COMPLETE, and setting that variable must trigger completion", "unscoped-key: 'app one' and 'app two' (and 'tool.a' / 'tool.b') must get different completion variables, and one program's variable must not trigger completion in another", "wrong-env-source: main must take the variable name from the overridable Command.get_complete_var rather than a hardcoded _{PROG}_COMPLETE, while an explicit complete_var still takes priority", "unknown-env: an empty, whitespace-only or punctuation-only prog_name raises ValueError naming prog_name, and an invalid explicit complete_var ('', 'BAD VAR', '1ABC', 'A=B') raises ValueError naming complete_var, even when no completion variable is set"]
+map_node = "src/click/core.py::Command._main_shell_completion#env:<dynamic>"
+blast_radius = 2
+fix_scope = "2-3 files"
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

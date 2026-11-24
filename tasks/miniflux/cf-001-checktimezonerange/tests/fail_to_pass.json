@@ -1,0 +1,8 @@
+[
+  "internal/reader/date::TestFaultInvertedRangeOffsetWindow",
+  "internal/reader/date::TestFaultDependentBoundWindowExcludesUTC",
+  "internal/reader/date::TestFaultBoundaryEqualOffsetWindow",
+  "internal/reader/date::TestDefaultOffsetWindowValidates",
+  "internal/reader/date::TestDefaultOffsetWindowMatchesParser",
+  "internal/reader/date::TestOffsetWindowApplyInclusiveBounds"
+]

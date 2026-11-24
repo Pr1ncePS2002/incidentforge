@@ -14,6 +14,19 @@ families/<slug>/
 (`families/output-contract-<language>.md` when present, else `families/output-contract.md`), so every
 family returns the same `TaskSpec` json shape. Family weights for sampling live in `families/taxonomy.json`.
 
+## per-target profile
+
+A target that is not a service (e.g. the click library) can carry `families/targets/<target>/`:
+
+| file | effect |
+|---|---|
+| `profile.yaml` | `families` offered on the target, per-family `surface_kinds` order, `prefer` symbol regexes tried first (in order), `skip_symbols` never offered |
+| `contract.md` | replaces the language output contract for that target |
+| `<slug>.md` | appended to the family prompt as "how this failure class applies to <target>" |
+
+`generate()` applies the profile in both the single-worker and the parallel path; a target without the
+directory behaves exactly as before.
+
 ## `family.yaml` schema
 
 | key | type | required | meaning |

@@ -7,7 +7,10 @@ difficulty = "easy"
 origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+repo_url = "https://github.com/miniflux/v2.git"
+licence = "Apache-2.0"
 fault_cases = ["inverted-range: OffsetWindow with MinOffsetSeconds greater than MaxOffsetSeconds (e.g. 3600 / -3600, swapped defaults)", "dependent-bound: OffsetWindow that does not contain the UTC fallback offset 0 (e.g. 3600..7200 or -7200..-3600)", "boundary-equal: MinOffsetSeconds == MaxOffsetSeconds is allowed when it is 0 and rejected when it excludes UTC (3600/3600)"]
+generator_backend = "claude-code"
 map_node = "internal/reader/date/parser.go::checkTimezoneRange"
 blast_radius = 1
 fix_scope = "1 file"

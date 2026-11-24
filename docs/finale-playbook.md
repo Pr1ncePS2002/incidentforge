@@ -8,7 +8,7 @@ generated from it, checked by Harbor, with at least one model evaluated.
 - [ ] Fresh clone of `main`, `uv sync`, `uv run pytest -q` green.
 - [ ] Docker running with ≥ 8 GB; base images pulled: `python:3.12-slim-bookworm`, `golang:1.25-bookworm`,
       `ghcr.io/astral-sh/uv:0.9.26`.
-- [ ] Harbor installed (`uv tool install harbor==0.26.0`), `harbor agent list` works.
+- [ ] Harbor installed (`uv tool install harbor==0.25.0`), `harbor agent list` works.
 - [ ] Claude Code logged in (`claude -p "ok"`) and/or `GEMINI_API_KEY` in `.env`.
 - [ ] Rehearse: `scripts/finale_dry_run.sh <some small repo> <sha> python` end to end.
 

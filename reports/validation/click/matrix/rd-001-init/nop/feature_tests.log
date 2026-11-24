@@ -1,0 +1,248 @@
+...F.FFFFFFFFFFFFFF                                                      [100%]
+=================================== FAILURES ===================================
+______________________ test_explicit_width_used_verbatim _______________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff976a61e0>
+
+    def test_explicit_width_used_verbatim(monkeypatch):
+        monkeypatch.setenv("COLUMNS", "200")
+        assert HelpFormatter(width=30).width == 30
+>       assert HelpFormatter(width=30, min_width=40).width == 30
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:31: TypeError
+______________ test_fault_hardcoded_size_floor_follows_min_width _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff976a9850>
+
+    def test_fault_hardcoded_size_floor_follows_min_width(monkeypatch):
+        monkeypatch.setenv("COLUMNS", "40")
+>       assert HelpFormatter(min_width=30).width == 38
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:47: TypeError
+____________________ test_fault_hardcoded_size_floor_raised ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff976a6f60>
+
+    def test_fault_hardcoded_size_floor_raised(monkeypatch):
+        monkeypatch.setenv("COLUMNS", "40")
+>       assert HelpFormatter(min_width=60, max_width=100).width == 60
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:52: TypeError
+___________________ test_fault_unset_limit_uses_default_max ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff976a5c70>
+
+    def test_fault_unset_limit_uses_default_max(monkeypatch):
+        monkeypatch.setenv("COLUMNS", "200")
+>       assert HelpFormatter(min_width=20).width == 78
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:57: TypeError
+____________________ test_fault_unset_limit_small_terminal _____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff974ed0a0>
+
+    def test_fault_unset_limit_small_terminal(monkeypatch):
+        monkeypatch.setenv("COLUMNS", "10")
+>       assert HelpFormatter(min_width=20).width == 20
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:62: TypeError
+_________________ test_fault_zero_or_negative[kwargs0-width-0] _________________
+
+kwargs = {'width': 0}, name = 'width', value = '0'
+
+    @pytest.mark.parametrize(
+        ("kwargs", "name", "value"),
+        [
+            ({"width": 0}, "width", "0"),
+            ({"width": -5}, "width", "-5"),
+            ({"max_width": 0}, "max_width", "0"),
+            ({"max_width": -1}, "max_width", "-1"),
+            ({"min_width": 0}, "min_width", "0"),
+            ({"min_width": -3}, "min_width", "-3"),
+        ],
+    )
+    def test_fault_zero_or_negative(kwargs, name, value):
+>       with pytest.raises(ValueError) as exc_info:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_formatter_width_limits.py:77: Failed
+________________ test_fault_zero_or_negative[kwargs1-width--5] _________________
+
+kwargs = {'width': -5}, name = 'width', value = '-5'
+
+    @pytest.mark.parametrize(
+        ("kwargs", "name", "value"),
+        [
+            ({"width": 0}, "width", "0"),
+            ({"width": -5}, "width", "-5"),
+            ({"max_width": 0}, "max_width", "0"),
+            ({"max_width": -1}, "max_width", "-1"),
+            ({"min_width": 0}, "min_width", "0"),
+            ({"min_width": -3}, "min_width", "-3"),
+        ],
+    )
+    def test_fault_zero_or_negative(kwargs, name, value):
+>       with pytest.raises(ValueError) as exc_info:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_formatter_width_limits.py:77: Failed
+_______________ test_fault_zero_or_negative[kwargs2-max_width-0] _______________
+
+kwargs = {'max_width': 0}, name = 'max_width', value = '0'
+
+    @pytest.mark.parametrize(
+        ("kwargs", "name", "value"),
+        [
+            ({"width": 0}, "width", "0"),
+            ({"width": -5}, "width", "-5"),
+            ({"max_width": 0}, "max_width", "0"),
+            ({"max_width": -1}, "max_width", "-1"),
+            ({"min_width": 0}, "min_width", "0"),
+            ({"min_width": -3}, "min_width", "-3"),
+        ],
+    )
+    def test_fault_zero_or_negative(kwargs, name, value):
+>       with pytest.raises(ValueError) as exc_info:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_formatter_width_limits.py:77: Failed
+______________ test_fault_zero_or_negative[kwargs3-max_width--1] _______________
+
+kwargs = {'max_width': -1}, name = 'max_width', value = '-1'
+
+    @pytest.mark.parametrize(
+        ("kwargs", "name", "value"),
+        [
+            ({"width": 0}, "width", "0"),
+            ({"width": -5}, "width", "-5"),
+            ({"max_width": 0}, "max_width", "0"),
+            ({"max_width": -1}, "max_width", "-1"),
+            ({"min_width": 0}, "min_width", "0"),
+            ({"min_width": -3}, "min_width", "-3"),
+        ],
+    )
+    def test_fault_zero_or_negative(kwargs, name, value):
+>       with pytest.raises(ValueError) as exc_info:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_formatter_width_limits.py:77: Failed
+_______________ test_fault_zero_or_negative[kwargs4-min_width-0] _______________
+
+kwargs = {'min_width': 0}, name = 'min_width', value = '0'
+
+    @pytest.mark.parametrize(
+        ("kwargs", "name", "value"),
+        [
+            ({"width": 0}, "width", "0"),
+            ({"width": -5}, "width", "-5"),
+            ({"max_width": 0}, "max_width", "0"),
+            ({"max_width": -1}, "max_width", "-1"),
+            ({"min_width": 0}, "min_width", "0"),
+            ({"min_width": -3}, "min_width", "-3"),
+        ],
+    )
+    def test_fault_zero_or_negative(kwargs, name, value):
+        with pytest.raises(ValueError) as exc_info:
+>           HelpFormatter(**kwargs)
+E           TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:78: TypeError
+______________ test_fault_zero_or_negative[kwargs5-min_width--3] _______________
+
+kwargs = {'min_width': -3}, name = 'min_width', value = '-3'
+
+    @pytest.mark.parametrize(
+        ("kwargs", "name", "value"),
+        [
+            ({"width": 0}, "width", "0"),
+            ({"width": -5}, "width", "-5"),
+            ({"max_width": 0}, "max_width", "0"),
+            ({"max_width": -1}, "max_width", "-1"),
+            ({"min_width": 0}, "min_width", "0"),
+            ({"min_width": -3}, "min_width", "-3"),
+        ],
+    )
+    def test_fault_zero_or_negative(kwargs, name, value):
+        with pytest.raises(ValueError) as exc_info:
+>           HelpFormatter(**kwargs)
+E           TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:78: TypeError
+_________________ test_fault_zero_or_negative_context_setting __________________
+
+runner = <click.testing.CliRunner object at 0xffff974f1040>
+
+    def test_fault_zero_or_negative_context_setting(runner):
+        @click.command(context_settings={"max_content_width": -5})
+        def cli():
+            pass
+    
+        result = runner.invoke(cli, ["--help"])
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_formatter_width_limits.py:90: AssertionError
+_______________________ test_fault_min_over_max_explicit _______________________
+
+    def test_fault_min_over_max_explicit():
+        with pytest.raises(ValueError) as exc_info:
+>           HelpFormatter(min_width=100, max_width=80)
+E           TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:98: TypeError
+_____________________ test_fault_min_over_max_default_max ______________________
+
+    def test_fault_min_over_max_default_max():
+        with pytest.raises(ValueError) as exc_info:
+>           HelpFormatter(min_width=90)
+E           TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:108: TypeError
+________________________ test_min_equal_to_max_allowed _________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff974f0c80>
+
+    def test_min_equal_to_max_allowed(monkeypatch):
+        monkeypatch.setenv("COLUMNS", "200")
+>       assert HelpFormatter(min_width=80, max_width=80).width == 80
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: HelpFormatter.__init__() got an unexpected keyword argument 'min_width'
+
+tests/test_formatter_width_limits.py:118: TypeError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_formatter_width_limits.py::test_default_width_clamped_to_80
+PASSED tests/test_formatter_width_limits.py::test_default_floor_is_50
+PASSED tests/test_formatter_width_limits.py::test_small_max_width_without_min_keeps_old_floor
+PASSED tests/test_formatter_width_limits.py::test_help_still_renders
+FAILED tests/test_formatter_width_limits.py::test_explicit_width_used_verbatim
+FAILED tests/test_formatter_width_limits.py::test_fault_hardcoded_size_floor_follows_min_width
+FAILED tests/test_formatter_width_limits.py::test_fault_hardcoded_size_floor_raised
+FAILED tests/test_formatter_width_limits.py::test_fault_unset_limit_uses_default_max
+FAILED tests/test_formatter_width_limits.py::test_fault_unset_limit_small_terminal
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs0-width-0]
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs1-width--5]
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs2-max_width-0]
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs3-max_width--1]
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs4-min_width-0]
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs5-min_width--3]
+FAILED tests/test_formatter_width_limits.py::test_fault_zero_or_negative_context_setting
+FAILED tests/test_formatter_width_limits.py::test_fault_min_over_max_explicit
+FAILED tests/test_formatter_width_limits.py::test_fault_min_over_max_default_max
+FAILED tests/test_formatter_width_limits.py::test_min_equal_to_max_allowed - ...
+15 failed, 4 passed in 0.03s

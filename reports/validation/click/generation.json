@@ -1,0 +1,16 @@
+{
+  "target": "click",
+  "runs": [
+    {"run": "smoke", "generations": 4, "passed_gates": 2},
+    {"run": "main", "generations": 14, "passed_gates": 12}
+  ],
+  "candidates": 18,
+  "passed_gates": 14,
+  "accepted": 10,
+  "dropped": [
+    {"task": "click/ff-002-resolve-envvar-value", "stage": "generation review", "why": "near-duplicate of ff-001-resolve-envvar-value"},
+    {"task": "click/cf-004-init", "stage": "generation review", "why": "near-duplicate of cf-002-validate"},
+    {"task": "click/cf-001-init", "stage": "independent review", "why": "one rule already enforced on base, so its tests only checked wording"},
+    {"task": "click/en-002-resolve-envvar-value", "stage": "independent review", "why": "reference applied the new env-var naming to value lookup but not to the --help display"}
+  ]
+}

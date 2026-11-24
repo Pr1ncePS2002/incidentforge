@@ -1,0 +1,10 @@
+[
+  "tests/test_forge_item_idempotency.py::test_fault_duplicate_delivery_same_session",
+  "tests/test_forge_item_idempotency.py::test_fault_duplicate_delivery_new_session_returns_original",
+  "tests/test_forge_item_idempotency.py::test_fault_retry_after_partial_commit_then_crash",
+  "tests/test_forge_item_idempotency.py::test_fault_retry_after_partial_failure_before_persist",
+  "tests/test_forge_item_idempotency.py::test_fault_back_to_back_duplicate",
+  "tests/test_forge_item_idempotency.py::test_fault_distinct_events_both_apply",
+  "tests/test_forge_item_idempotency.py::test_fault_distinct_events_same_key_different_owners",
+  "tests/test_forge_item_idempotency.py::test_blank_key_is_rejected"
+]

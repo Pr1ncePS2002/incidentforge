@@ -1,0 +1,504 @@
+FFFFFFFFFFFFFF......FFFFFFFFF                                            [100%]
+=================================== FAILURES ===================================
+______________ test_int_accepts_thousands_separators[1,000-1000] _______________
+
+runner = <click.testing.CliRunner object at 0xffffbcf7b380>, raw = '1,000'
+expected = '1000'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", "1000"),
+            ("12,345,678", "12345678"),
+            ("-1,000", "-1000"),
+            ("+2,500", "2500"),
+            (" 9,999 ", "9999"),
+        ],
+    )
+    def test_int_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.INT), ["--count", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '1,000' is not a valid integer.
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_number_digit_grouping.py:27: AssertionError
+__________ test_int_accepts_thousands_separators[12,345,678-12345678] __________
+
+runner = <click.testing.CliRunner object at 0xffffbcf77320>, raw = '12,345,678'
+expected = '12345678'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", "1000"),
+            ("12,345,678", "12345678"),
+            ("-1,000", "-1000"),
+            ("+2,500", "2500"),
+            (" 9,999 ", "9999"),
+        ],
+    )
+    def test_int_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.INT), ["--count", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '12,345,678' is not a valid integer.
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_number_digit_grouping.py:27: AssertionError
+_____________ test_int_accepts_thousands_separators[-1,000--1000] ______________
+
+runner = <click.testing.CliRunner object at 0xffffbcdbe330>, raw = '-1,000'
+expected = '-1000'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", "1000"),
+            ("12,345,678", "12345678"),
+            ("-1,000", "-1000"),
+            ("+2,500", "2500"),
+            (" 9,999 ", "9999"),
+        ],
+    )
+    def test_int_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.INT), ["--count", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '-1,000' is not a valid integer.
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_number_digit_grouping.py:27: AssertionError
+______________ test_int_accepts_thousands_separators[+2,500-2500] ______________
+
+runner = <click.testing.CliRunner object at 0xffffbcdbfcb0>, raw = '+2,500'
+expected = '2500'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", "1000"),
+            ("12,345,678", "12345678"),
+            ("-1,000", "-1000"),
+            ("+2,500", "2500"),
+            (" 9,999 ", "9999"),
+        ],
+    )
+    def test_int_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.INT), ["--count", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '+2,500' is not a valid integer.
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_number_digit_grouping.py:27: AssertionError
+_____________ test_int_accepts_thousands_separators[ 9,999 -9999] ______________
+
+runner = <click.testing.CliRunner object at 0xffffbcdbea50>, raw = ' 9,999 '
+expected = '9999'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", "1000"),
+            ("12,345,678", "12345678"),
+            ("-1,000", "-1000"),
+            ("+2,500", "2500"),
+            (" 9,999 ", "9999"),
+        ],
+    )
+    def test_int_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.INT), ["--count", raw])
+>       assert result.exception is None, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': ' 9,999 ' is not a valid integer.
+E         
+E       assert SystemExit(2) is None
+E        +  where SystemExit(2) = <Result SystemExit(2)>.exception
+
+tests/test_number_digit_grouping.py:27: AssertionError
+____________ test_float_accepts_thousands_separators[1,000-1000.0] _____________
+
+runner = <click.testing.CliRunner object at 0xffffbcdc0380>, raw = '1,000'
+expected = 1000.0
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", 1000.0),
+            ("1,234.5", 1234.5),
+            ("-12,345.25", -12345.25),
+        ],
+    )
+    def test_float_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.FLOAT), ["--count", raw])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '1,000' is not a valid float.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:42: AssertionError
+___________ test_float_accepts_thousands_separators[1,234.5-1234.5] ____________
+
+runner = <click.testing.CliRunner object at 0xffffbcdc0f20>, raw = '1,234.5'
+expected = 1234.5
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", 1000.0),
+            ("1,234.5", 1234.5),
+            ("-12,345.25", -12345.25),
+        ],
+    )
+    def test_float_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.FLOAT), ["--count", raw])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '1,234.5' is not a valid float.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:42: AssertionError
+________ test_float_accepts_thousands_separators[-12,345.25--12345.25] _________
+
+runner = <click.testing.CliRunner object at 0xffffbcdc2390>, raw = '-12,345.25'
+expected = -12345.25
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("1,000", 1000.0),
+            ("1,234.5", 1234.5),
+            ("-12,345.25", -12345.25),
+        ],
+    )
+    def test_float_accepts_thousands_separators(runner, raw, expected):
+        result = runner.invoke(make_cli(click.FLOAT), ["--count", raw])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '-12,345.25' is not a valid float.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:42: AssertionError
+_____________________ test_grouped_value_matches_canonical _____________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcb6b0>
+
+    def test_grouped_value_matches_canonical(runner):
+        grouped = runner.invoke(make_cli(click.INT), ["--count", "1,000,000"])
+        canonical = runner.invoke(make_cli(click.INT), ["--count", "1000000"])
+>       assert grouped.exit_code == 0 == canonical.exit_code
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:49: AssertionError
+______________________ test_int_range_uses_grouped_value _______________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdc9a90>
+
+    def test_int_range_uses_grouped_value(runner):
+        result = runner.invoke(make_cli(click.IntRange(0, 10000)), ["--count", "2,500"])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '2,500' is not a valid integer range.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:55: AssertionError
+_____________________ test_int_range_clamps_grouped_value ______________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcbd40>
+
+    def test_int_range_clamps_grouped_value(runner):
+        cli = make_cli(click.IntRange(0, 1000, clamp=True))
+        result = runner.invoke(cli, ["--count", "5,000"])
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '5,000' is not a valid integer range.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:62: AssertionError
+______________ test_int_range_rejects_grouped_value_out_of_range _______________
+
+runner = <click.testing.CliRunner object at 0xffffbcdca030>
+
+    def test_int_range_rejects_grouped_value_out_of_range(runner):
+        result = runner.invoke(make_cli(click.IntRange(0, 100)), ["--count", "1,000"])
+        assert result.exit_code == 2
+        assert "--count" in result.output
+>       assert "not in the range" in result.output
+E       assert 'not in the range' in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer range.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer range.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:70: AssertionError
+__________________________ test_envvar_grouped_value ___________________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdc2c90>
+
+    def test_envvar_grouped_value(runner):
+        cli = make_cli(click.INT, envvar="COUNT")
+        result = runner.invoke(cli, [], env={"COUNT": "1,000"})
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '1,000' is not a valid integer.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:76: AssertionError
+_____________________ test_envvar_multiple_grouped_values ______________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdc1760>
+
+    def test_envvar_multiple_grouped_values(runner):
+        cli = make_cli(click.INT, envvar="COUNT", multiple=True)
+        result = runner.invoke(cli, [], env={"COUNT": "1,000 2,000"})
+>       assert result.exit_code == 0, result.output
+E       AssertionError: Usage: cli [OPTIONS]
+E         Try 'cli --help' for help.
+E         
+E         Error: Invalid value for '--count': '1,000' is not a valid integer.
+E         
+E       assert 2 == 0
+E        +  where 2 = <Result SystemExit(2)>.exit_code
+
+tests/test_number_digit_grouping.py:83: AssertionError
+_________ test_fault_garbage_bad_grouping_names_option_and_value[1,00] _________
+
+runner = <click.testing.CliRunner object at 0xffffbcdbc0b0>, bad = '1,00'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "'1,00' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+________ test_fault_garbage_bad_grouping_names_option_and_value[1,0000] ________
+
+runner = <click.testing.CliRunner object at 0xffffbcdbff80>, bad = '1,0000'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "'1,0000' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+_______ test_fault_garbage_bad_grouping_names_option_and_value[1234,567] _______
+
+runner = <click.testing.CliRunner object at 0xffffbcdc1220>, bad = '1234,567'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "'1234,567' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+_________ test_fault_garbage_bad_grouping_names_option_and_value[,100] _________
+
+runner = <click.testing.CliRunner object at 0xffffbcf76630>, bad = ',100'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "',100' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+_________ test_fault_garbage_bad_grouping_names_option_and_value[100,] _________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcb200>, bad = '100,'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "'100,' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+________ test_fault_garbage_bad_grouping_names_option_and_value[1,,000] ________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcaf30>, bad = '1,,000'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "'1,,000' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+________ test_fault_garbage_bad_grouping_names_option_and_value[1,0a0] _________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcbbf0>, bad = '1,0a0'
+
+    @pytest.mark.parametrize(
+        "bad",
+        ["1,00", "1,0000", "1234,567", ",100", "100,", "1,,000", "1,0a0"],
+    )
+    def test_fault_garbage_bad_grouping_names_option_and_value(runner, bad):
+        cli = make_cli(click.INT, multiple=True)
+        # The first value is well formed, so the error must come from the bad one.
+        result = runner.invoke(cli, ["--count", "1,000", "--count", bad])
+        assert result.exit_code == 2
+        assert isinstance(result.exception, SystemExit)
+        assert "'--count'" in result.output
+>       assert f"{bad!r} is not a valid integer" in result.output
+E       assert "'1,0a0' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:115: AssertionError
+_____________________ test_fault_garbage_int_with_fraction _____________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcc830>
+
+    def test_fault_garbage_int_with_fraction(runner):
+        cli = make_cli(click.INT, multiple=True)
+        result = runner.invoke(cli, ["--count", "2,000", "--count", "1,000.5"])
+        assert result.exit_code == 2
+        assert "'--count'" in result.output
+>       assert "'1,000.5' is not a valid integer" in result.output
+E       assert "'1,000.5' is not a valid integer" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '2,000' is not a valid integer.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '2,000' is not a valid integer.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:124: AssertionError
+__________________ test_fault_garbage_float_comma_in_fraction __________________
+
+runner = <click.testing.CliRunner object at 0xffffbcdcecc0>
+
+    def test_fault_garbage_float_comma_in_fraction(runner):
+        cli = make_cli(click.FLOAT, multiple=True)
+        result = runner.invoke(cli, ["--count", "1,000.5", "--count", "1,000.0,5"])
+        assert result.exit_code == 2
+        assert "'--count'" in result.output
+>       assert "'1,000.0,5' is not a valid float" in result.output
+E       assert "'1,000.0,5' is not a valid float" in "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000.5' is not a valid float.\n"
+E        +  where "Usage: cli [OPTIONS]\nTry 'cli --help' for help.\n\nError: Invalid value for '--count': '1,000.5' is not a valid float.\n" = <Result SystemExit(2)>.output
+
+tests/test_number_digit_grouping.py:133: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_0-42-42]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_1- 7 -7]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_2-1_000-1000]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_3--3--3]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_4-2.5-2.5]
+PASSED tests/test_number_digit_grouping.py::test_plain_numbers_still_parse[type_5-1e3-1000.0]
+FAILED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[1,000-1000]
+FAILED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[12,345,678-12345678]
+FAILED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[-1,000--1000]
+FAILED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[+2,500-2500]
+FAILED tests/test_number_digit_grouping.py::test_int_accepts_thousands_separators[ 9,999 -9999]
+FAILED tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators[1,000-1000.0]
+FAILED tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators[1,234.5-1234.5]
+FAILED tests/test_number_digit_grouping.py::test_float_accepts_thousands_separators[-12,345.25--12345.25]
+FAILED tests/test_number_digit_grouping.py::test_grouped_value_matches_canonical
+FAILED tests/test_number_digit_grouping.py::test_int_range_uses_grouped_value
+FAILED tests/test_number_digit_grouping.py::test_int_range_clamps_grouped_value
+FAILED tests/test_number_digit_grouping.py::test_int_range_rejects_grouped_value_out_of_range
+FAILED tests/test_number_digit_grouping.py::test_envvar_grouped_value - Asser...
+FAILED tests/test_number_digit_grouping.py::test_envvar_multiple_grouped_values
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,00]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,0000]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1234,567]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[,100]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[100,]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,,000]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_bad_grouping_names_option_and_value[1,0a0]
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_int_with_fraction
+FAILED tests/test_number_digit_grouping.py::test_fault_garbage_float_comma_in_fraction
+23 failed, 6 passed in 0.06s

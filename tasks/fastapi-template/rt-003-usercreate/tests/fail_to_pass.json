@@ -1,0 +1,18 @@
+[
+  "tests/test_forge_user_drafts.py::test_noop_edit_leaves_file_identical",
+  "tests/test_forge_user_drafts.py::test_edit_with_same_values_leaves_file_identical",
+  "tests/test_forge_user_drafts.py::test_changing_one_field_changes_only_that_field",
+  "tests/test_forge_user_drafts.py::test_returns_validated_user",
+  "tests/test_forge_user_drafts.py::test_new_key_in_changes_is_added",
+  "tests/test_forge_user_drafts.py::test_non_object_draft_is_rejected",
+  "tests/test_forge_user_drafts.py::test_fault_dropped_field_unknown_keys_survive",
+  "tests/test_forge_user_drafts.py::test_fault_dropped_field_untouched_known_fields_survive",
+  "tests/test_forge_user_drafts.py::test_fault_default_overwrite_unset_stays_unset",
+  "tests/test_forge_user_drafts.py::test_fault_default_overwrite_explicit_default_kept",
+  "tests/test_forge_user_drafts.py::test_fault_default_overwrite_explicit_null_kept",
+  "tests/test_forge_user_drafts.py::test_fault_default_overwrite_explicit_empty_kept",
+  "tests/test_forge_user_drafts.py::test_fault_type_drift_untouched_values_keep_type",
+  "tests/test_forge_user_drafts.py::test_fault_type_drift_changed_field_uses_field_type",
+  "tests/test_forge_user_drafts.py::test_fault_partial_write_invalid_change_keeps_previous",
+  "tests/test_forge_user_drafts.py::test_fault_partial_write_failed_replace_keeps_previous"
+]

@@ -1,0 +1,17 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 14, "passed": 7, "failed": 7, "pending": 0, "skipped": 0, "other": 0, "start": 1795522390000, "stop": 1795522390000},
+  "tests": [
+    {"name": "feature_tests", "status": "failed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_in_list", "status": "failed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_after_valid", "status": "failed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_fault_separator_injection_equals", "status": "failed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_fault_separator_injection_space", "status": "failed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_fault_separator_injection_tab_in_list", "status": "failed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_fault_separator_injection_argument", "status": "failed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_plain_envvar_still_read", "status": "passed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_list_first_non_empty_still_wins", "status": "passed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_two_environments_read_distinct_names", "status": "passed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_empty_string_envvar_still_disabled", "status": "passed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_command_line_value_still_used", "status": "passed", "duration": 0},
+    {"name": "tests/test_envvar_name_validation.py::test_auto_envvar_prefix_names_unchanged", "status": "passed", "duration": 0}]}}

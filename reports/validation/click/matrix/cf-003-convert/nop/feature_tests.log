@@ -1,0 +1,122 @@
+FFFFFFFFF......                                                          [100%]
+=================================== FAILURES ===================================
+________________________ test_fault_inverted_range_int _________________________
+
+    def test_fault_inverted_range_int():
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:17: Failed
+_______________________ test_fault_inverted_range_float ________________________
+
+    def test_fault_inverted_range_float():
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:23: Failed
+___________________ test_fault_inverted_range_mixed_numbers ____________________
+
+    def test_fault_inverted_range_mixed_numbers():
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:29: Failed
+_________________ test_fault_inverted_range_keywords_and_clamp _________________
+
+    def test_fault_inverted_range_keywords_and_clamp():
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:35: Failed
+___________________ test_fault_inverted_range_at_declaration ___________________
+
+    def test_fault_inverted_range_at_declaration():
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:41: Failed
+_________________ test_fault_boundary_equal_open_int[kwargs0] __________________
+
+kwargs = {'min_open': True}
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"min_open": True},
+            {"max_open": True},
+            {"min_open": True, "max_open": True},
+        ],
+    )
+    def test_fault_boundary_equal_open_int(kwargs):
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:60: Failed
+_________________ test_fault_boundary_equal_open_int[kwargs1] __________________
+
+kwargs = {'max_open': True}
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"min_open": True},
+            {"max_open": True},
+            {"min_open": True, "max_open": True},
+        ],
+    )
+    def test_fault_boundary_equal_open_int(kwargs):
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:60: Failed
+_________________ test_fault_boundary_equal_open_int[kwargs2] __________________
+
+kwargs = {'max_open': True, 'min_open': True}
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"min_open": True},
+            {"max_open": True},
+            {"min_open": True, "max_open": True},
+        ],
+    )
+    def test_fault_boundary_equal_open_int(kwargs):
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:60: Failed
+_____________________ test_fault_boundary_equal_open_float _____________________
+
+    def test_fault_boundary_equal_open_float():
+>       with pytest.raises(ValueError) as excinfo:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_range_combinations.py:66: Failed
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_range_combinations.py::test_equal_closed_bounds_accept_single_value
+PASSED tests/test_range_combinations.py::test_equal_closed_bounds_clamp
+PASSED tests/test_range_combinations.py::test_equal_closed_float_bounds
+PASSED tests/test_range_combinations.py::test_single_and_no_bounds_still_work
+PASSED tests/test_range_combinations.py::test_valid_ranges_unchanged
+PASSED tests/test_range_combinations.py::test_float_clamp_open_still_type_error
+FAILED tests/test_range_combinations.py::test_fault_inverted_range_int - Fail...
+FAILED tests/test_range_combinations.py::test_fault_inverted_range_float - Fa...
+FAILED tests/test_range_combinations.py::test_fault_inverted_range_mixed_numbers
+FAILED tests/test_range_combinations.py::test_fault_inverted_range_keywords_and_clamp
+FAILED tests/test_range_combinations.py::test_fault_inverted_range_at_declaration
+FAILED tests/test_range_combinations.py::test_fault_boundary_equal_open_int[kwargs0]
+FAILED tests/test_range_combinations.py::test_fault_boundary_equal_open_int[kwargs1]
+FAILED tests/test_range_combinations.py::test_fault_boundary_equal_open_int[kwargs2]
+FAILED tests/test_range_combinations.py::test_fault_boundary_equal_open_float
+9 failed, 6 passed in 0.03s

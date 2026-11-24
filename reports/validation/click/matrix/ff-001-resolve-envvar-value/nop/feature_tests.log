@@ -1,0 +1,393 @@
+FFFFFFFFFFFFFFFFF........                                                [100%]
+=================================== FAILURES ===================================
+_______________________ test_fault_empty_value_rejected ________________________
+
+runner = <click.testing.CliRunner object at 0xffffabd34b30>
+
+    def test_fault_empty_value_rejected(runner):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": ""})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:25: AssertionError
+___________________ test_fault_empty_whitespace_rejected[ ] ____________________
+
+runner = <click.testing.CliRunner object at 0xffffabd65be0>, value = ' '
+
+    @pytest.mark.parametrize("value", [" ", "   ", "\t\n"])
+    def test_fault_empty_whitespace_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:34: AssertionError
+__________________ test_fault_empty_whitespace_rejected[   ] ___________________
+
+runner = <click.testing.CliRunner object at 0xffffabbafc80>, value = '   '
+
+    @pytest.mark.parametrize("value", [" ", "   ", "\t\n"])
+    def test_fault_empty_whitespace_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:34: AssertionError
+__________________ test_fault_empty_whitespace_rejected[\t\n] __________________
+
+runner = <click.testing.CliRunner object at 0xffffabbad2b0>, value = '\t\n'
+
+    @pytest.mark.parametrize("value", [" ", "   ", "\t\n"])
+    def test_fault_empty_whitespace_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:34: AssertionError
+_________________ test_fault_placeholder_rejected[changethis] __________________
+
+runner = <click.testing.CliRunner object at 0xffffabbae180>
+value = 'changethis'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+__________________ test_fault_placeholder_rejected[changeme] ___________________
+
+runner = <click.testing.CliRunner object at 0xffffabbaf5f0>, value = 'changeme'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+____________________ test_fault_placeholder_rejected[TODO] _____________________
+
+runner = <click.testing.CliRunner object at 0xffffabbb0140>, value = 'TODO'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+____________________ test_fault_placeholder_rejected[todo] _____________________
+
+runner = <click.testing.CliRunner object at 0xffffabbb0f50>, value = 'todo'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+________________ test_fault_placeholder_rejected[  ChangeMe  ] _________________
+
+runner = <click.testing.CliRunner object at 0xffffabbb9400>
+value = '  ChangeMe  '
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+__________________ test_fault_placeholder_rejected[<fill-me>] __________________
+
+runner = <click.testing.CliRunner object at 0xffffabbbae10>, value = '<fill-me>'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+________________ test_fault_placeholder_rejected[<your-token>] _________________
+
+runner = <click.testing.CliRunner object at 0xffffabbb2690>
+value = '<your-token>'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+_____________________ test_fault_placeholder_rejected[xxx] _____________________
+
+runner = <click.testing.CliRunner object at 0xffffabbb03e0>, value = 'xxx'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+____________________ test_fault_placeholder_rejected[FIXME] ____________________
+
+runner = <click.testing.CliRunner object at 0xffffabbad310>, value = 'FIXME'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+_________________ test_fault_placeholder_rejected[placeholder] _________________
+
+runner = <click.testing.CliRunner object at 0xffffabbae780>
+value = 'placeholder'
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "changethis",
+            "changeme",
+            "TODO",
+            "todo",
+            "  ChangeMe  ",
+            "<fill-me>",
+            "<your-token>",
+            "xxx",
+            "FIXME",
+            "placeholder",
+        ],
+    )
+    def test_fault_placeholder_rejected(runner, value):
+        result = runner.invoke(_make_cli(), [], env={"APP_TOKEN": value})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:56: AssertionError
+_______________________ test_fault_placeholder_argument ________________________
+
+runner = <click.testing.CliRunner object at 0xffffabbacc80>
+
+    def test_fault_placeholder_argument(runner):
+        @click.command()
+        @click.argument("name", envvar="APP_NAME", cls=StrictArgument)
+        def cli(name):
+            click.echo(f"name={name}")
+    
+        result = runner.invoke(cli, [], env={"APP_NAME": "<fill-me>"})
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:68: AssertionError
+_______________________ test_fault_several_bad_all_named _______________________
+
+runner = <click.testing.CliRunner object at 0xffffabd66240>
+
+    def test_fault_several_bad_all_named(runner):
+        cli = _make_cli(envvar=["APP_TOKEN_A", "APP_TOKEN_B", "APP_TOKEN_C"])
+        result = runner.invoke(
+            cli,
+            [],
+            env={"APP_TOKEN_A": "", "APP_TOKEN_B": "todo", "APP_TOKEN_C": "real"},
+        )
+>       assert result.exit_code == 2
+E       assert 0 == 2
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_strict_envvar.py:81: AssertionError
+______________ test_fault_several_bad_raises_single_bad_parameter ______________
+
+    def test_fault_several_bad_raises_single_bad_parameter():
+        cli = _make_cli(envvar=["APP_TOKEN_A", "APP_TOKEN_B"])
+        from click.testing import CliRunner
+    
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [],
+            env={"APP_TOKEN_A": "changethis", "APP_TOKEN_B": "  "},
+            standalone_mode=False,
+        )
+>       assert isinstance(result.exception, click.BadParameter)
+E       AssertionError: assert False
+E        +  where False = isinstance(None, <class 'click.exceptions.BadParameter'>)
+E        +    where None = <Result okay>.exception
+E        +    and   <class 'click.exceptions.BadParameter'> = click.BadParameter
+
+tests/test_strict_envvar.py:99: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_strict_envvar.py::test_strict_valid_value_loads
+PASSED tests/test_strict_envvar.py::test_strict_value_containing_placeholder_word_is_valid
+PASSED tests/test_strict_envvar.py::test_strict_absent_uses_default
+PASSED tests/test_strict_envvar.py::test_strict_absent_first_valid_second
+PASSED tests/test_strict_envvar.py::test_strict_command_line_value_without_env
+PASSED tests/test_strict_envvar.py::test_non_strict_whitespace_passes_through
+PASSED tests/test_strict_envvar.py::test_non_strict_placeholder_passes_through
+PASSED tests/test_strict_envvar.py::test_non_strict_empty_treated_as_unset
+FAILED tests/test_strict_envvar.py::test_fault_empty_value_rejected - assert ...
+FAILED tests/test_strict_envvar.py::test_fault_empty_whitespace_rejected[ ]
+FAILED tests/test_strict_envvar.py::test_fault_empty_whitespace_rejected[   ]
+FAILED tests/test_strict_envvar.py::test_fault_empty_whitespace_rejected[\t\n]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[changethis]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[changeme]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[TODO] - a...
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[todo] - a...
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[  ChangeMe  ]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[<fill-me>]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[<your-token>]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[xxx] - as...
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[FIXME] - ...
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_rejected[placeholder]
+FAILED tests/test_strict_envvar.py::test_fault_placeholder_argument - assert ...
+FAILED tests/test_strict_envvar.py::test_fault_several_bad_all_named - assert...
+FAILED tests/test_strict_envvar.py::test_fault_several_bad_raises_single_bad_parameter
+17 failed, 8 passed in 0.05s

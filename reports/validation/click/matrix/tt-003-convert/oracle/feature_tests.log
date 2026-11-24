@@ -1,0 +1,43 @@
+.......................................                                  [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["true"-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['YES'-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["On"-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line[" 1 "-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['t'-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line[ "y" -True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["no"-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['OFF'-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["0"-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line["False"-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line['n'-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar["true"-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar['Yes'-True]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar["off"-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar['0'-False]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false[""]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false['']
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false[ "" ]
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_argument
+PASSED tests/test_bool_quoted_values.py::test_fault_bool_words_type_converts_directly
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_quoted_word_names_option_and_value
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected[""yes""]
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected["true']
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected["]
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected[']
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected["yes]
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_bad_quoting_rejected[no']
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_from_envvar_names_value
+PASSED tests/test_bool_quoted_values.py::test_fault_garbage_direct_convert_raises
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[yes-True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[TRUE-True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[ on -True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[1-True]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[no-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[Off-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[0-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_values_still_parse[-False]
+PASSED tests/test_bool_quoted_values.py::test_unquoted_garbage_still_rejected
+PASSED tests/test_bool_quoted_values.py::test_native_bool_passthrough
+39 passed in 0.03s

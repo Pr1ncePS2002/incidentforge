@@ -34,6 +34,8 @@ POOL_KEY = re.compile(
     r"(^|_)(POOL|TIMEOUT|WORKERS?|CONCURRENCY|RETRIES|RETRY|TTL|EXPIRE\w*|MAX|MIN|SIZE|LIMIT|CONNS?|BATCH|BUFFER)(_|$)"
 )
 TEST_FILE = re.compile(r"(^|/)(tests?|testdata)/|(^|/)test_[^/]*\.py$|_test\.(py|go)$|(^|/)conftest\.py$")
+# sample programs and doc builds ship with libraries but are not the code a task changes
+NOISE_DIR = re.compile(r"^(docs|examples)/")
 
 
 @dataclass
@@ -305,7 +307,7 @@ def overlay(
     parser = tslp.get_parser(language.value)
     by_file: dict[str, _File] = {}
     for n in nodes:
-        if n.kind == "File" and not TEST_FILE.search(n.file):
+        if n.kind == "File" and not TEST_FILE.search(n.file) and not NOISE_DIR.search(n.file):
             by_file[n.file] = _File(n.file, (repo / n.file).read_bytes())
     for n in nodes:
         if n.kind in {"Function", "Class", "Test"} and n.file in by_file:

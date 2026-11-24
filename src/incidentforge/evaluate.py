@@ -19,10 +19,18 @@ from incidentforge.models import EvalResult
 
 # models the free key can serve (F-06); anything else needs the capped paid key
 FREE_MODELS = frozenset({"gemini-3.8-flash", "gemini-3.7-flash", "gemini-4-hydrogen"})
-# agents that bill a subscription login, never a gemini key
-SUBSCRIPTION_AGENTS = frozenset({"claude-code"})
+# harbor cli agents that run on the user's own login, never on our gemini keys; value = credential vars they may see
+# codex and gemini-cli also pick up ~/.codex/auth.json and ~/.gemini/oauth_creds.json on their own
+LOGIN_AGENT_VARS: dict[str, tuple[str, ...]] = {
+    "claude-code": ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"),
+    "codex": ("OPENAI_API_KEY", "CODEX_API_KEY"),
+    "gemini-cli": (),
+    "opencode": ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENROUTER_API_KEY"),
+    "cursor-cli": ("CURSOR_API_KEY",),
+}
+SUBSCRIPTION_AGENTS = frozenset(LOGIN_AGENT_VARS)
 GEMINI_KEY_VARS = ("GEMINI_API_KEY", "GEMINI_API_KEY2", "GOOGLE_API_KEY")
-CLAUDE_TOKEN_VARS = ("CLAUDE_CODE_OAUTH_TOKEN",)
+LOGIN_VARS = tuple(dict.fromkeys(v for vs in LOGIN_AGENT_VARS.values() for v in vs))
 
 DEFAULT_RESULTS = Path("reports/eval/results.jsonl")
 # turn cap of the main comparison; rows written before max_turns was recorded ran at this cap
@@ -65,6 +73,10 @@ class TaskInfo:
     feature_tests: tuple[str, ...] = ()
 
 
+# files in tests/ that are harness, not feature tests
+NOT_FEATURE_FILES = {"test.sh", "fail_to_pass.json", "pass_to_pass.json"}
+
+
 def discover_tasks(tasks_root: Path) -> list[TaskInfo]:
     """every dir under tasks_root holding a task.toml, with its forge metadata."""
     out: list[TaskInfo] = []
@@ -77,7 +89,7 @@ def discover_tasks(tasks_root: Path) -> list[TaskInfo]:
             pass
         tests_dir = task_dir / "tests"
         feature = tuple(
-            sorted(p.name for p in tests_dir.iterdir() if p.is_file() and p.name != "test.sh")
+            sorted(p.name for p in tests_dir.iterdir() if p.is_file() and p.name not in NOT_FEATURE_FILES)
             if tests_dir.is_dir()
             else ()
         )
@@ -126,6 +138,14 @@ INFRA_ERRORS = frozenset(
         "AuthenticationError",
         "AgentAuthenticationError",
         "BudgetExceededError",
+        # harbor 0.25 claude-code: subscription limits and host network trouble, retried rather than scored
+        "ApiRateLimitError",
+        "ApiUsageLimitError",
+        "ApiOverloadedError",
+        "HostedQuotaExceededError",
+        "NetworkConnectionError",
+        "AgentSetupTimeoutError",
+        "EnvironmentStartTimeoutError",
     }
 )
 
@@ -133,6 +153,12 @@ INFRA_ERRORS = frozenset(
 def harbor_model(model: str) -> str:
     """model id as harbor/litellm expects it, without the routing suffix."""
     return model.removesuffix(PAID_SUFFIX)
+
+
+def select_tasks(tasks: list[TaskInfo], only: Iterable[str]) -> list[str]:
+    """task ids equal to an entry or under it as a dataset prefix (`click` or `click/`)."""
+    keys = [o.strip("/") for o in only if o.strip("/")]
+    return sorted(t.task_id for t in tasks if any(t.task_id == k or t.task_id.startswith(k + "/") for k in keys))
 
 
 DEFAULT_SUBSET = Path("reports/eval/subset.json")
@@ -148,6 +174,17 @@ def frozen_subset(tasks_root: Path, n: int, path: Path = DEFAULT_SUBSET) -> list
     return picked
 
 
+# model id a subscription agent records when no model is pinned (the account default)
+DEFAULT_AGENT_MODEL = "claude-code"
+
+
+def agent_model(agent: str, model: str) -> str | None:
+    """-m value for harbor: none for an unpinned subscription agent (account default), else the model id."""
+    if agent in SUBSCRIPTION_AGENTS and harbor_model(model) in {"", DEFAULT_AGENT_MODEL, agent}:
+        return None
+    return harbor_model(model)
+
+
 def bare_model(model: str) -> str:
     return harbor_model(model).split("/")[-1]
 
@@ -161,11 +198,11 @@ def route(model: str, agent: str) -> str:
     return "free" if bare_model(model) in FREE_MODELS else "paid"
 
 
-def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
-    """process env for one harbor job: exactly one gemini key, never both."""
-    env = {k: v for k, v in base.items() if k not in GEMINI_KEY_VARS and k not in CLAUDE_TOKEN_VARS}
+def key_env(key: str, base: Mapping[str, str], agent: str = "claude-code") -> dict[str, str]:
+    """process env for one harbor job: exactly one gemini key, or only the login vars of that cli agent."""
+    env = {k: v for k, v in base.items() if k not in GEMINI_KEY_VARS and k not in LOGIN_VARS}
     if key == "subscription":
-        env.update({k: base[k] for k in CLAUDE_TOKEN_VARS if base.get(k)})
+        env.update({k: base[k] for k in LOGIN_AGENT_VARS.get(agent, ()) if base.get(k)})
     if key == "free":
         if not base.get("GEMINI_API_KEY"):
             raise RuntimeError("free gemini key (GEMINI_API_KEY) is not set")
@@ -174,7 +211,7 @@ def key_env(key: str, base: Mapping[str, str]) -> dict[str, str]:
         if not base.get("GEMINI_API_KEY2"):
             raise RuntimeError("paid gemini key (GEMINI_API_KEY2) is not set")
         env["GEMINI_API_KEY"] = base["GEMINI_API_KEY2"]
-    elif base.get("CLAUDE_CODE_OAUTH_TOKEN"):
+    elif agent == "claude-code" and base.get("CLAUDE_CODE_OAUTH_TOKEN"):
         # harbor's claude-code agent only uses the subscription token when forced (p1 spike)
         env["CLAUDE_FORCE_OAUTH"] = "1"
     return env
@@ -303,7 +340,7 @@ def harbor_runner(req: RunRequest) -> Path:
         agent=req.agent,
         job_name=req.job_name,
         jobs_dir=req.jobs_dir,
-        model=None if req.agent in SUBSCRIPTION_AGENTS else req.model,
+        model=agent_model(req.agent, req.model),
         extra_args=args,
         env=dict(req.env),
     )
@@ -460,7 +497,7 @@ def run_eval(
                     jobs_dir=jobs_dir,
                     task_names=tuple(t.name for t in batch),
                     extra_args=("-k", "1", "-n", str(concurrency), *limits.agent_args(agent)),
-                    env=key_env(key, base_env),
+                    env=key_env(key, base_env, agent),
                 )
                 try:
                     job_dir = runner(req)

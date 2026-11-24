@@ -1,0 +1,700 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFF                                              [100%]
+=================================== FAILURES ===================================
+________________________ test_plain_seconds_still_parse ________________________
+
+runner = <click.testing.CliRunner object at 0xffff816576b0>
+
+    def test_plain_seconds_still_parse(runner):
+>       result = runner.invoke(_cli(), ["--timeout", "30"])
+                               ^^^^^^
+
+tests/test_duration_type.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_____________________ test_plain_fractional_seconds_parse ______________________
+
+runner = <click.testing.CliRunner object at 0xffff81657260>
+
+    def test_plain_fractional_seconds_parse(runner):
+>       result = runner.invoke(_cli(), ["--timeout", "2.5"])
+                               ^^^^^^
+
+tests/test_duration_type.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_________________________ test_missing_option_is_none __________________________
+
+runner = <click.testing.CliRunner object at 0xffff8149f5f0>
+
+    def test_missing_option_is_none(runner):
+>       result = runner.invoke(_cli(), [])
+                               ^^^^^^
+
+tests/test_duration_type.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_________________________ test_python_defaults_convert _________________________
+
+runner = <click.testing.CliRunner object at 0xffff8149fb00>
+
+    def test_python_defaults_convert(runner):
+>       assert runner.invoke(_cli(default=45), []).output == "45.0\n"
+                             ^^^^^^^^^^^^^^^^
+
+tests/test_duration_type.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {'default': 45}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_____________________________ test_metavar_in_help _____________________________
+
+runner = <click.testing.CliRunner object at 0xffff8149cbc0>
+
+    def test_metavar_in_help(runner):
+>       result = runner.invoke(_cli(), ["--help"])
+                               ^^^^^^
+
+tests/test_duration_type.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+____________________ test_direct_convert_returns_timedelta _____________________
+
+    def test_direct_convert_returns_timedelta():
+>       dur = click.types.Duration()
+              ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:52: AttributeError
+_____________________ test_fault_duration_suffix[30s-30.0] _____________________
+
+runner = <click.testing.CliRunner object at 0xffff8149e0f0>, raw = '30s'
+expected = '30.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_____________________ test_fault_duration_suffix[5m-300.0] _____________________
+
+runner = <click.testing.CliRunner object at 0xffff814a3a70>, raw = '5m'
+expected = '300.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+____________________ test_fault_duration_suffix[2h-7200.0] _____________________
+
+runner = <click.testing.CliRunner object at 0xffff814a0770>, raw = '2h'
+expected = '7200.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+____________________ test_fault_duration_suffix[1d-86400.0] ____________________
+
+runner = <click.testing.CliRunner object at 0xffff814a10d0>, raw = '1d'
+expected = '86400.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+___________________ test_fault_duration_suffix[1.5h-5400.0] ____________________
+
+runner = <click.testing.CliRunner object at 0xffff814a3a40>, raw = '1.5h'
+expected = '5400.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_____________________ test_fault_duration_suffix[90S-90.0] _____________________
+
+runner = <click.testing.CliRunner object at 0xffff814a0e90>, raw = '90S'
+expected = '90.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+____________________ test_fault_duration_suffix[2H-7200.0] _____________________
+
+runner = <click.testing.CliRunner object at 0xffff814a3c50>, raw = '2H'
+expected = '7200.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+__________________ test_fault_duration_suffix[  10m  -600.0] ___________________
+
+runner = <click.testing.CliRunner object at 0xffff8149e270>, raw = '  10m  '
+expected = '600.0'
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            ("30s", "30.0"),
+            ("5m", "300.0"),
+            ("2h", "7200.0"),
+            ("1d", "86400.0"),
+            ("1.5h", "5400.0"),
+            ("90S", "90.0"),
+            ("2H", "7200.0"),
+            ("  10m  ", "600.0"),
+        ],
+    )
+    def test_fault_duration_suffix(runner, raw, expected):
+>       result = runner.invoke(_cli(), ["--timeout", raw])
+                               ^^^^^^
+
+tests/test_duration_type.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_________________ test_fault_duration_suffix_matches_canonical _________________
+
+runner = <click.testing.CliRunner object at 0xffff8149e420>
+
+    def test_fault_duration_suffix_matches_canonical(runner):
+>       suffixed = runner.invoke(_cli(), ["--timeout", "5m"])
+                                 ^^^^^^
+
+tests/test_duration_type.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+____________________ test_fault_duration_suffix_from_envvar ____________________
+
+runner = <click.testing.CliRunner object at 0xffff8149fbf0>
+
+    def test_fault_duration_suffix_from_envvar(runner):
+        result = runner.invoke(
+>           _cli(envvar="APP_TIMEOUT"), [], env={"APP_TIMEOUT": "2h"}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        )
+
+tests/test_duration_type.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {'envvar': 'APP_TIMEOUT'}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+________________ test_fault_garbage_names_option_and_value[5x] _________________
+
+runner = <click.testing.CliRunner object at 0xffff81656e40>, raw = '5x'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+________________ test_fault_garbage_names_option_and_value[abc] ________________
+
+runner = <click.testing.CliRunner object at 0xffff8165bf20>, raw = 'abc'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_________________ test_fault_garbage_names_option_and_value[] __________________
+
+runner = <click.testing.CliRunner object at 0xffff814a9640>, raw = ''
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_________________ test_fault_garbage_names_option_and_value[s] _________________
+
+runner = <click.testing.CliRunner object at 0xffff814ab080>, raw = 's'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+________________ test_fault_garbage_names_option_and_value[-5s] ________________
+
+runner = <click.testing.CliRunner object at 0xffff814a94f0>, raw = '-5s'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+________________ test_fault_garbage_names_option_and_value[nan] ________________
+
+runner = <click.testing.CliRunner object at 0xffff814a9670>, raw = 'nan'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+________________ test_fault_garbage_names_option_and_value[inf] ________________
+
+runner = <click.testing.CliRunner object at 0xffff814a89b0>, raw = 'inf'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+______________ test_fault_garbage_names_option_and_value[1e400s] _______________
+
+runner = <click.testing.CliRunner object at 0xffff814aa3f0>, raw = '1e400s'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+_____________ test_fault_garbage_names_option_and_value[5 minutes] _____________
+
+runner = <click.testing.CliRunner object at 0xffff814a9040>, raw = '5 minutes'
+
+    @pytest.mark.parametrize(
+        "raw",
+        ["5x", "abc", "", "s", "-5s", "nan", "inf", "1e400s", "5 minutes"],
+    )
+    def test_fault_garbage_names_option_and_value(runner, raw):
+>       result = runner.invoke(_cli(), [f"--timeout={raw}"])
+                               ^^^^^^
+
+tests/test_duration_type.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+________________________ test_fault_garbage_from_envvar ________________________
+
+runner = <click.testing.CliRunner object at 0xffff814a9970>
+
+    def test_fault_garbage_from_envvar(runner):
+        result = runner.invoke(
+>           _cli(envvar="APP_TIMEOUT"), [], env={"APP_TIMEOUT": "ten"}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        )
+
+tests/test_duration_type.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+option_kwargs = {'envvar': 'APP_TIMEOUT'}
+
+    def _cli(**option_kwargs):
+        @click.command()
+>       @click.option("--timeout", type=click.types.Duration(), **option_kwargs)
+                                        ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:10: AttributeError
+____________ test_fault_garbage_direct_convert_raises_bad_parameter ____________
+
+    def test_fault_garbage_direct_convert_raises_bad_parameter():
+        with pytest.raises(click.BadParameter, match="oops"):
+>           click.types.Duration().convert("oops", None, None)
+            ^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'click.types' has no attribute 'Duration'
+
+tests/test_duration_type.py:119: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_duration_type.py::test_plain_seconds_still_parse - Attribut...
+FAILED tests/test_duration_type.py::test_plain_fractional_seconds_parse - Att...
+FAILED tests/test_duration_type.py::test_missing_option_is_none - AttributeEr...
+FAILED tests/test_duration_type.py::test_python_defaults_convert - AttributeE...
+FAILED tests/test_duration_type.py::test_metavar_in_help - AttributeError: mo...
+FAILED tests/test_duration_type.py::test_direct_convert_returns_timedelta - A...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[30s-30.0] - At...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[5m-300.0] - At...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[2h-7200.0] - A...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[1d-86400.0] - ...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[1.5h-5400.0]
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[90S-90.0] - At...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[2H-7200.0] - A...
+FAILED tests/test_duration_type.py::test_fault_duration_suffix[  10m  -600.0]
+FAILED tests/test_duration_type.py::test_fault_duration_suffix_matches_canonical
+FAILED tests/test_duration_type.py::test_fault_duration_suffix_from_envvar - ...
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[5x]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[abc]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[s]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[-5s]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[nan]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[inf]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[1e400s]
+FAILED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[5 minutes]
+FAILED tests/test_duration_type.py::test_fault_garbage_from_envvar - Attribut...
+FAILED tests/test_duration_type.py::test_fault_garbage_direct_convert_raises_bad_parameter
+27 failed in 0.07s

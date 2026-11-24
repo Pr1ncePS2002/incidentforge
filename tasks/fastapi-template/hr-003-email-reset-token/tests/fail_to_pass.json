@@ -1,0 +1,17 @@
+[
+  "tests/test_forge_reset_link_reload.py::test_defaults_without_reload_are_unchanged",
+  "tests/test_forge_reset_link_reload.py::test_startup_values_still_honoured",
+  "tests/test_forge_reset_link_reload.py::test_reload_next_read_returns_new_values",
+  "tests/test_forge_reset_link_reload.py::test_reload_parses_numeric_string_and_ignores_unknown_keys",
+  "tests/test_forge_reset_link_reload.py::test_fault_stale_capture_same_object_sees_reload",
+  "tests/test_forge_reset_link_reload.py::test_fault_stale_capture_global_settings",
+  "tests/test_forge_reset_link_reload.py::test_fault_invalid_reload_hours",
+  "tests/test_forge_reset_link_reload.py::test_fault_invalid_reload_frontend_host",
+  "tests/test_forge_reset_link_reload.py::test_fault_invalid_reload_names_every_key",
+  "tests/test_forge_reset_link_reload.py::test_fault_invalid_reload_then_good_reload_applies",
+  "tests/test_forge_reset_link_reload.py::test_fault_partial_reload_bad_host_keeps_old_hours",
+  "tests/test_forge_reset_link_reload.py::test_fault_partial_reload_bad_hours_keeps_old_host",
+  "tests/test_forge_reset_link_reload.py::test_fault_partial_reload_readers_never_see_mixed_pair",
+  "tests/test_forge_reset_link_reload.py::test_fault_reload_unset_falls_back_to_defaults",
+  "tests/test_forge_reset_link_reload.py::test_fault_reload_unset_one_key_only"
+]

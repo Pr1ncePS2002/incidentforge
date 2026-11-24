@@ -1,0 +1,16 @@
+............                                                             [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_datetime_envvar_lists.py::test_whitespace_envvar_list_still_works
+PASSED tests/test_datetime_envvar_lists.py::test_command_line_values_unchanged
+PASSED tests/test_datetime_envvar_lists.py::test_fault_csv_list_matches_canonical
+PASSED tests/test_datetime_envvar_lists.py::test_fault_csv_list_with_spaced_datetimes
+PASSED tests/test_datetime_envvar_lists.py::test_fault_csv_list_nargs
+PASSED tests/test_datetime_envvar_lists.py::test_fault_csv_list_split_direct
+PASSED tests/test_datetime_envvar_lists.py::test_fault_json_list
+PASSED tests/test_datetime_envvar_lists.py::test_fault_json_list_empty
+PASSED tests/test_datetime_envvar_lists.py::test_fault_json_list_split_direct
+PASSED tests/test_datetime_envvar_lists.py::test_fault_garbage_csv_item_named
+PASSED tests/test_datetime_envvar_lists.py::test_fault_garbage_invalid_json
+PASSED tests/test_datetime_envvar_lists.py::test_fault_garbage_json_non_strings
+12 passed in 0.02s

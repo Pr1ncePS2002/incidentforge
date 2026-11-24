@@ -1,0 +1,23 @@
+...................                                                      [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_formatter_width_limits.py::test_default_width_clamped_to_80
+PASSED tests/test_formatter_width_limits.py::test_default_floor_is_50
+PASSED tests/test_formatter_width_limits.py::test_small_max_width_without_min_keeps_old_floor
+PASSED tests/test_formatter_width_limits.py::test_explicit_width_used_verbatim
+PASSED tests/test_formatter_width_limits.py::test_help_still_renders
+PASSED tests/test_formatter_width_limits.py::test_fault_hardcoded_size_floor_follows_min_width
+PASSED tests/test_formatter_width_limits.py::test_fault_hardcoded_size_floor_raised
+PASSED tests/test_formatter_width_limits.py::test_fault_unset_limit_uses_default_max
+PASSED tests/test_formatter_width_limits.py::test_fault_unset_limit_small_terminal
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs0-width-0]
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs1-width--5]
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs2-max_width-0]
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs3-max_width--1]
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs4-min_width-0]
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative[kwargs5-min_width--3]
+PASSED tests/test_formatter_width_limits.py::test_fault_zero_or_negative_context_setting
+PASSED tests/test_formatter_width_limits.py::test_fault_min_over_max_explicit
+PASSED tests/test_formatter_width_limits.py::test_fault_min_over_max_default_max
+PASSED tests/test_formatter_width_limits.py::test_min_equal_to_max_allowed
+19 passed in 0.02s

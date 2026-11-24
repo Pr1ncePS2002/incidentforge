@@ -1,0 +1,8 @@
+name: click
+repo_url: https://github.com/pallets/click.git
+commit: cf19179e8e2fd54c601378cec9e0d21bb12b6fb1
+language: python
+env_template: env/click
+test_command: run_tests -q
+source_root: "."
+licence: BSD-3-Clause

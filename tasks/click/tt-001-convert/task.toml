@@ -1,0 +1,26 @@
+schema_version = "1.4"
+
+[metadata]
+title = "add a duration parameter type that accepts unit suffixes"
+family = "tolerant-typed-config"
+difficulty = "easy"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["duration-suffix: --timeout given as 30s, 5m, 2h, 1d, 1.5h, 90S or '  10m  ' (and APP_TIMEOUT=2h through envvar) converts to the same timedelta as the plain number of seconds", "garbage: --timeout=5x, abc, '', s, -5s, nan, inf, 1e400s or '5 minutes' (and APP_TIMEOUT=ten) is rejected with exit code 2, and the message names --timeout and quotes the bad value"]
+map_node = "src/click/types.py::FuncParamType.convert"
+blast_radius = 1
+fix_scope = "1 file"
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

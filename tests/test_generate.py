@@ -52,6 +52,7 @@ def target(tmp_path: Path) -> Target:
         name="fixture",
         repo_url=str(repo),
         commit=commit,
+        licence="MIT",
         language=Language.python,
         env_template=env,
         test_command="run_tests -q tests/",
@@ -119,7 +120,7 @@ def run(target: Target, tmp_path: Path, backend: FakeBackend, validator: FakeVal
         writer=write_task,
         validator=validator,
         jobs=1,
-        log=lambda _m: None,
+        log=kw.pop("log", lambda _m: None),
         **kw,
     )
 
@@ -134,6 +135,8 @@ def test_accepts_first_try(target: Target, tmp_path: Path) -> None:
     assert "STRICT" in (task / "solution" / "reference.patch").read_text()
     # one changed file and one fault is easy, whatever the model claimed
     assert 'difficulty = "easy"' in (task / "task.toml").read_text()
+    assert 'generator_backend = "fake"' in (task / "task.toml").read_text()
+    assert 'generator_model = "default"' in (task / "task.toml").read_text()
     prompt = backend.prompts[0]
     assert "backend/app/config.py::Settings (settings-class)" in prompt
     assert "{{" not in prompt
@@ -163,9 +166,12 @@ def test_bad_patch_and_backend_errors_are_rejections(target: Target, tmp_path: P
         no_fault,
         {k: v for k, v in answer(patch).items() if k != "instruction"},
     )
-    reports = run(target, tmp_path, backend, FakeValidator(), n=2, max_pairs=2)
+    lines: list[str] = []
+    reports = run(target, tmp_path, backend, FakeValidator(), n=2, max_pairs=2, log=lines.append)
     gates = [r.gates[0].gate for r in reports]
     assert gates == ["generator", "spec_schema"]
+    # the generator's reason reaches the run log, a schema miss does not add a line
+    assert [x.strip() for x in lines if "generator:" in x] == ["generator: RuntimeError: backend down"]
     log = [json.loads(x) for x in (tmp_path / "work/generate-log.jsonl").read_text().splitlines()]
     assert [r["failed_gates"] for r in log] == [["patch_apply"], ["generator"], ["patch_apply"], ["spec_schema"]]
 

@@ -18,7 +18,8 @@ class Target(BaseModel):
 
     name: str  # e.g. fastapi-template
     repo_url: str
-    commit: str
+    commit: str = Field(pattern=r"^[0-9a-f]{40}$")  # full sha; the task format records it as base_commit
+    licence: str  # spdx id of the upstream repo, e.g. MIT
     language: Language
     env_template: Path  # dir with Dockerfile + run_tests.sh copied into each task
     test_command: str  # runs the repo suite inside the task container, e.g. "run_tests -q tests/"
@@ -55,6 +56,8 @@ class TaskSpec(BaseModel):
     origin: str = "llm"  # llm | feature-removal | hand-written
     surface: Surface | None = None
     source_url: str | None = None  # public postmortem a task was derived from
+    generator_backend: str | None = None  # backend that wrote the task, e.g. claude-code | gemini
+    generator_model: str | None = None  # model id the backend was asked for, or "default"
 
 
 class GateResult(BaseModel):

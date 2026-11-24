@@ -1,0 +1,10 @@
+[
+  "internal/config::TestLiveOptionsServesStartupOptionsUnchanged",
+  "internal/config::TestLiveOptionsNilServesDefaults",
+  "internal/config::TestLiveOptionsValidReloadSucceeds",
+  "internal/config::TestFaultStaleCaptureNextReadSeesReload",
+  "internal/config::TestFaultInvalidReloadKeepsLastGoodValue",
+  "internal/config::TestFaultInvalidReloadMalformedLine",
+  "internal/config::TestFaultPartialReloadPairsSwapTogether",
+  "internal/config::TestFaultReloadUnsetFallsBackToDefault"
+]

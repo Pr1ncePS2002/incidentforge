@@ -1,0 +1,7 @@
+[
+  "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_on_command_line",
+  "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_from_envvar",
+  "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_empty_is_false",
+  "tests/test_bool_quoted_values.py::test_fault_bool_words_quoted_argument",
+  "tests/test_bool_quoted_values.py::test_fault_bool_words_type_converts_directly"
+]

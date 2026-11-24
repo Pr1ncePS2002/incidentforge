@@ -1,0 +1,9 @@
+[
+  "tests/test_forge_usercreate_identity_password.py::test_fault_dependent_bound_email_local_part",
+  "tests/test_forge_usercreate_identity_password.py::test_fault_dependent_bound_full_name",
+  "tests/test_forge_usercreate_identity_password.py::test_fault_dependent_bound_both_reported_in_one_error",
+  "tests/test_forge_usercreate_identity_password.py::test_fault_dependent_bound_signup_payload_conversion",
+  "tests/test_forge_usercreate_identity_password.py::test_fault_boundary_equal_password_equals_local_part",
+  "tests/test_forge_usercreate_identity_password.py::test_fault_boundary_equal_password_equals_full_name",
+  "tests/test_forge_usercreate_identity_password.py::test_fault_boundary_equal_three_char_local_part_is_checked"
+]

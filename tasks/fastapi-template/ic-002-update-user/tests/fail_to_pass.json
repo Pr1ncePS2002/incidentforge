@@ -1,0 +1,8 @@
+[
+  "tests/test_forge_idempotent_update_user.py::test_first_keyed_update_applies",
+  "tests/test_forge_idempotent_update_user.py::test_fault_duplicate_delivery_password_not_rehashed",
+  "tests/test_forge_idempotent_update_user.py::test_fault_duplicate_delivery_does_not_revert_later_update",
+  "tests/test_forge_idempotent_update_user.py::test_fault_retry_after_partial_write",
+  "tests/test_forge_idempotent_update_user.py::test_fault_distinct_events_same_user_both_apply",
+  "tests/test_forge_idempotent_update_user.py::test_fault_distinct_events_same_key_different_users"
+]

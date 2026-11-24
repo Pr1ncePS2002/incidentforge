@@ -1,0 +1,17 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 14, "passed": 1, "failed": 13, "pending": 0, "skipped": 0, "other": 0, "start": 1795522521000, "stop": 1795522521000},
+  "tests": [
+    {"name": "feature_tests", "status": "failed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_plain_seconds_still_parse", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_plain_fractional_seconds_parse", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_missing_option_is_none", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_python_defaults_convert", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_metavar_in_help", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_direct_convert_returns_timedelta", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_fault_duration_suffix", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_fault_duration_suffix_matches_canonical", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_fault_duration_suffix_from_envvar", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_fault_garbage_names_option_and_value", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_fault_garbage_from_envvar", "status": "failed", "duration": 0},
+    {"name": "tests/test_duration_type.py::test_fault_garbage_direct_convert_raises_bad_parameter", "status": "failed", "duration": 0}]}}

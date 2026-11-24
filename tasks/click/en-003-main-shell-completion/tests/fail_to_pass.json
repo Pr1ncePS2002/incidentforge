@@ -1,0 +1,10 @@
+[
+  "tests/test_complete_var_name.py::test_plain_names_stay_stable",
+  "tests/test_complete_var_name.py::test_group_inherits_helper",
+  "tests/test_complete_var_name.py::test_fault_separator_injection_space_in_prog_name",
+  "tests/test_complete_var_name.py::test_fault_separator_injection_helper_normalises",
+  "tests/test_complete_var_name.py::test_fault_unscoped_key_distinct_programs",
+  "tests/test_complete_var_name.py::test_fault_wrong_env_source_override_is_used",
+  "tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name",
+  "tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var"
+]

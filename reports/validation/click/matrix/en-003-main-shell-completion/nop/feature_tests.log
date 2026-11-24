@@ -1,0 +1,196 @@
+FF...FFFFFFFFFFF                                                         [100%]
+=================================== FAILURES ===================================
+_________________________ test_plain_names_stay_stable _________________________
+
+    def test_plain_names_stay_stable():
+        cli = _make_cli()
+>       assert cli.get_complete_var("cli") == "_CLI_COMPLETE"
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Command' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:20: AttributeError
+__________________________ test_group_inherits_helper __________________________
+
+    def test_group_inherits_helper():
+        @click.group()
+        def grp():
+            pass
+    
+>       assert grp.get_complete_var("my-group") == "_MY_GROUP_COMPLETE"
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Group' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:31: AttributeError
+______________ test_fault_separator_injection_space_in_prog_name _______________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5cd70>
+
+    def test_fault_separator_injection_space_in_prog_name(runner):
+        cli = _make_cli()
+        result = runner.invoke(
+            cli, [], prog_name="my app", env={"_MY_APP_COMPLETE": "zsh_source"}
+        )
+        assert result.exception is None or isinstance(result.exception, SystemExit)
+        assert result.exit_code == 0
+>       assert "_MY_APP_COMPLETE=zsh_complete" in result.output
+E       AssertionError: assert '_MY_APP_COMPLETE=zsh_complete' in 'command-body-executed\n'
+E        +  where 'command-body-executed\n' = <Result okay>.output
+
+tests/test_complete_var_name.py:73: AssertionError
+_______________ test_fault_separator_injection_helper_normalises _______________
+
+    def test_fault_separator_injection_helper_normalises():
+        cli = _make_cli()
+>       assert cli.get_complete_var("my app") == "_MY_APP_COMPLETE"
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Command' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:79: AttributeError
+__________________ test_fault_unscoped_key_distinct_programs ___________________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5e120>
+
+    def test_fault_unscoped_key_distinct_programs(runner):
+        cli = _make_cli()
+>       assert cli.get_complete_var("app one") != cli.get_complete_var("app two")
+               ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Command' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:89: AttributeError
+_________________ test_fault_wrong_env_source_override_is_used _________________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5d460>
+
+    def test_fault_wrong_env_source_override_is_used(runner):
+        class CustomCommand(click.Command):
+            def get_complete_var(self, prog_name: str) -> str:
+                return "CUSTOM_" + prog_name.upper() + "_COMPLETE"
+    
+        cli = _make_cli(CustomCommand)
+    
+        result = runner.invoke(
+            cli, [], prog_name="tool", env={"CUSTOM_TOOL_COMPLETE": "zsh_source"}
+        )
+        assert result.exit_code == 0
+>       assert "CUSTOM_TOOL_COMPLETE=zsh_complete" in result.output
+E       AssertionError: assert 'CUSTOM_TOOL_COMPLETE=zsh_complete' in 'command-body-executed\n'
+E        +  where 'command-body-executed\n' = <Result okay>.output
+
+tests/test_complete_var_name.py:110: AssertionError
+_________________ test_fault_unknown_env_unusable_prog_name[] __________________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5dfa0>, prog_name = ''
+
+    @pytest.mark.parametrize("prog_name", ["", "   ", "---"])
+    def test_fault_unknown_env_unusable_prog_name(runner, prog_name):
+        cli = _make_cli()
+        with pytest.raises(ValueError, match="prog_name"):
+>           cli.get_complete_var(prog_name)
+            ^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'Command' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:136: AttributeError
+________________ test_fault_unknown_env_unusable_prog_name[   ] ________________
+
+runner = <click.testing.CliRunner object at 0xffff8c08bdd0>, prog_name = '   '
+
+    @pytest.mark.parametrize("prog_name", ["", "   ", "---"])
+    def test_fault_unknown_env_unusable_prog_name(runner, prog_name):
+        cli = _make_cli()
+        with pytest.raises(ValueError, match="prog_name"):
+>           cli.get_complete_var(prog_name)
+            ^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'Command' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:136: AttributeError
+________________ test_fault_unknown_env_unusable_prog_name[---] ________________
+
+runner = <click.testing.CliRunner object at 0xffff8ae171a0>, prog_name = '---'
+
+    @pytest.mark.parametrize("prog_name", ["", "   ", "---"])
+    def test_fault_unknown_env_unusable_prog_name(runner, prog_name):
+        cli = _make_cli()
+        with pytest.raises(ValueError, match="prog_name"):
+>           cli.get_complete_var(prog_name)
+            ^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'Command' object has no attribute 'get_complete_var'
+
+tests/test_complete_var_name.py:136: AttributeError
+________________ test_fault_unknown_env_invalid_complete_var[] _________________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5f350>, complete_var = ''
+
+    @pytest.mark.parametrize("complete_var", ["", "BAD VAR", "1ABC", "A=B"])
+    def test_fault_unknown_env_invalid_complete_var(runner, complete_var):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], prog_name="tool", complete_var=complete_var)
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(None, ValueError)
+E        +    where None = <Result okay>.exception
+
+tests/test_complete_var_name.py:148: AssertionError
+_____________ test_fault_unknown_env_invalid_complete_var[BAD VAR] _____________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5db50>
+complete_var = 'BAD VAR'
+
+    @pytest.mark.parametrize("complete_var", ["", "BAD VAR", "1ABC", "A=B"])
+    def test_fault_unknown_env_invalid_complete_var(runner, complete_var):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], prog_name="tool", complete_var=complete_var)
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(None, ValueError)
+E        +    where None = <Result okay>.exception
+
+tests/test_complete_var_name.py:148: AssertionError
+______________ test_fault_unknown_env_invalid_complete_var[1ABC] _______________
+
+runner = <click.testing.CliRunner object at 0xffff8ac5c4d0>
+complete_var = '1ABC'
+
+    @pytest.mark.parametrize("complete_var", ["", "BAD VAR", "1ABC", "A=B"])
+    def test_fault_unknown_env_invalid_complete_var(runner, complete_var):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], prog_name="tool", complete_var=complete_var)
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(None, ValueError)
+E        +    where None = <Result okay>.exception
+
+tests/test_complete_var_name.py:148: AssertionError
+_______________ test_fault_unknown_env_invalid_complete_var[A=B] _______________
+
+runner = <click.testing.CliRunner object at 0xffff8ac60410>
+complete_var = 'A=B'
+
+    @pytest.mark.parametrize("complete_var", ["", "BAD VAR", "1ABC", "A=B"])
+    def test_fault_unknown_env_invalid_complete_var(runner, complete_var):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], prog_name="tool", complete_var=complete_var)
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(None, ValueError)
+E        +    where None = <Result okay>.exception
+
+tests/test_complete_var_name.py:148: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_complete_var_name.py::test_plain_invocation_without_completion_runs
+PASSED tests/test_complete_var_name.py::test_dashed_name_completion_still_triggers
+PASSED tests/test_complete_var_name.py::test_valid_explicit_complete_var_is_used
+FAILED tests/test_complete_var_name.py::test_plain_names_stay_stable - Attrib...
+FAILED tests/test_complete_var_name.py::test_group_inherits_helper - Attribut...
+FAILED tests/test_complete_var_name.py::test_fault_separator_injection_space_in_prog_name
+FAILED tests/test_complete_var_name.py::test_fault_separator_injection_helper_normalises
+FAILED tests/test_complete_var_name.py::test_fault_unscoped_key_distinct_programs
+FAILED tests/test_complete_var_name.py::test_fault_wrong_env_source_override_is_used
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name[]
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name[   ]
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name[---]
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[]
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[BAD VAR]
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[1ABC]
+FAILED tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var[A=B]
+13 failed, 3 passed in 0.05s

@@ -1,8 +1,29 @@
 import os
+from typing import TYPE_CHECKING
 
 import typer
 
+if TYPE_CHECKING:
+    from incidentforge.backends.base import Backend
+
 app = typer.Typer(help="incidentforge coding task factory", no_args_is_help=True)
+BACKEND_HELP = (
+    "claude-code | codex | opencode | gemini-cli | command | gemini | auto; the clis use their own login, "
+    "auto = first of claude, codex, opencode, gemini on PATH"
+)
+COMMAND_HELP = (
+    "for --backend command: shell-style command, prompt on stdin or {prompt_file}; "
+    "also {schema_file}, {model}; default env FORGE_GEN_COMMAND"
+)
+
+
+def _backend(name: str, model: str | None, command: str | None) -> "Backend":
+    from incidentforge.backends.base import get_backend
+
+    try:
+        return get_backend(name, model, command)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc), param_hint="--backend") from exc
 
 
 @app.callback()
@@ -23,7 +44,9 @@ def run(
     target: str = typer.Option("fastapi-template", help="target name under incidentforge/targets"),
     family: list[str] = typer.Option(None, help="family slug(s); default = frequency-weighted mix"),
     n: int = typer.Option(5, help="tasks to accept"),
-    backend: str = typer.Option("claude-code", help="claude-code | gemini"),
+    backend: str = typer.Option("claude-code", help=BACKEND_HELP),
+    model: str = typer.Option(None, help="backend model override (opencode wants provider/model)"),
+    backend_command: str = typer.Option(None, help=COMMAND_HELP),
     out: str = typer.Option("tasks", help="tasks root dir"),
     workers: int = typer.Option(1, help="parallel workers, one per failure-map cluster; 1 = single-worker path"),
     max_containers: int = typer.Option(4, help="docker containers shared by all workers (workers > 1 only)"),
@@ -33,13 +56,13 @@ def run(
     """generate, validate and keep tasks for a target. owner: phase 2."""
     from pathlib import Path
 
-    from incidentforge.backends.base import get_backend
     from incidentforge.families import list_families
     from incidentforge.families.sampling import pick_families
     from incidentforge.generate import generate
     from incidentforge.targets import load_target
 
     tgt = load_target(target)
+    be = _backend(backend, model, backend_command)
     # weighted mix decides the family order; generate round-robins so each family gets a turn
     slugs = list(dict.fromkeys(family or pick_families(max(n, 8), available=list_families())))
     map_path = Path("work") / target / "map.sqlite"
@@ -50,7 +73,7 @@ def run(
             tgt,
             slugs,
             n,
-            get_backend(backend),
+            be,
             map_path=map_path,
             workers=workers,
             max_containers=max_containers,
@@ -62,7 +85,7 @@ def run(
     else:
         if workers > 1:
             typer.echo(f"no failure map at {map_path} (run `forge map build --target {target}`); using one worker")
-        reports = generate(tgt, slugs, n, get_backend(backend), tasks_root=Path(out), log=typer.echo)
+        reports = generate(tgt, slugs, n, be, tasks_root=Path(out), log=typer.echo)
     kept = sum(r.accepted for r in reports)
     if kept < n:
         typer.echo(f"only {kept}/{n} tasks accepted")
@@ -94,23 +117,61 @@ def validate(task_dirs: list[str] = typer.Argument(..., help="task dirs or a tas
         raise typer.Exit(1)
 
 
+@app.command()
+def rerender(
+    task_dirs: list[str] = typer.Argument(..., help="task dirs or a tasks root"),
+    nop_job: list[str] = typer.Option(
+        [], help="harbor nop job dir(s); feature tests that passed there move from fail_to_pass to pass_to_pass"
+    ),
+) -> None:
+    """rewrite committed tasks in the current package format (test.sh, test id lists, task.toml); content stays."""
+    from pathlib import Path
+
+    from incidentforge.harbor import read_trials
+    from incidentforge.package import rerender_task, spec_from_task_dir
+    from incidentforge.targets import load_target
+    from incidentforge.validate import find_task_dirs, passed_on_base, task_target
+
+    trials = {t.task_name: t for job in nop_job for t in read_trials(Path(job)) if not t.error}
+    for d in find_task_dirs([Path(p) for p in task_dirs]):
+        target = load_target(task_target(d))
+        trial = trials.get(d.name)
+        moved = passed_on_base(trial, d) if trial else []
+        guards = [*spec_from_task_dir(d, target).guards, *moved]
+        rerender_task(d, target, guards=guards)
+        typer.echo(f"rewrote {d}" + (f" ({len(moved)} base-passing test(s) moved to pass_to_pass)" if moved else ""))
+
+
 @app.command(name="eval")
 def eval_(
     tasks: str = typer.Option("tasks", help="tasks root"),
     model: list[str] = typer.Option(None, help="model ids, e.g. gemini/gemini-3.8-flash"),
-    agent: str = typer.Option("terminus-2", help="harbor agent"),
+    agent: str = typer.Option(
+        "terminus-2",
+        help="terminus-2 (gemini keys) or a login cli: claude-code, codex, gemini-cli, opencode, cursor-cli",
+    ),
     k: int = typer.Option(1, help="attempts per task"),
     subset: int = typer.Option(None, help="only a fixed seeded subset of this many tasks (>=1 per family)"),
+    only: list[str] = typer.Option(
+        None, help="task ids or dataset prefixes to run, e.g. click/ (ids stay relative to --tasks)"
+    ),
 ) -> None:
     """evaluate models on the dataset with the paid-key cap enforced. owner: phase 4."""
     from pathlib import Path
 
     from incidentforge.backends.gemini import load_env
-    from incidentforge.evaluate import frozen_subset, run_eval
+    from incidentforge.evaluate import SUBSCRIPTION_AGENTS, discover_tasks, frozen_subset, run_eval, select_tasks
 
     root = Path(tasks)
+    if subset and only:
+        raise typer.BadParameter("--subset and --only don't combine")
     picked = frozen_subset(root, subset) if subset else None
-    models = model or ["gemini/gemini-3.8-flash"]
+    if only:
+        picked = select_tasks(discover_tasks(root), only)
+        if not picked:
+            raise typer.BadParameter(f"no task under {root} matches {only}")
+    # a login agent with no --model runs its own default model
+    models = model or ([agent] if agent in SUBSCRIPTION_AGENTS else ["gemini/gemini-3.8-flash"])
     # keys come from .env unless already exported; harbor only ever sees the routed one
     env = {**load_env(".env"), **os.environ}
     new = run_eval(root, models, agent, k, picked, env=env, echo=typer.echo)
@@ -143,8 +204,9 @@ def from_postmortem_cmd(
     source: str = typer.Argument(..., help="public postmortem url, or a local copy with --source-url"),
     target: str = typer.Option(..., help="target name under incidentforge/targets"),
     source_url: str = typer.Option(None, help="public url of the report; required for a local file"),
-    backend: str = typer.Option("claude-code", help="claude-code | gemini"),
+    backend: str = typer.Option("claude-code", help=BACKEND_HELP),
     model: str = typer.Option(None, help="backend model override"),
+    backend_command: str = typer.Option(None, help=COMMAND_HELP),
     tries: int = typer.Option(2, help="surfaces to try in rank order before giving up"),
     family: str = typer.Option(None, help="use this family even if the classifier picks another (logged)"),
     out: str = typer.Option("tasks", help="tasks root dir"),
@@ -152,7 +214,6 @@ def from_postmortem_cmd(
     """turn a public incident report into one validated task with source_url set. owner: v2-postmortem."""
     from pathlib import Path
 
-    from incidentforge.backends.base import get_backend
     from incidentforge.postmortem import NoFamilyFits, PostmortemError, from_postmortem
     from incidentforge.targets import load_target
 
@@ -160,7 +221,7 @@ def from_postmortem_cmd(
         res = from_postmortem(
             source,
             load_target(target),
-            get_backend(backend, model),
+            _backend(backend, model, backend_command),
             source_url=source_url,
             tasks_root=Path(out),
             tries=tries,
@@ -192,6 +253,7 @@ def map_build(
     commit: str = typer.Option(None, help="unseen repo: commit to pin"),
     language: str = typer.Option(None, help="unseen repo: python | go"),
     source_root: str = typer.Option(".", help="unseen repo: package dir inside the repo"),
+    licence: str = typer.Option("unknown", help="unseen repo: spdx licence id"),
     coverage: bool = typer.Option(False, help="run the suite once with coverage in the target image if not cached"),
     image: str = typer.Option(None, help="docker image for the coverage run"),
     work: str = typer.Option("work", help="work root; outputs go to <work>/<target>/"),
@@ -212,6 +274,7 @@ def map_build(
             name=target,
             repo_url=repo_url,
             commit=commit,
+            licence=licence,
             language=Language(language),
             env_template=Path("."),
             test_command="",

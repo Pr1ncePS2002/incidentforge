@@ -1,0 +1,15 @@
+[
+  "tests/test_forge_emails_bcc.py::test_default_is_empty_list",
+  "tests/test_forge_emails_bcc.py::test_python_list_still_works",
+  "tests/test_forge_emails_bcc.py::test_fault_csv_list_from_env",
+  "tests/test_forge_emails_bcc.py::test_fault_csv_list_kwarg",
+  "tests/test_forge_emails_bcc.py::test_fault_csv_list_single_item",
+  "tests/test_forge_emails_bcc.py::test_fault_json_list_from_env",
+  "tests/test_forge_emails_bcc.py::test_fault_json_list_kwarg",
+  "tests/test_forge_emails_bcc.py::test_fault_empty_list_kwarg",
+  "tests/test_forge_emails_bcc.py::test_fault_empty_list_from_env",
+  "tests/test_forge_emails_bcc.py::test_fault_garbage_bad_address_in_csv",
+  "tests/test_forge_emails_bcc.py::test_fault_garbage_bad_address_kwarg",
+  "tests/test_forge_emails_bcc.py::test_fault_garbage_malformed_json",
+  "tests/test_forge_emails_bcc.py::test_fault_garbage_non_string_json_item"
+]

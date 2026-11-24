@@ -1,0 +1,16 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 13, "passed": 13, "failed": 0, "pending": 0, "skipped": 0, "other": 0, "start": 1795522457000, "stop": 1795522457000},
+  "tests": [
+    {"name": "feature_tests", "status": "passed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_plain_names_stay_stable", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_group_inherits_helper", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_fault_separator_injection_space_in_prog_name", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_fault_separator_injection_helper_normalises", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_fault_unscoped_key_distinct_programs", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_fault_wrong_env_source_override_is_used", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_fault_unknown_env_unusable_prog_name", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_fault_unknown_env_invalid_complete_var", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_plain_invocation_without_completion_runs", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_dashed_name_completion_still_triggers", "status": "passed", "duration": 0},
+    {"name": "tests/test_complete_var_name.py::test_valid_explicit_complete_var_is_used", "status": "passed", "duration": 0}]}}

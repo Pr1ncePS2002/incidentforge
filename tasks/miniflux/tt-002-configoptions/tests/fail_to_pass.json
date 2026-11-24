@@ -1,0 +1,7 @@
+[
+  "internal/config::TestFaultJsonListMatchesCsv",
+  "internal/config::TestFaultJsonListCompactAndPadded",
+  "internal/config::TestFaultJsonListEmptyArray",
+  "internal/config::TestFaultGarbageUnterminatedJsonList",
+  "internal/config::TestFaultGarbageNonStringJsonList"
+]
