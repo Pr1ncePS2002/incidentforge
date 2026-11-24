@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24T20:52:17+0530",
+  "generated_at": "2026-11-24T21:06:17+0530",
   "tasks_total": 62,
   "tasks_by_family": {
     "config-round-trip": 7,
@@ -602,8 +602,8 @@
       "nodes": 719,
       "total": {
         "surfaces": 38,
-        "with_task": 0,
-        "tasks": 0,
+        "with_task": 8,
+        "tasks": 10,
         "covered": 38,
         "uncovered": 0
       },
@@ -611,22 +611,22 @@
       "by_family": {
         "cross-field-validation": {
           "surfaces": 18,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 2,
           "covered": 18,
           "uncovered": 0
         },
         "env-aware-naming": {
           "surfaces": 6,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 2,
+          "tasks": 2,
           "covered": 6,
           "uncovered": 0
         },
         "fail-fast-config": {
           "surfaces": 15,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 15,
           "uncovered": 0
         },
@@ -639,15 +639,15 @@
         },
         "resource-aware-defaults": {
           "surfaces": 2,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 1,
+          "tasks": 1,
           "covered": 2,
           "uncovered": 0
         },
         "tolerant-typed-config": {
           "surfaces": 13,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 4,
+          "tasks": 4,
           "covered": 13,
           "uncovered": 0
         }
@@ -655,8 +655,8 @@
       "by_module": {
         "src/click": {
           "surfaces": 38,
-          "with_task": 0,
-          "tasks": 0,
+          "with_task": 8,
+          "tasks": 10,
           "covered": 38,
           "uncovered": 0
         }

@@ -72,7 +72,7 @@ report's URL is kept in the task's `source_url`.
 **Difficulty** is labelled by the number of injected fault cases (easy ≤ 3, medium 4–5, hard ≥ 6). The size
 of the fix is a separate `fix_scope` label (1 file, 2–3 files, 4+ files) taken from the blast radius.
 
-![failure map](docs/img/failure-map.png)
+![failure map of click: 10 tasks pinned to the surfaces they change](docs/img/failure-map.png)
 
 Module map and data flow: [docs/architecture.md](docs/architecture.md). Design decisions, assumptions,
 reused components, models and the variation strategy: [docs/technical-explanation.md](docs/technical-explanation.md).

@@ -1,6 +1,6 @@
 {
 "commit":"cf19179e8e2fd54c601378cec9e0d21bb12b6fb1",
-"coverage_mode":"cached",
+"coverage_mode":"run",
 "graph_hash":"6023fdaf795e55a81aa6d843918fe4d8a71a5ef216f2eea95ee6feba2362545b",
 "language":"python",
 "schema":1,
@@ -1656,6 +1656,15 @@
 {"blast_radius":0,"covered":null,"difficulty":"","families":[],"file":"src/click/utils.py","id":"src/click/utils.py::wrapper","kind":"Function","line":42,"module":"src/click","name":"wrapper","surface_kinds":[]}
 ],
 "tasks":[
-
+{"difficulty":"easy","family":"cross-field-validation","node_id":"src/click/core.py::Option._validate","task_id":"click/cf-002-validate"},
+{"difficulty":"easy","family":"cross-field-validation","node_id":"src/click/types.py::_NumberRangeBase.__init__","task_id":"click/cf-003-convert"},
+{"difficulty":"easy","family":"env-aware-naming","node_id":"src/click/core.py::Option.resolve_envvar_value#env:<dynamic>","task_id":"click/en-001-resolve-envvar-value"},
+{"difficulty":"medium","family":"env-aware-naming","node_id":"src/click/core.py::Command._main_shell_completion#env:<dynamic>","task_id":"click/en-003-main-shell-completion"},
+{"difficulty":"easy","family":"fail-fast-config","node_id":"src/click/core.py::Option.resolve_envvar_value#env:<dynamic>","task_id":"click/ff-001-resolve-envvar-value"},
+{"difficulty":"medium","family":"resource-aware-defaults","node_id":"src/click/formatting.py::HelpFormatter.__init__","task_id":"click/rd-001-init"},
+{"difficulty":"easy","family":"tolerant-typed-config","node_id":"src/click/types.py::FuncParamType.convert","task_id":"click/tt-001-convert"},
+{"difficulty":"easy","family":"tolerant-typed-config","node_id":"src/click/types.py::_NumberParamTypeBase.convert","task_id":"click/tt-002-convert"},
+{"difficulty":"easy","family":"tolerant-typed-config","node_id":"src/click/types.py::BoolParamType.convert","task_id":"click/tt-003-convert"},
+{"difficulty":"easy","family":"tolerant-typed-config","node_id":"src/click/types.py::DateTime.convert","task_id":"click/tt-004-convert"}
 ]
 }
