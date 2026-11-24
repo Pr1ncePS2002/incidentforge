@@ -56,7 +56,7 @@ def _primary(name: str, block: dict[str, Any], generated_at: str) -> list[str]:
             "|---|---|---|---|---|",
         ]
         out += [
-            f"| {m.get('model')} | {m.get('agent')} | {m.get('n')} (k={m.get('k')}) "
+            f"| {m.get('label', m.get('model'))} | {m.get('agent')} | {m.get('n')} (k={m.get('k')}) "
             f"| {_pct(m.get('pass_rate', 0))} | {float(m.get('mean_reward', m.get('pass_rate', 0))):.2f} |"
             for m in sorted(models, key=lambda m: (-float(m.get("pass_rate", 0)), -float(m.get("mean_reward", 0))))
         ]

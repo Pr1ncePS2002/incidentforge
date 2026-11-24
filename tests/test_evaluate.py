@@ -353,3 +353,45 @@ def test_turns_come_from_the_trajectory(tmp_path: Path) -> None:
     steps = [{"source": "user"}] + [{"source": "agent"}] * 30
     (trial / "agent" / "trajectory.json").write_text(json.dumps({"steps": steps}))
     assert read_trials(tmp_path / "job")[0].turns == 30
+
+
+@pytest.mark.parametrize(
+    ("agent", "model", "want"),
+    [
+        ("claude-code", "claude-code", None),
+        ("claude-code", "", None),
+        ("claude-code", "anthropic/claude-sonnet-5-5", "anthropic/claude-sonnet-5-5"),
+        ("terminus-2", "gemini/gemini-2.5-flash@paid", "gemini/gemini-2.5-flash"),
+    ],
+)
+def test_agent_model_pins_claude_only_when_asked(agent: str, model: str, want: str | None) -> None:
+    assert evaluate.agent_model(agent, model) == want
+
+
+def test_pinned_claude_model_reaches_harbor_and_the_row(
+    monkeypatch: pytest.MonkeyPatch, tasks_root: Path, tmp_path: Path
+) -> None:
+    seen: list[object] = []
+
+    def fake_run_job(**kw: object) -> Path:
+        seen.append(kw["model"])
+        return tmp_path / "none"
+
+    monkeypatch.setattr("incidentforge.harbor.run_job", fake_run_job)
+    req = RunRequest(tmp_path, "claude-code", "anthropic/claude-haiku-5-5", "j", tmp_path, ("a",), ())
+    evaluate.harbor_runner(req)
+    evaluate.harbor_runner(RunRequest(tmp_path, "claude-code", "claude-code", "j", tmp_path, ("a",), ()))
+    assert seen == ["anthropic/claude-haiku-5-5", None]
+    h = FakeHarbor(tmp_path)
+    [row] = run(tasks_root, tmp_path, h, ["anthropic/claude-haiku-5-5"], agent="claude-code", subset=["go-svc/hr-001"])
+    assert row.model == "anthropic/claude-haiku-5-5" and row.key == "subscription"
+
+
+def test_subscription_limits_are_retried_not_scored(tmp_path: Path) -> None:
+    for exc in ("ApiRateLimitError", "ApiUsageLimitError", "NetworkConnectionError"):
+        trial = tmp_path / exc / "t__1"
+        trial.mkdir(parents=True)
+        result = {"verifier_result": {"rewards": {"reward": 0}}, "exception_info": {"exception_type": exc}}
+        (trial / "result.json").write_text(json.dumps(result))
+        [tr] = read_trials(tmp_path / exc)
+        assert tr.reward is None

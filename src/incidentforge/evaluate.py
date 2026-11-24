@@ -130,6 +130,14 @@ INFRA_ERRORS = frozenset(
         "AuthenticationError",
         "AgentAuthenticationError",
         "BudgetExceededError",
+        # harbor 0.25 claude-code: subscription limits and host network trouble, retried rather than scored
+        "ApiRateLimitError",
+        "ApiUsageLimitError",
+        "ApiOverloadedError",
+        "HostedQuotaExceededError",
+        "NetworkConnectionError",
+        "AgentSetupTimeoutError",
+        "EnvironmentStartTimeoutError",
     }
 )
 
@@ -156,6 +164,17 @@ def frozen_subset(tasks_root: Path, n: int, path: Path = DEFAULT_SUBSET) -> list
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(picked, indent=2) + "\n")
     return picked
+
+
+# model id a subscription agent records when no model is pinned (the account default)
+DEFAULT_AGENT_MODEL = "claude-code"
+
+
+def agent_model(agent: str, model: str) -> str | None:
+    """-m value for harbor: none for an unpinned subscription agent (account default), else the model id."""
+    if agent in SUBSCRIPTION_AGENTS and harbor_model(model) in {"", DEFAULT_AGENT_MODEL, agent}:
+        return None
+    return harbor_model(model)
 
 
 def bare_model(model: str) -> str:
@@ -313,7 +332,7 @@ def harbor_runner(req: RunRequest) -> Path:
         agent=req.agent,
         job_name=req.job_name,
         jobs_dir=req.jobs_dir,
-        model=None if req.agent in SUBSCRIPTION_AGENTS else req.model,
+        model=agent_model(req.agent, req.model),
         extra_args=args,
         env=dict(req.env),
     )

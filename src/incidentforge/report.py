@@ -189,8 +189,15 @@ def _family_of(data: Data) -> dict[str, str]:
     return fam
 
 
+def label(model: str, agent: str) -> str:
+    """display name: an unpinned claude-code row ran the account's default model."""
+    if agent == model == "claude-code":
+        return "claude-code (default)"
+    return model if agent in {"terminus-2", "", model} else f"{agent}:{model}"
+
+
 def model_label(r: EvalResult) -> str:
-    return r.model if r.agent in {"terminus-2", "", r.model} else f"{r.agent}:{r.model}"
+    return label(r.model, r.agent)
 
 
 def _mean(rs: list[EvalResult]) -> float:
@@ -211,6 +218,7 @@ def model_rows(results: list[EvalResult]) -> list[dict[str, Any]]:
         {
             "model": m,
             "agent": a,
+            "label": label(m, a),
             "k": max(r.attempt for r in rs),
             "pass_rate": round(_rate(rs), 4),
             "mean_reward": round(_mean(rs), 4),
@@ -568,7 +576,7 @@ def _models_table(models: list[dict[str, Any]]) -> str:
         listed = cost_usd(bare_model(m["model"]), m["input_tokens"], m["output_tokens"])
         rows.append(
             [
-                _esc(m["model"]),
+                _esc(m.get("label", m["model"])),
                 _esc(m["agent"]),
                 str(m["tasks"]),
                 str(m["n"]),
@@ -691,7 +699,9 @@ def render_html(data: Data, summary: dict[str, Any]) -> str:
         for n in extras:
             ts = bt[n]
             v = ts["validation"]
-            rates = ", ".join(f"{_esc(m['model'])} {m['pass_rate']:.0%} ({m['n']} runs)" for m in ts["models"])
+            rates = ", ".join(
+                f"{_esc(m.get('label', m['model']))} {m['pass_rate']:.0%} ({m['n']} runs)" for m in ts["models"]
+            )
             mut = f"{v['mutants_killed']}/{v['mutants_total']}" if v["mutants_total"] else "-"
             rows.append([_esc(n), str(ts["tasks_total"]), str(len(ts["tasks_by_family"])), mut, rates or "-"])
         s.append(_table(["repository", "tasks", "families", "mutants killed", "pass rate"], rows))

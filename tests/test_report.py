@@ -342,3 +342,11 @@ def test_cli_eval_only_selects_a_dataset(tmp_path: Path, monkeypatch) -> None:  
     assert r.exit_code != 0
     r = CliRunner().invoke(app, ["eval", "--tasks", "tasks", "--only", "nope"])
     assert r.exit_code != 0 and "no task" in r.output
+
+
+def test_unpinned_claude_code_is_labelled_default() -> None:
+    from incidentforge.report import label
+
+    assert label("claude-code", "claude-code") == "claude-code (default)"
+    assert label("anthropic/claude-opus-5-5", "claude-code") == "claude-code:anthropic/claude-opus-5-5"
+    assert label("gemini/gemini-2.5-flash", "terminus-2") == "gemini/gemini-2.5-flash"
