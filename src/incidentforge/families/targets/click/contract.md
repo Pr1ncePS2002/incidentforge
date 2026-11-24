@@ -14,8 +14,8 @@ Reply with exactly one json object and nothing else (no prose, no code fences). 
   error behaviour (exception class, which words the message must contain), and the boundary rules,
   precisely enough that the hidden tests are fair. Write it as new behaviour ("add", "support",
   "reject ... with a clear error"), never as a bug report, regression or fix. Name every new public
-  symbol and keyword the tests use, and the module it is imported from (e.g. `click.types.Duration`). Never include
-  code from the solution, never mention the hidden tests.
+  symbol and keyword the tests use, and the module it is imported from (e.g. `click.types.Duration`).
+  Never include code from the solution, never mention the hidden tests.
 - `solution_patch` (string): a unified diff (`git diff` format, `--- a/<path>` / `+++ b/<path>` headers,
   paths relative to the repository root such as `src/click/types.py`, correct `@@` hunk line counts) that
   applies with `git apply` on the pinned commit. Context lines must match the pinned code exactly. Change
@@ -28,8 +28,8 @@ Reply with exactly one json object and nothing else (no prose, no code fences). 
 - `feature_tests` (object): file name -> file content. One or two pytest files named `test_*.py`; a bare
   file name is placed in the repository's `tests/` directory, so click's `runner` fixture (a
   `click.testing.CliRunner`) from `tests/conftest.py` is available. Import from `click` only
-  (`import click`, `from click.testing import CliRunner`, `from click.types import ...`). Exercise the feature the way a user would: build a
-  small command with `@click.command()` and `@click.option(...)`, invoke it with
+  (`import click`, `from click.testing import CliRunner`, `from click.types import ...`). Exercise the
+  feature the way a user would: build a small command with `@click.command()` and `@click.option(...)`, invoke it with
   `runner.invoke(cli, [...])` or `runner.invoke(cli, [...], env={...})`, and assert on `result.exit_code`,
   `result.output` and `result.exception`; construction-time errors are asserted with `pytest.raises`.
   Set environment variables through `runner.invoke(..., env=...)` or `monkeypatch.setenv`, never by
