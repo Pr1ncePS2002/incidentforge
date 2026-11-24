@@ -12,7 +12,21 @@ from typing import TypeGuard
 from incidentforge.models import Surface
 
 MAX_EXCERPT = 40
-SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", "tests", "test", "migrations", "versions"}
+# converter and constructor checks need the whole method in view, so library surfaces get a wider cap
+WIDE_EXCERPT = 90
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    "tests",
+    "test",
+    "migrations",
+    "versions",
+    "docs",
+    "examples",
+}
 SETTINGS_BASES = {"BaseSettings"}
 MODEL_BASES = {"BaseModel", "SQLModel"}
 VALIDATOR_DECOS = {"field_validator", "model_validator", "validator", "root_validator"}
@@ -26,6 +40,12 @@ POOL_KWARGS = {"pool_size", "max_overflow", "pool_timeout", "pool_recycle", "tim
 OUTPUT_MODEL = re.compile(r"(Public|Response|Out|Message|Token)$")
 POOL_FACTORIES = {"create_engine", "create_async_engine", "ConnectionPool", "ThreadPoolExecutor", "create_pool"}
 DUMP_CALLS = {"dump", "safe_dump", "dumps", "write_text"}
+# a name-matched handler must take something that looks like a delivered message, not ctx/value/opts
+MESSAGE_PARAM = re.compile(r"(?i)event|msg|message|payload|body|record|job|task|delivery|envelope|webhook|notification")
+CONVERT_METHODS = {"convert", "coerce", "to_python", "parse_value", "clean"}
+CHECK_METHOD = re.compile(r"^_*(validate|check)")
+CHECK_ERRORS = {"ValueError", "TypeError", "BadParameter", "UsageError", "ValidationError"}
+RESOURCE_PROBES = {"get_terminal_size", "cpu_count", "sched_getaffinity", "process_cpu_count", "sysconf", "getrlimit"}
 
 
 def _name(node: ast.expr) -> str:
@@ -94,7 +114,12 @@ def _is_dump(node: ast.AST) -> bool:
     if not isinstance(node, ast.Call) or _name(node.func) not in DUMP_CALLS:
         return False
     owner = _dotted(node.func.value) if isinstance(node.func, ast.Attribute) else ""
-    return owner.split(".")[-1] in {"yaml", "json", "toml", "tomli_w"} or _name(node.func) == "write_text"
+    last = owner.split(".")[-1]
+    if _name(node.func) == "write_text":
+        # formatter.write_text and friends write help output, not a file
+        target = node.func.value if isinstance(node.func, ast.Attribute) else node.func
+        return (isinstance(target, ast.Call) and _name(target) == "Path") or bool(re.search(r"(?i)path|file", last))
+    return last in {"yaml", "json", "toml", "tomli_w"}
 
 
 def _is_pool_call(node: ast.AST) -> TypeGuard[ast.Call]:
@@ -115,7 +140,7 @@ def _scan_function(
     is_consumer = (
         _is_route_write(fn)
         or bool(decos & TASK_DECOS)
-        or bool(CONSUMER_NAME.search(fn.name))
+        or (bool(CONSUMER_NAME.search(fn.name)) and _takes_message(fn))
         or (module == "crud" and bool(CRUD_NAME.match(fn.name)))
     )
     if is_consumer:
@@ -127,6 +152,61 @@ def _scan_function(
         yield Surface(file=rel, symbol=symbol, kind="env-read", excerpt=excerpt)
     if any(_is_dump(n) for n in body):
         yield Surface(file=rel, symbol=symbol, kind="config-writer", excerpt=excerpt)
+    if any(isinstance(n, ast.Call) and _name(n.func) in RESOURCE_PROBES for n in body):
+        # a size resolved from the machine at call time is where resource-aware defaults attach
+        yield Surface(file=rel, symbol=symbol, kind="pool-config", excerpt=_excerpt(lines, start, end))
+
+
+def _takes_message(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    args = [*fn.args.posonlyargs, *fn.args.args, *fn.args.kwonlyargs]
+    return any(MESSAGE_PARAM.search(a.arg) for a in args if a.arg not in {"self", "cls"})
+
+
+def _raises_check(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """raises a value/type/usage error or calls self.fail, i.e. the method rejects bad input."""
+    for n in ast.walk(fn):
+        if isinstance(n, ast.Raise) and n.exc is not None and _name(n.exc) in CHECK_ERRORS:
+            return True
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "fail":
+            return True
+    return False
+
+
+def _check_outline(fn: ast.FunctionDef | ast.AsyncFunctionDef, lines: list[str]) -> list[int]:
+    """signature plus every if-branch that raises, so a long constructor shows its checks."""
+    body_start = fn.body[0].lineno
+    keep = list(range(fn.lineno, body_start))
+    for n in ast.walk(fn):
+        if isinstance(n, ast.If) and any(isinstance(b, ast.Raise) for b in n.body):
+            keep += range(n.lineno, (n.end_lineno or n.lineno) + 1)
+    return sorted(set(keep))
+
+
+def _converter_excerpt(cls: ast.ClassDef, fn: ast.FunctionDef | ast.AsyncFunctionDef, lines: list[str]) -> str:
+    """class header, fields, __init__ (or its signature and checks when long), then the method, capped."""
+    keep = [cls.lineno]
+    for node in cls.body:
+        if isinstance(node, ast.AnnAssign | ast.Assign):
+            keep += range(node.lineno, (node.end_lineno or node.lineno) + 1)
+        elif isinstance(node, ast.FunctionDef) and node.name == "__init__" and node is not fn:
+            end = node.end_lineno or node.lineno
+            keep += range(node.lineno, end + 1) if end - node.lineno < 25 else _check_outline(node, lines)
+    keep += range(fn.lineno, (fn.end_lineno or fn.lineno) + 1)
+    return "\n".join(lines[i - 1] for i in sorted(set(keep))[:WIDE_EXCERPT])
+
+
+def _library_validators(cls: ast.ClassDef, rel: str, lines: list[str]) -> Iterator[Surface]:
+    """converter methods and constructor checks of plain classes: where a library validates its inputs."""
+    for node in cls.body:
+        if not isinstance(node, ast.FunctionDef) or not _raises_check(node):
+            continue
+        if node.name in CONVERT_METHODS or CHECK_METHOD.match(node.name):
+            excerpt = _converter_excerpt(cls, node, lines)
+        elif node.name == "__init__":
+            excerpt = "\n".join(lines[i - 1] for i in [cls.lineno, *_check_outline(node, lines)][:WIDE_EXCERPT])
+        else:
+            continue
+        yield Surface(file=rel, symbol=f"{cls.name}.{node.name}", kind="validator", excerpt=excerpt)
 
 
 def _scan_class(
@@ -152,6 +232,8 @@ def _scan_class(
         if fields >= 2 and not is_table and not OUTPUT_MODEL.search(cls.name):
             # request/input models are where cross-field rules belong
             yield Surface(file=rel, symbol=cls.name, kind="validator", excerpt=_class_outline(cls, lines))
+    else:
+        yield from _library_validators(cls, rel, lines)
     for node in cls.body:
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             for s in _scan_function(node, f"{cls.name}.{node.name}", rel, lines, module):

@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from incidentforge.backends.base import Backend
 from incidentforge.failmap.difficulty import difficulty_from_faults
-from incidentforge.families import Family, load_family, render_prompt
+from incidentforge.families import Family, TargetProfile, load_family, load_profile, render_prompt
 from incidentforge.models import GateResult, Language, Surface, Target, TaskSpec, ValidationReport
 
 TASK_SCHEMA: dict[str, Any] = {
@@ -209,7 +209,7 @@ class Generator:
             "existing_tasks": "\n".join(f"- {e}" for e in existing) or "none",
             "task_id": pair.task_id,
         }
-        return render_prompt(pair.family, values, language=t.language.value)
+        return render_prompt(pair.family, values, language=t.language.value, target=t.name)
 
     def build_spec(self, pair: Pair, data: dict[str, Any]) -> TaskSpec:
         patch = self.normalise_patch(str(data.get("solution_patch", "")))
@@ -354,14 +354,18 @@ def family_titles(tasks_root: Path, target: str, family: str) -> list[str]:
 
 
 def plan_pairs(
-    families: list[Family], surfaces: list[Surface], used: set[tuple[str, str]]
+    families: list[Family],
+    surfaces: list[Surface],
+    used: set[tuple[str, str]],
+    profile: TargetProfile | None = None,
 ) -> Iterator[tuple[Family, Surface]]:
     """round-robin over families; each family walks its kinds in preference order, skipping used pairs."""
+    prof = profile or TargetProfile()
     queues: dict[str, list[Surface]] = {}
     for fam in families:
         rank = {k: i for i, k in enumerate(fam.surface_kinds)}
         cands = [s for s in surfaces if s.kind in rank and (fam.slug, surface_key(s)) not in used]
-        queues[fam.slug] = sorted(cands, key=lambda s: rank[s.kind])
+        queues[fam.slug] = sorted(cands, key=lambda s: (rank[s.kind], prof.rank(fam.slug, s.symbol)))
     while any(queues.values()):
         for fam in families:
             q = queues[fam.slug]
@@ -396,12 +400,17 @@ def generate(
     repo = checkout(target, work_root)
     gold = gold_example(scope.tasks_root if scope else tasks_root, target)
     gen = Generator(target, backend, repo, tasks_root, work_root, write, check, gold, log, scope=scope)
+    profile = load_profile(target.name)
     surfaces = scope.surfaces if scope else find_target_surfaces(repo, target)
+    surfaces = [s for s in surfaces if not profile.skipped(s.symbol)]
     fams = [load_family(f) for f in families]
-    fams = [f for f in fams if target.language.value in f.languages]
+    dropped = [f.slug for f in fams if not profile.allows(f.slug)]
+    if dropped:
+        log(f"{target.name}: profile leaves out {dropped} (no natural surface on this target)")
+    fams = [profile.adapt(f) for f in fams if target.language.value in f.languages and profile.allows(f.slug)]
     history = gen.history()
     used = {(r["family"], r["surface"]) for r in history}
-    pairs = plan_pairs(fams, surfaces, used)
+    pairs = plan_pairs(fams, surfaces, used, profile)
     limit = max_pairs if max_pairs is not None else max(3 * n, n + 4)
     log(f"{target.name}: {len(surfaces)} surfaces, families {[f.slug for f in fams]}, want {n} accepted")
 

@@ -32,3 +32,6 @@ map_rules:
   - id: naming-setting
     node_kinds: [config_read, env_read]
     name_matches: "(?i)(name|prefix|topic|queue|bucket|database|namespace|project|domain|_db$|^db_)"
+  - id: computed-env-name
+    node_kinds: [env_read]
+    where: {key: "<dynamic>"}
