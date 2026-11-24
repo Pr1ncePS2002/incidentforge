@@ -1,0 +1,18 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 15, "passed": 15, "failed": 0, "pending": 0, "skipped": 0, "other": 0, "start": 1795522377000, "stop": 1795522377000},
+  "tests": [
+    {"name": "feature_tests", "status": "passed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_inverted_range_int", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_inverted_range_float", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_inverted_range_mixed_numbers", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_inverted_range_keywords_and_clamp", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_inverted_range_at_declaration", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_boundary_equal_open_int", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_fault_boundary_equal_open_float", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_equal_closed_bounds_accept_single_value", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_equal_closed_bounds_clamp", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_equal_closed_float_bounds", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_single_and_no_bounds_still_work", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_valid_ranges_unchanged", "status": "passed", "duration": 0},
+    {"name": "tests/test_range_combinations.py::test_float_clamp_open_still_type_error", "status": "passed", "duration": 0}]}}

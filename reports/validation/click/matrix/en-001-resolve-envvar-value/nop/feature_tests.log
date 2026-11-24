@@ -1,0 +1,141 @@
+FFFFFF......                                                             [100%]
+=================================== FAILURES ===================================
+__________________ test_fault_unknown_env_empty_entry_in_list __________________
+
+runner = <click.testing.CliRunner object at 0xffff8fe89640>
+
+    def test_fault_unknown_env_empty_entry_in_list(runner):
+        cli = _make(["", "APP_TOKEN"])
+        result = runner.invoke(cli, [], env={"APP_TOKEN": "secret"})
+>       _assert_rejected(result, "")
+
+tests/test_envvar_name_validation.py:27: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = <Result okay>, bad_name = '', param_name = 'token'
+
+    def _assert_rejected(result, bad_name, param_name="token"):
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_envvar_name_validation.py:16: AssertionError
+________________ test_fault_unknown_env_empty_entry_after_valid ________________
+
+runner = <click.testing.CliRunner object at 0xffff8fe89df0>
+
+    def test_fault_unknown_env_empty_entry_after_valid(runner):
+        cli = _make(["APP_TOKEN", ""])
+        result = runner.invoke(cli, [], env={"APP_TOKEN": "secret"})
+>       _assert_rejected(result, "")
+
+tests/test_envvar_name_validation.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = <Result okay>, bad_name = '', param_name = 'token'
+
+    def _assert_rejected(result, bad_name, param_name="token"):
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_envvar_name_validation.py:16: AssertionError
+____________________ test_fault_separator_injection_equals _____________________
+
+runner = <click.testing.CliRunner object at 0xffff8fe8bce0>
+
+    def test_fault_separator_injection_equals(runner):
+        cli = _make("STG=PRD")
+        result = runner.invoke(cli, [])
+>       _assert_rejected(result, "STG=PRD")
+
+tests/test_envvar_name_validation.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = <Result okay>, bad_name = 'STG=PRD', param_name = 'token'
+
+    def _assert_rejected(result, bad_name, param_name="token"):
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_envvar_name_validation.py:16: AssertionError
+_____________________ test_fault_separator_injection_space _____________________
+
+runner = <click.testing.CliRunner object at 0xffff8fe8acf0>
+
+    def test_fault_separator_injection_space(runner):
+        cli = _make("APP TOKEN")
+        result = runner.invoke(cli, [], env={"APP TOKEN": "x"})
+>       _assert_rejected(result, "APP TOKEN")
+
+tests/test_envvar_name_validation.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = <Result okay>, bad_name = 'APP TOKEN', param_name = 'token'
+
+    def _assert_rejected(result, bad_name, param_name="token"):
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_envvar_name_validation.py:16: AssertionError
+__________________ test_fault_separator_injection_tab_in_list __________________
+
+runner = <click.testing.CliRunner object at 0xffff8fcceba0>
+
+    def test_fault_separator_injection_tab_in_list(runner):
+        cli = _make(["GOOD_TOKEN", "BAD\tTOKEN"])
+        result = runner.invoke(cli, [], env={"GOOD_TOKEN": "x"})
+>       _assert_rejected(result, "BAD\tTOKEN")
+
+tests/test_envvar_name_validation.py:51: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = <Result okay>, bad_name = 'BAD\tTOKEN', param_name = 'token'
+
+    def _assert_rejected(result, bad_name, param_name="token"):
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_envvar_name_validation.py:16: AssertionError
+___________________ test_fault_separator_injection_argument ____________________
+
+runner = <click.testing.CliRunner object at 0xffff8fe8acc0>
+
+    def test_fault_separator_injection_argument(runner):
+        @click.command()
+        @click.argument("src", envvar="SRC PATH", required=False)
+        def cli(src):
+            click.echo(f"src={src}")
+    
+        result = runner.invoke(cli, [], env={"SRC PATH": "x"})
+>       _assert_rejected(result, "SRC PATH", param_name="src")
+
+tests/test_envvar_name_validation.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = <Result okay>, bad_name = 'SRC PATH', param_name = 'src'
+
+    def _assert_rejected(result, bad_name, param_name="token"):
+>       assert result.exit_code != 0
+E       assert 0 != 0
+E        +  where 0 = <Result okay>.exit_code
+
+tests/test_envvar_name_validation.py:16: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_envvar_name_validation.py::test_plain_envvar_still_read
+PASSED tests/test_envvar_name_validation.py::test_list_first_non_empty_still_wins
+PASSED tests/test_envvar_name_validation.py::test_two_environments_read_distinct_names
+PASSED tests/test_envvar_name_validation.py::test_empty_string_envvar_still_disabled
+PASSED tests/test_envvar_name_validation.py::test_command_line_value_still_used
+PASSED tests/test_envvar_name_validation.py::test_auto_envvar_prefix_names_unchanged
+FAILED tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_in_list
+FAILED tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_after_valid
+FAILED tests/test_envvar_name_validation.py::test_fault_separator_injection_equals
+FAILED tests/test_envvar_name_validation.py::test_fault_separator_injection_space
+FAILED tests/test_envvar_name_validation.py::test_fault_separator_injection_tab_in_list
+FAILED tests/test_envvar_name_validation.py::test_fault_separator_injection_argument
+6 failed, 6 passed in 0.03s

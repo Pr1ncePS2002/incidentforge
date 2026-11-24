@@ -1,0 +1,288 @@
+F.FFF.FFFFFFFFFFFFFF                                                     [100%]
+=================================== FAILURES ===================================
+________________________ test_plain_names_are_unchanged ________________________
+
+runner = <click.testing.CliRunner object at 0xffff9c596690>
+
+    def test_plain_names_are_unchanged(runner):
+        cli = _make_cli()
+        result = runner.invoke(
+            cli, [], auto_envvar_prefix="app", env={"APP_TOKEN": "abc"}
+        )
+>       assert result.exception is None, result.output
+E       AssertionError: 
+E       assert AttributeError("'Option' object has no attribute 'get_auto_envvar_name'") is None
+E        +  where AttributeError("'Option' object has no attribute 'get_auto_envvar_name'") = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exception
+
+tests/test_auto_envvar_name.py:44: AssertionError
+______________________ test_command_line_value_still_wins ______________________
+
+runner = <click.testing.CliRunner object at 0xffff9c597f50>
+
+    def test_command_line_value_still_wins(runner):
+        cli = _make_cli()
+        result = runner.invoke(
+            cli, ["--token", "cli"], auto_envvar_prefix="app", env={"APP_TOKEN": "env"}
+        )
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:67: AssertionError
+___________________ test_helper_returns_none_without_prefix ____________________
+
+    def test_helper_returns_none_without_prefix():
+        cli = _make_cli()
+        ctx = click.Context(cli)
+>       assert cli.params[0].get_auto_envvar_name(ctx) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Option' object has no attribute 'get_auto_envvar_name'
+
+tests/test_auto_envvar_name.py:74: AttributeError
+________________ test_helper_returns_none_when_autoenv_disabled ________________
+
+    def test_helper_returns_none_when_autoenv_disabled():
+        @click.command()
+        @click.option("--token", allow_from_autoenv=False)
+        def cli(token):
+            pass
+    
+        ctx = click.Context(cli, auto_envvar_prefix="app")
+>       assert cli.params[0].get_auto_envvar_name(ctx) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'Option' object has no attribute 'get_auto_envvar_name'
+
+tests/test_auto_envvar_name.py:84: AttributeError
+_______________ test_fault_unscoped_key_two_environments_differ ________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3dd2e0>
+
+    def test_fault_unscoped_key_two_environments_differ(runner):
+        cli = _make_cli()
+        env = {"TOKEN": "unscoped", "STAGING_TOKEN": "stg", "PROD_TOKEN": "prd"}
+        stg = runner.invoke(cli, [], auto_envvar_prefix="staging", env=env)
+        prd = runner.invoke(cli, [], auto_envvar_prefix="prod", env=env)
+>       assert stg.exit_code == 0, stg.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:103: AssertionError
+__________________ test_fault_unscoped_key_bare_name_not_read __________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3ddee0>
+
+    def test_fault_unscoped_key_bare_name_not_read(runner):
+        cli = _make_cli()
+        result = runner.invoke(
+            cli, [], auto_envvar_prefix="prod", env={"TOKEN": "unscoped"}
+        )
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:114: AssertionError
+________________ test_fault_wrong_env_source_uses_given_context ________________
+
+    def test_fault_wrong_env_source_uses_given_context():
+        cli = _make_cli()
+        opt = cli.params[0]
+>       assert opt.get_auto_envvar_name(click.Context(cli, auto_envvar_prefix="stg")) == (
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+            "STG_TOKEN"
+        )
+E       AttributeError: 'Option' object has no attribute 'get_auto_envvar_name'
+
+tests/test_auto_envvar_name.py:121: AttributeError
+__________________ test_fault_wrong_env_source_nested_command __________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3e0f20>
+
+    def test_fault_wrong_env_source_nested_command(runner):
+        grp = _make_group()
+        result = runner.invoke(
+            grp,
+            ["deploy"],
+            auto_envvar_prefix="app",
+            env={"APP_TOKEN": "wrong", "APP_DEPLOY_TOKEN": "right"},
+        )
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:137: AssertionError
+_________________ test_fault_unknown_env_rejected_on_invoke[] __________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3e0050>, prefix = ''
+
+    @pytest.mark.parametrize("prefix", ["", "-", "__", ". "])
+    def test_fault_unknown_env_rejected_on_invoke(runner, prefix):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env={"_TOKEN": "x"})
+        assert result.exit_code != 0
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(AttributeError("'Option' object has no attribute 'get_auto_envvar_name'"), ValueError)
+E        +    where AttributeError("'Option' object has no attribute 'get_auto_envvar_name'") = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exception
+
+tests/test_auto_envvar_name.py:146: AssertionError
+_________________ test_fault_unknown_env_rejected_on_invoke[-] _________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3e2090>, prefix = '-'
+
+    @pytest.mark.parametrize("prefix", ["", "-", "__", ". "])
+    def test_fault_unknown_env_rejected_on_invoke(runner, prefix):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env={"_TOKEN": "x"})
+        assert result.exit_code != 0
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(AttributeError("'Option' object has no attribute 'get_auto_envvar_name'"), ValueError)
+E        +    where AttributeError("'Option' object has no attribute 'get_auto_envvar_name'") = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exception
+
+tests/test_auto_envvar_name.py:146: AssertionError
+________________ test_fault_unknown_env_rejected_on_invoke[__] _________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3e9b20>, prefix = '__'
+
+    @pytest.mark.parametrize("prefix", ["", "-", "__", ". "])
+    def test_fault_unknown_env_rejected_on_invoke(runner, prefix):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env={"_TOKEN": "x"})
+        assert result.exit_code != 0
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(AttributeError("'Option' object has no attribute 'get_auto_envvar_name'"), ValueError)
+E        +    where AttributeError("'Option' object has no attribute 'get_auto_envvar_name'") = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exception
+
+tests/test_auto_envvar_name.py:146: AssertionError
+________________ test_fault_unknown_env_rejected_on_invoke[. ] _________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3eb2f0>, prefix = '. '
+
+    @pytest.mark.parametrize("prefix", ["", "-", "__", ". "])
+    def test_fault_unknown_env_rejected_on_invoke(runner, prefix):
+        cli = _make_cli()
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env={"_TOKEN": "x"})
+        assert result.exit_code != 0
+>       assert isinstance(result.exception, ValueError)
+E       assert False
+E        +  where False = isinstance(AttributeError("'Option' object has no attribute 'get_auto_envvar_name'"), ValueError)
+E        +    where AttributeError("'Option' object has no attribute 'get_auto_envvar_name'") = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exception
+
+tests/test_auto_envvar_name.py:146: AssertionError
+_____________________ test_fault_unknown_env_helper_raises _____________________
+
+    def test_fault_unknown_env_helper_raises():
+        cli = _make_cli()
+        ctx = click.Context(cli, auto_envvar_prefix="")
+        with pytest.raises(ValueError, match="auto_envvar_prefix"):
+>           cli.params[0].get_auto_envvar_name(ctx)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: 'Option' object has no attribute 'get_auto_envvar_name'
+
+tests/test_auto_envvar_name.py:154: AttributeError
+___________ test_fault_separator_injection_prefix_normalised[my.app] ___________
+
+runner = <click.testing.CliRunner object at 0xffff9c3e0800>, prefix = 'my.app'
+
+    @pytest.mark.parametrize("prefix", ["my.app", "my app", "my/app"])
+    def test_fault_separator_injection_prefix_normalised(runner, prefix):
+        cli = _make_cli()
+        env = {"MY_APP_TOKEN": "ok", f"{prefix.upper()}_TOKEN": "raw"}
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env=env)
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:162: AssertionError
+___________ test_fault_separator_injection_prefix_normalised[my app] ___________
+
+runner = <click.testing.CliRunner object at 0xffff9c3e1100>, prefix = 'my app'
+
+    @pytest.mark.parametrize("prefix", ["my.app", "my app", "my/app"])
+    def test_fault_separator_injection_prefix_normalised(runner, prefix):
+        cli = _make_cli()
+        env = {"MY_APP_TOKEN": "ok", f"{prefix.upper()}_TOKEN": "raw"}
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env=env)
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:162: AssertionError
+___________ test_fault_separator_injection_prefix_normalised[my/app] ___________
+
+runner = <click.testing.CliRunner object at 0xffff9c3dce60>, prefix = 'my/app'
+
+    @pytest.mark.parametrize("prefix", ["my.app", "my app", "my/app"])
+    def test_fault_separator_injection_prefix_normalised(runner, prefix):
+        cli = _make_cli()
+        env = {"MY_APP_TOKEN": "ok", f"{prefix.upper()}_TOKEN": "raw"}
+        result = runner.invoke(cli, [], auto_envvar_prefix=prefix, env=env)
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:162: AssertionError
+_______________ test_fault_separator_injection_raw_name_not_read _______________
+
+runner = <click.testing.CliRunner object at 0xffff9c3de5d0>
+
+    def test_fault_separator_injection_raw_name_not_read(runner):
+        cli = _make_cli()
+        result = runner.invoke(
+            cli, [], auto_envvar_prefix="my.app", env={"MY.APP_TOKEN": "raw"}
+        )
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:171: AssertionError
+________________ test_fault_separator_injection_subcommand_name ________________
+
+runner = <click.testing.CliRunner object at 0xffff9c3ddfd0>
+
+    def test_fault_separator_injection_subcommand_name(runner):
+        grp = _make_group()
+        result = runner.invoke(
+            grp,
+            ["db.migrate"],
+            auto_envvar_prefix="app",
+            env={"APP_DB_MIGRATE_TOKEN": "ok", "APP_DB.MIGRATE_TOKEN": "raw"},
+        )
+>       assert result.exit_code == 0, result.output
+E       AssertionError: 
+E       assert 1 == 0
+E        +  where 1 = <Result AttributeError("'Option' object has no attribute 'get_auto_envvar_name'")>.exit_code
+
+tests/test_auto_envvar_name.py:183: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_auto_envvar_name.py::test_dashed_names_are_unchanged
+PASSED tests/test_auto_envvar_name.py::test_no_prefix_reads_nothing
+FAILED tests/test_auto_envvar_name.py::test_plain_names_are_unchanged - Asser...
+FAILED tests/test_auto_envvar_name.py::test_command_line_value_still_wins - A...
+FAILED tests/test_auto_envvar_name.py::test_helper_returns_none_without_prefix
+FAILED tests/test_auto_envvar_name.py::test_helper_returns_none_when_autoenv_disabled
+FAILED tests/test_auto_envvar_name.py::test_fault_unscoped_key_two_environments_differ
+FAILED tests/test_auto_envvar_name.py::test_fault_unscoped_key_bare_name_not_read
+FAILED tests/test_auto_envvar_name.py::test_fault_wrong_env_source_uses_given_context
+FAILED tests/test_auto_envvar_name.py::test_fault_wrong_env_source_nested_command
+FAILED tests/test_auto_envvar_name.py::test_fault_unknown_env_rejected_on_invoke[]
+FAILED tests/test_auto_envvar_name.py::test_fault_unknown_env_rejected_on_invoke[-]
+FAILED tests/test_auto_envvar_name.py::test_fault_unknown_env_rejected_on_invoke[__]
+FAILED tests/test_auto_envvar_name.py::test_fault_unknown_env_rejected_on_invoke[. ]
+FAILED tests/test_auto_envvar_name.py::test_fault_unknown_env_helper_raises
+FAILED tests/test_auto_envvar_name.py::test_fault_separator_injection_prefix_normalised[my.app]
+FAILED tests/test_auto_envvar_name.py::test_fault_separator_injection_prefix_normalised[my app]
+FAILED tests/test_auto_envvar_name.py::test_fault_separator_injection_prefix_normalised[my/app]
+FAILED tests/test_auto_envvar_name.py::test_fault_separator_injection_raw_name_not_read
+FAILED tests/test_auto_envvar_name.py::test_fault_separator_injection_subcommand_name
+18 failed, 2 passed in 0.05s

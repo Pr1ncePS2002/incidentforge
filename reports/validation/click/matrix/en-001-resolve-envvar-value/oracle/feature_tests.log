@@ -1,0 +1,16 @@
+............                                                             [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_in_list
+PASSED tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_after_valid
+PASSED tests/test_envvar_name_validation.py::test_fault_separator_injection_equals
+PASSED tests/test_envvar_name_validation.py::test_fault_separator_injection_space
+PASSED tests/test_envvar_name_validation.py::test_fault_separator_injection_tab_in_list
+PASSED tests/test_envvar_name_validation.py::test_fault_separator_injection_argument
+PASSED tests/test_envvar_name_validation.py::test_plain_envvar_still_read
+PASSED tests/test_envvar_name_validation.py::test_list_first_non_empty_still_wins
+PASSED tests/test_envvar_name_validation.py::test_two_environments_read_distinct_names
+PASSED tests/test_envvar_name_validation.py::test_empty_string_envvar_still_disabled
+PASSED tests/test_envvar_name_validation.py::test_command_line_value_still_used
+PASSED tests/test_envvar_name_validation.py::test_auto_envvar_prefix_names_unchanged
+12 passed in 0.01s

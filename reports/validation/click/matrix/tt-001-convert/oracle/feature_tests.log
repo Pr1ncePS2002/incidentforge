@@ -1,0 +1,31 @@
+...........................                                              [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_duration_type.py::test_plain_seconds_still_parse
+PASSED tests/test_duration_type.py::test_plain_fractional_seconds_parse
+PASSED tests/test_duration_type.py::test_missing_option_is_none
+PASSED tests/test_duration_type.py::test_python_defaults_convert
+PASSED tests/test_duration_type.py::test_metavar_in_help
+PASSED tests/test_duration_type.py::test_direct_convert_returns_timedelta
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[30s-30.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[5m-300.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[2h-7200.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[1d-86400.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[1.5h-5400.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[90S-90.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[2H-7200.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix[  10m  -600.0]
+PASSED tests/test_duration_type.py::test_fault_duration_suffix_matches_canonical
+PASSED tests/test_duration_type.py::test_fault_duration_suffix_from_envvar
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[5x]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[abc]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[s]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[-5s]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[nan]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[inf]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[1e400s]
+PASSED tests/test_duration_type.py::test_fault_garbage_names_option_and_value[5 minutes]
+PASSED tests/test_duration_type.py::test_fault_garbage_from_envvar
+PASSED tests/test_duration_type.py::test_fault_garbage_direct_convert_raises_bad_parameter
+27 passed in 0.02s

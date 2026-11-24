@@ -1,0 +1,17 @@
+{"results": {"tool": {"name": "incidentforge"},
+  "summary": {"tests": 14, "passed": 3, "failed": 11, "pending": 0, "skipped": 0, "other": 0, "start": 1795522598000, "stop": 1795522598000},
+  "tests": [
+    {"name": "feature_tests", "status": "failed", "duration": 0},
+    {"name": "repo_suite", "status": "passed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_csv_list_matches_canonical", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_csv_list_with_spaced_datetimes", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_csv_list_nargs", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_csv_list_split_direct", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_json_list", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_json_list_empty", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_json_list_split_direct", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_garbage_csv_item_named", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_garbage_invalid_json", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_fault_garbage_json_non_strings", "status": "failed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_whitespace_envvar_list_still_works", "status": "passed", "duration": 0},
+    {"name": "tests/test_datetime_envvar_lists.py::test_command_line_values_unchanged", "status": "passed", "duration": 0}]}}
