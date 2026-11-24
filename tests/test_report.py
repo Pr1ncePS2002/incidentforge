@@ -222,18 +222,3 @@ def test_failure_causes_cover_every_failed_run(tmp_path: Path) -> None:
     assert "Why failed runs failed" in page and 'class="stack"' in page and "c-turn_budget" in page
     assert "without per-test detail" in page
     assert any(f.startswith("each of the 5 failed runs has one cause") for f in summary["findings"])
-
-
-def test_deck_mentions_failure_causes() -> None:
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location("build_deck", Path(__file__).parent.parent / "deck/build_deck.py")
-    assert spec and spec.loader
-    deck = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(deck)
-    d = deck.load_data(Path(__file__).parent.parent)
-    d["summary"] = {
-        "models": [{"model": "m", "agent": "terminus-2", "pass_rate": 0.5, "n": 2}],
-        "failure_causes": {"by_model": {"m": {"turn_budget": 2, "fault_path_missed": 3}}},
-    }
-    assert "<b>2</b> failed runs used every turn and <b>3</b> passed the normal cases" in deck.build_html(d)

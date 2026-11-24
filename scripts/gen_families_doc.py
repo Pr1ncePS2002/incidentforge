@@ -19,6 +19,10 @@ in `src/incidentforge/families/<slug>/` (`family.yaml` + `prompt.md`); this page
 
 `forge run` without `--family` samples families by the share of incidents each class accounts for
 (`families/taxonomy.json`), so the dataset mix follows production reality rather than being uniform.
+
+Targets: **pallets/click 8.5.1** is the primary target and the submission dataset (`tasks/click/`).
+`fastapi-template` (Python) and `miniflux` (Go) are extra evidence that the factory runs on other repos;
+the sample task links below are the first few kept tasks of each family across all targets.
 """
 
 

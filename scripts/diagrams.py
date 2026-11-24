@@ -133,7 +133,7 @@ def architecture() -> str:
     row2 = [
         ("backends/", "claude code headless,\ngemini api"),
         ("harbor.py", "run jobs,\nread rewards"),
-        ("evaluate.py", "models x tasks,\ncap check per batch"),
+        ("evaluate.py", "models x tasks,\nharbor trials per task"),
         ("report.py", "static html +\nsummary.json"),
         ("parallel.py", "workers, docker\nslots, id merge"),
         ("postmortem.py", "incident report\n-> family + trigger"),

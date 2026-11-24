@@ -8,6 +8,10 @@ in `src/incidentforge/families/<slug>/` (`family.yaml` + `prompt.md`); this page
 `forge run` without `--family` samples families by the share of incidents each class accounts for
 (`families/taxonomy.json`), so the dataset mix follows production reality rather than being uniform.
 
+Targets: **pallets/click 8.5.1** is the primary target and the submission dataset (`tasks/click/`).
+`fastapi-template` (Python) and `miniflux` (Go) are extra evidence that the factory runs on other repos;
+the sample task links below are the first few kept tasks of each family across all targets.
+
 ## 1. fail-fast-config
 
 **fail fast on missing or placeholder settings.** the service refuses to start when a required setting is missing, empty, whitespace or still a placeholder, and reports every bad key in one aggregated error instead of crashing later on first use.
@@ -24,7 +28,7 @@ Injected faults:
 
 Example: when outbound email is enabled, the mail host and sender address must both be set, and a missing one fails startup naming the key
 
-Accepted tasks (7): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md), [`fastapi-template/ff-002-settings`](../tasks/fastapi-template/ff-002-settings/instruction.md), [`fastapi-template/ff-003-access-token-expire`](../tasks/fastapi-template/ff-003-access-token-expire/instruction.md)
+Accepted tasks (10): [`fastapi-template/ff-001-email-config`](../tasks/fastapi-template/ff-001-email-config/instruction.md), [`fastapi-template/ff-002-settings`](../tasks/fastapi-template/ff-002-settings/instruction.md), [`fastapi-template/ff-003-access-token-expire`](../tasks/fastapi-template/ff-003-access-token-expire/instruction.md)
 
 ## 2. tolerant-typed-config
 
@@ -61,7 +65,7 @@ Injected faults:
 
 Example: a maintenance window with an end time before its start time is rejected
 
-Accepted tasks (3): [`fastapi-template/cf-001-settings`](../tasks/fastapi-template/cf-001-settings/instruction.md), [`fastapi-template/cf-002-userbase`](../tasks/fastapi-template/cf-002-userbase/instruction.md), [`fastapi-template/cf-003-usercreate`](../tasks/fastapi-template/cf-003-usercreate/instruction.md)
+Accepted tasks (11): [`fastapi-template/cf-001-settings`](../tasks/fastapi-template/cf-001-settings/instruction.md), [`fastapi-template/cf-002-userbase`](../tasks/fastapi-template/cf-002-userbase/instruction.md), [`fastapi-template/cf-003-usercreate`](../tasks/fastapi-template/cf-003-usercreate/instruction.md)
 
 ## 4. idempotent-consumer
 
@@ -78,7 +82,7 @@ Injected faults:
 
 Example: a "create item" request retried by a client with the same request id creates one item, not two
 
-Accepted tasks (3): [`fastapi-template/ic-001-create-user`](../tasks/fastapi-template/ic-001-create-user/instruction.md), [`fastapi-template/ic-002-update-user`](../tasks/fastapi-template/ic-002-update-user/instruction.md), [`fastapi-template/ic-003-create-item`](../tasks/fastapi-template/ic-003-create-item/instruction.md)
+Accepted tasks (6): [`fastapi-template/ic-001-create-user`](../tasks/fastapi-template/ic-001-create-user/instruction.md), [`fastapi-template/ic-002-update-user`](../tasks/fastapi-template/ic-002-update-user/instruction.md), [`fastapi-template/ic-003-create-item`](../tasks/fastapi-template/ic-003-create-item/instruction.md)
 
 ## 5. hot-reload-config
 
@@ -112,7 +116,7 @@ Injected faults:
 
 Example: a session cache key carries the environment so a staging login never resolves against production
 
-Accepted tasks (5): [`fastapi-template/en-001-create-user`](../tasks/fastapi-template/en-001-create-user/instruction.md), [`fastapi-template/en-002-update-user`](../tasks/fastapi-template/en-002-update-user/instruction.md), [`fastapi-template/en-003-create-item`](../tasks/fastapi-template/en-003-create-item/instruction.md)
+Accepted tasks (6): [`fastapi-template/en-001-create-user`](../tasks/fastapi-template/en-001-create-user/instruction.md), [`fastapi-template/en-002-update-user`](../tasks/fastapi-template/en-002-update-user/instruction.md), [`fastapi-template/en-003-create-item`](../tasks/fastapi-template/en-003-create-item/instruction.md)
 
 ## 7. resource-aware-defaults
 
@@ -130,7 +134,7 @@ Injected faults:
 
 Example: a database pool whose size is capped so workers times connections never exceeds the server's connection limit
 
-Accepted tasks (3): [`fastapi-template/rd-001-access-token-expire`](../tasks/fastapi-template/rd-001-access-token-expire/instruction.md), [`fastapi-template/rd-003-create-engine-7`](../tasks/fastapi-template/rd-003-create-engine-7/instruction.md), [`miniflux/rd-003-databasemaxconns`](../tasks/miniflux/rd-003-databasemaxconns/instruction.md)
+Accepted tasks (4): [`fastapi-template/rd-001-access-token-expire`](../tasks/fastapi-template/rd-001-access-token-expire/instruction.md), [`fastapi-template/rd-003-create-engine-7`](../tasks/fastapi-template/rd-003-create-engine-7/instruction.md), [`fastapi-template/rd-004-email-reset-token`](../tasks/fastapi-template/rd-004-email-reset-token/instruction.md)
 
 ## 8. config-round-trip
 
@@ -147,4 +151,4 @@ Injected faults:
 
 Example: toggling one user preference and saving keeps every other preference the user had set
 
-Accepted tasks (5): [`fastapi-template/rt-001-settings`](../tasks/fastapi-template/rt-001-settings/instruction.md), [`fastapi-template/rt-002-userbase`](../tasks/fastapi-template/rt-002-userbase/instruction.md), [`fastapi-template/rt-003-usercreate`](../tasks/fastapi-template/rt-003-usercreate/instruction.md)
+Accepted tasks (7): [`fastapi-template/rt-001-settings`](../tasks/fastapi-template/rt-001-settings/instruction.md), [`fastapi-template/rt-002-userbase`](../tasks/fastapi-template/rt-002-userbase/instruction.md), [`fastapi-template/rt-003-usercreate`](../tasks/fastapi-template/rt-003-usercreate/instruction.md)
