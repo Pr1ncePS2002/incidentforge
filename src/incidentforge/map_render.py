@@ -298,7 +298,7 @@ def _run(cmd: list[str]) -> Any:
 
 
 def export_png(page: Path, png: Path, run: Runner = _run, chrome: str | None = None) -> Path:
-    """headless chrome screenshot of the page in png mode (controls hidden); same tool the deck pdf uses."""
+    """headless chrome screenshot of the page in png mode (controls hidden)."""
     png.parent.mkdir(parents=True, exist_ok=True)
     run(
         [

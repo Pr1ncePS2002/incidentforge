@@ -164,7 +164,7 @@ def model_label(r: EvalResult) -> str:
 
 
 def summarize(data: Data) -> dict[str, Any]:
-    """machine-readable summary read by the readme and deck (shape agreed with p5)."""
+    """machine-readable summary read by scripts/readme_results.py."""
     fam_count: dict[str, int] = defaultdict(int)
     for t in data.tasks:
         fam_count[t.family] += 1
