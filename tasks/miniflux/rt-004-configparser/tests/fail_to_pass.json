@@ -1,0 +1,13 @@
+[
+  "internal/config::TestRenameConfigKeysWithoutMatchIsNoop",
+  "internal/config::TestRenameConfigKeysChangesOnlyTheRenamedKey",
+  "internal/config::TestRenamedConfigFileStillParses",
+  "internal/config::TestFaultDroppedFieldCommentsAndUnknownKeys",
+  "internal/config::TestFaultDefaultOverwriteEmptyAndZeroValues",
+  "internal/config::TestFaultTypeDriftRawValuesKept",
+  "internal/config::TestFaultPartialWriteInvalidLineKeepsPreviousFile",
+  "internal/config::TestFaultPartialWriteConflictKeepsPreviousFile",
+  "internal/config::TestRenameConfigKeysRejectsInvalidRenames",
+  "internal/config::TestRenameConfigKeysPreservesPermissions",
+  "internal/config::TestRenameConfigKeysMissingFile"
+]

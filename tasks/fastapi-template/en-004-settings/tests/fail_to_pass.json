@@ -1,0 +1,10 @@
+[
+  "tests/test_forge_secret_names.py::test_default_environment_is_local_and_stable",
+  "tests/test_forge_secret_names.py::test_allowed_environments_load",
+  "tests/test_forge_secret_names.py::test_fault_unscoped_key_environments_do_not_collide",
+  "tests/test_forge_secret_names.py::test_fault_wrong_env_source_uses_configured_env_var",
+  "tests/test_forge_secret_names.py::test_fault_wrong_env_source_not_default_local",
+  "tests/test_forge_secret_names.py::test_fault_unknown_env_rejected_at_startup",
+  "tests/test_forge_secret_names.py::test_fault_separator_injection_in_name",
+  "tests/test_forge_secret_names.py::test_empty_secret_name_rejected"
+]

@@ -1,0 +1,10 @@
+[
+  "tests/test_forge_item_idempotency.py::test_fault_duplicate_delivery",
+  "tests/test_forge_item_idempotency.py::test_fault_retry_after_partial_commit_landed_response_lost",
+  "tests/test_forge_item_idempotency.py::test_fault_retry_after_partial_flush_never_committed",
+  "tests/test_forge_item_idempotency.py::test_fault_back_to_back_duplicate",
+  "tests/test_forge_item_idempotency.py::test_fault_distinct_events",
+  "tests/test_forge_item_idempotency.py::test_reused_key_with_different_payload_is_rejected",
+  "tests/test_forge_item_idempotency.py::test_blank_key_is_rejected",
+  "tests/test_forge_item_idempotency.py::test_key_length_limit"
+]

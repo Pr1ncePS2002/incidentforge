@@ -1,0 +1,15 @@
+[
+  "tests/test_forge_settings_reload.py::test_shared_settings_instance_supports_reload",
+  "tests/test_forge_settings_reload.py::test_reload_applies_on_next_read",
+  "tests/test_forge_settings_reload.py::test_fault_stale_capture_held_reference_sees_new_value",
+  "tests/test_forge_settings_reload.py::test_fault_stale_capture_reload_keeps_identity",
+  "tests/test_forge_settings_reload.py::test_fault_invalid_reload_bad_port_keeps_last_good",
+  "tests/test_forge_settings_reload.py::test_fault_invalid_reload_missing_required_key",
+  "tests/test_forge_settings_reload.py::test_fault_invalid_reload_bad_email",
+  "tests/test_forge_settings_reload.py::test_fault_partial_reload_rejected_pair_stays_old",
+  "tests/test_forge_settings_reload.py::test_fault_partial_reload_related_values_swap_together",
+  "tests/test_forge_settings_reload.py::test_fault_partial_reload_derived_value_follows_source",
+  "tests/test_forge_settings_reload.py::test_fault_partial_reload_computed_flag_follows",
+  "tests/test_forge_settings_reload.py::test_fault_reload_unset_falls_back_to_default",
+  "tests/test_forge_settings_reload.py::test_fault_reload_unset_ignores_process_env"
+]

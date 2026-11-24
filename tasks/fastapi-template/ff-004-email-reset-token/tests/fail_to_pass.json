@@ -1,0 +1,11 @@
+[
+  "tests/test_forge_reset_email_settings.py::test_fault_conditional_missing_from_email",
+  "tests/test_forge_reset_email_settings.py::test_fault_conditional_missing_smtp_password",
+  "tests/test_forge_reset_email_settings.py::test_fault_empty_smtp_host",
+  "tests/test_forge_reset_email_settings.py::test_fault_empty_frontend_host",
+  "tests/test_forge_reset_email_settings.py::test_fault_empty_smtp_password",
+  "tests/test_forge_reset_email_settings.py::test_fault_placeholder_smtp_password",
+  "tests/test_forge_reset_email_settings.py::test_fault_placeholder_frontend_host",
+  "tests/test_forge_reset_email_settings.py::test_fault_placeholder_smtp_host",
+  "tests/test_forge_reset_email_settings.py::test_fault_several_bad"
+]

@@ -1,0 +1,8 @@
+[
+  "tests/test_forge_email_config.py::test_host_without_from_email_fails",
+  "tests/test_forge_email_config.py::test_user_without_password_fails",
+  "tests/test_forge_email_config.py::test_password_without_user_fails",
+  "tests/test_forge_email_config.py::test_tls_and_ssl_together_fail",
+  "tests/test_forge_email_config.py::test_port_out_of_range_fails",
+  "tests/test_forge_email_config.py::test_one_error_lists_every_offending_variable"
+]

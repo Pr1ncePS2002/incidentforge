@@ -1,0 +1,13 @@
+[
+  "tests/test_forge_reset_token_expiry.py::test_fault_unset_limit_empty_value_is_derived",
+  "tests/test_forge_reset_token_expiry.py::test_fault_unset_limit_missing_value_is_derived",
+  "tests/test_forge_reset_token_expiry.py::test_fault_unset_limit_derived_value_respects_floor",
+  "tests/test_forge_reset_token_expiry.py::test_fault_hardcoded_size_follows_configured_ceiling",
+  "tests/test_forge_reset_token_expiry.py::test_fault_hardcoded_size_follows_access_token_lifetime",
+  "tests/test_forge_reset_token_expiry.py::test_fault_min_over_max",
+  "tests/test_forge_reset_token_expiry.py::test_fault_exceeds_limit_above_max",
+  "tests/test_forge_reset_token_expiry.py::test_fault_exceeds_limit_below_min",
+  "tests/test_forge_reset_token_expiry.py::test_fault_zero_or_negative_expiry",
+  "tests/test_forge_reset_token_expiry.py::test_fault_zero_or_negative_min",
+  "tests/test_forge_reset_token_expiry.py::test_fault_zero_or_negative_max"
+]

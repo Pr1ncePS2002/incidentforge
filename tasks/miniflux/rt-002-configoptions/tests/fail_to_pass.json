@@ -1,0 +1,10 @@
+[
+  "internal/config::TestFaultDroppedFieldUnknownKeysAndCommentsKept",
+  "internal/config::TestFaultDefaultOverwriteExplicitValuesWritten",
+  "internal/config::TestFaultDefaultOverwriteExplicitEmptyReplacesValue",
+  "internal/config::TestFaultTypeDriftValuesWrittenVerbatim",
+  "internal/config::TestFaultPartialWriteKeepsPreviousFile",
+  "internal/config::TestExportWithoutChangesLeavesFileIdentical",
+  "internal/config::TestExportAppendsAfterMissingTrailingNewline",
+  "internal/config::TestExportKeepsFileModeAndParses"
+]

@@ -1,0 +1,10 @@
+[
+  "tests/test_forge_token_lifetimes.py::test_out_of_range_access_lifetime_rejected",
+  "tests/test_forge_token_lifetimes.py::test_out_of_range_reset_lifetime_rejected",
+  "tests/test_forge_token_lifetimes.py::test_fault_empty_access_lifetime",
+  "tests/test_forge_token_lifetimes.py::test_fault_empty_reset_lifetime_from_env",
+  "tests/test_forge_token_lifetimes.py::test_fault_placeholder_access_lifetime",
+  "tests/test_forge_token_lifetimes.py::test_fault_placeholder_reset_lifetime_from_env",
+  "tests/test_forge_token_lifetimes.py::test_fault_several_bad_out_of_range",
+  "tests/test_forge_token_lifetimes.py::test_fault_several_bad_mixed"
+]

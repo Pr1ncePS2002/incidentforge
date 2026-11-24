@@ -1,0 +1,6 @@
+[
+  "internal/config::TestFaultConditionalMissingAdminUsername",
+  "internal/config::TestFaultConditionalMissingAdminPassword",
+  "internal/config::TestFaultEmptyAdminCredentials",
+  "internal/config::TestFaultSeveralBadAdminCredentials"
+]

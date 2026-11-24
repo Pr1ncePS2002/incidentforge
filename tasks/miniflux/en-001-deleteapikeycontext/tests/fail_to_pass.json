@@ -1,0 +1,7 @@
+[
+  "client::TestFaultUnscopedKeyEnvironmentsDiffer",
+  "client::TestFaultWrongEnvSourceUsesConfiguredEnvironment",
+  "client::TestFaultUnknownEnvRejected",
+  "client::TestFaultSeparatorInjectionRejected",
+  "client::TestDefaultEnvironmentKeyStable"
+]

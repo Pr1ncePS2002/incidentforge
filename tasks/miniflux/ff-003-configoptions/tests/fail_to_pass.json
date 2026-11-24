@@ -1,0 +1,7 @@
+[
+  "internal/config::TestFaultConditionalMissingKeyFile",
+  "internal/config::TestFaultConditionalMissingCertFile",
+  "internal/config::TestFaultPlaceholderCertFile",
+  "internal/config::TestFaultPlaceholderKeyFile",
+  "internal/config::TestFaultSeveralBadTLSFiles"
+]

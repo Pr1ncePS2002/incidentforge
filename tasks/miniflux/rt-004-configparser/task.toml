@@ -7,7 +7,10 @@ difficulty = "medium"
 origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+repo_url = "https://github.com/miniflux/v2.git"
+licence = "Apache-2.0"
 fault_cases = ["dropped-field: comments, blank lines, unknown keys such as SOME_FUTURE_OPTION and a final line with no newline disappear or move when a different key is renamed", "default-overwrite: explicitly empty (ADMIN_PASSWORD=), whitespace-only or zero (CREATE_ADMIN=0) values are dropped or normalised when their key is renamed", "type-drift: raw values like ' 1h30m ', 'a, b ,c', a quoted string or '007' are reformatted, and CRLF line endings are changed across the rename", "partial-write: a rename that fails on a malformed line later in the file, or because the target key already exists, leaves a truncated or partly renamed file or a leftover temp file instead of the previous file"]
+generator_backend = "claude-code"
 map_node = "internal/config/parser.go::configParser"
 blast_radius = 1
 fix_scope = "1 file"
