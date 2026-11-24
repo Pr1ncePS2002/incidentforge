@@ -1,0 +1,9 @@
+[
+  "tests/test_range_combinations.py::test_fault_inverted_range_int",
+  "tests/test_range_combinations.py::test_fault_inverted_range_float",
+  "tests/test_range_combinations.py::test_fault_inverted_range_mixed_numbers",
+  "tests/test_range_combinations.py::test_fault_inverted_range_keywords_and_clamp",
+  "tests/test_range_combinations.py::test_fault_inverted_range_at_declaration",
+  "tests/test_range_combinations.py::test_fault_boundary_equal_open_int",
+  "tests/test_range_combinations.py::test_fault_boundary_equal_open_float"
+]

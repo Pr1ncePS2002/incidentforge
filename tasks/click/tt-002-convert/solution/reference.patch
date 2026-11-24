@@ -1,0 +1,32 @@
+diff --git a/src/click/types.py b/src/click/types.py
+index b6e98a9..ae73882 100644
+--- a/src/click/types.py
++++ b/src/click/types.py
+@@ -601,6 +601,27 @@ class _NumberParamTypeBase(
+         try:
+             return self._number_class(value)
+         except ValueError:
++            if isinstance(value, str) and "," in value:
++                text = value.strip()
++                sign = text[:1] if text[:1] in ("+", "-") else ""
++                integer, dot, fraction = text[len(sign) :].partition(".")
++                groups = integer.split(",")
++                if (
++                    1 <= len(groups[0]) <= 3
++                    and all(len(group) == 3 for group in groups[1:])
++                    and all(group.isascii() and group.isdigit() for group in groups)
++                    and fraction.isascii()
++                    and "," not in fraction
++                ):
++                    ungrouped = sign + "".join(groups) + dot + fraction
++
++                    try:
++                        return self._number_class(
++                            t.cast(t.Any, ungrouped)
++                        )
++                    except ValueError:
++                        pass
++
+             self.fail(
+                 _("{value!r} is not a valid {number_type}.").format(
+                     value=value, number_type=self.name

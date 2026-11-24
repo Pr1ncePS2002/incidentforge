@@ -1,0 +1,22 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index e4b6b57..73b24c7 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -3191,6 +3191,17 @@ class Option(Parameter):
+             raise TypeError("Secondary flag is not valid for non-boolean flag.")
+         if self.is_bool_flag and self.hide_input and self.prompt is not None:
+             raise TypeError("'prompt' with 'hide_input' is not valid for boolean flag.")
++        if self.is_bool_flag and self.confirmation_prompt:
++            raise TypeError(
++                "'confirmation_prompt' is not valid with 'is_flag' for boolean flag."
++            )
++        if (
++            self.count
++            and isinstance(self.default, int)
++            and not isinstance(self.default, bool)
++            and self.default < 0
++        ):
++            raise TypeError("'default' must not be negative with 'count'.")
+         if self.count:
+             if self.multiple:
+                 raise TypeError("'count' is not valid with 'multiple'.")

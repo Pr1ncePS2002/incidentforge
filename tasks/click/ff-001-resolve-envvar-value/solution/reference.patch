@@ -1,0 +1,56 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index e4b6b57..18d53eb 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -2727,6 +2727,51 @@ class Parameter(ABC):
+         if not self.envvar:
+             return None
+ 
++        if getattr(self, "strict_envvar", False):
++            names = [self.envvar] if isinstance(self.envvar, str) else self.envvar
++            placeholders = {
++                "changeme",
++                "change-me",
++                "change_me",
++                "changethis",
++                "fixme",
++                "placeholder",
++                "replaceme",
++                "tbd",
++                "todo",
++                "xxx",
++            }
++            offending: list[str] = []
++
++            for name in names:
++                raw = os.environ.get(name)
++
++                if raw is None:
++                    continue
++
++                stripped = raw.strip()
++
++                if (
++                    not stripped
++                    or stripped.casefold() in placeholders
++                    or (
++                        len(stripped) >= 2
++                        and stripped.startswith("<")
++                        and stripped.endswith(">")
++                    )
++                ):
++                    offending.append(name)
++
++            if offending:
++                raise BadParameter(
++                    _(
++                        "environment variable(s) {names} must be set to a real"
++                        " value, not an empty, blank or placeholder value."
++                    ).format(names=", ".join(f"'{var}'" for var in offending)),
++                    ctx=ctx,
++                    param=self,
++                )
++
+         if isinstance(self.envvar, str):
+             rv = os.environ.get(self.envvar)
+ 

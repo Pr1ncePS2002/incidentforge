@@ -1,0 +1,8 @@
+[
+  "tests/test_strict_envvar.py::test_fault_empty_value_rejected",
+  "tests/test_strict_envvar.py::test_fault_empty_whitespace_rejected",
+  "tests/test_strict_envvar.py::test_fault_placeholder_rejected",
+  "tests/test_strict_envvar.py::test_fault_placeholder_argument",
+  "tests/test_strict_envvar.py::test_fault_several_bad_all_named",
+  "tests/test_strict_envvar.py::test_fault_several_bad_raises_single_bad_parameter"
+]

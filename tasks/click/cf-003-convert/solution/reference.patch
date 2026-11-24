@@ -1,0 +1,29 @@
+diff --git a/src/click/types.py b/src/click/types.py
+index b6e98a9..3f81c71 100644
+--- a/src/click/types.py
++++ b/src/click/types.py
+@@ -647,6 +647,24 @@ class _NumberRangeBase(
+         max_open: bool = False,
+         clamp: bool = False,
+     ) -> None:
++        if min is not None and max is not None:
++            if min > max:
++                raise ValueError(
++                    _(
++                        "Invalid range: min {min} must not be greater than"
++                        " max {max}."
++                    ).format(min=min, max=max)
++                )
++
++            if min == max and (min_open or max_open):
++                raise ValueError(
++                    _(
++                        "Invalid range: min {min} equals max {max}, so"
++                        " neither min_open nor max_open may be set; the"
++                        " range would be empty."
++                    ).format(min=min, max=max)
++                )
++
+         self.min = min
+         self.max = max
+         self.min_open = min_open

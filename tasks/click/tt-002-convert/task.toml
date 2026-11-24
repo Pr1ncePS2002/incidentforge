@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "accept thousands separators in integer and float parameter values"
+family = "tolerant-typed-config"
+difficulty = "easy"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["garbage: --count 1,000 --count 1,00 (also 1,0000, 1234,567, ,100, 100, and 1,,000 and 1,0a0) on an INT multiple option: the well-formed 1,000 is accepted and the bad value is rejected with exit 2, naming '--count' and quoting the bad value", "garbage: --count 1,000.5 on an INT option and --count 1,000.0,5 on a FLOAT option are rejected with exit 2, naming '--count' and quoting the bad value"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

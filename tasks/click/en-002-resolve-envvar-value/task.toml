@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "add an option helper that returns its normalised auto environment variable name and rejects an unusable prefix"
+family = "env-aware-naming"
+difficulty = "medium"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["unscoped-key: with prefixes staging and prod, --token resolves STAGING_TOKEN and PROD_TOKEN separately, and the bare TOKEN variable is never read", "wrong-env-source: get_auto_envvar_name uses the prefix of the context it is given (STG_TOKEN vs PRD_TOKEN), and a subcommand option reads APP_DEPLOY_TOKEN, not the parent's APP_TOKEN", "unknown-env: auto_envvar_prefix of '', '-', '__' or '. ' raises ValueError mentioning auto_envvar_prefix, both from the helper and on invoke", "separator-injection: prefixes 'my.app', 'my app' and 'my/app' and subcommand 'db.migrate' give MY_APP_TOKEN / APP_DB_MIGRATE_TOKEN, and the raw dotted names are not read"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

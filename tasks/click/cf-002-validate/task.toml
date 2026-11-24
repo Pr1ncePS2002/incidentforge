@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "reject confirmation prompts on boolean flags and negative defaults on counting options"
+family = "cross-field-validation"
+difficulty = "easy"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["mutually-exclusive: is_flag=True with prompt=True and confirmation_prompt=True (also '--shout/--no-shout' and confirmation_prompt='Again?' via @click.option) raises TypeError naming confirmation_prompt and is_flag", "negative-or-zero: count=True with default=-1 or default=-5 raises TypeError naming default and count", "boundary-equal: count=True with default=0 is accepted and reports 0 when the option is not passed (2 for -vv), while default=-1 is rejected"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

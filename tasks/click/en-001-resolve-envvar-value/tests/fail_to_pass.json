@@ -1,0 +1,8 @@
+[
+  "tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_in_list",
+  "tests/test_envvar_name_validation.py::test_fault_unknown_env_empty_entry_after_valid",
+  "tests/test_envvar_name_validation.py::test_fault_separator_injection_equals",
+  "tests/test_envvar_name_validation.py::test_fault_separator_injection_space",
+  "tests/test_envvar_name_validation.py::test_fault_separator_injection_tab_in_list",
+  "tests/test_envvar_name_validation.py::test_fault_separator_injection_argument"
+]

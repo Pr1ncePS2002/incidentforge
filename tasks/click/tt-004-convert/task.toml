@@ -1,0 +1,23 @@
+schema_version = "1.4"
+
+[metadata]
+title = "accept comma-separated and json array env var lists for datetime options"
+family = "tolerant-typed-config"
+difficulty = "easy"
+origin = "llm"
+target = "click"
+base_commit = "cf19179e8e2fd54c601378cec9e0d21bb12b6fb1"
+repo_url = "https://github.com/pallets/click.git"
+licence = "BSD-3-Clause"
+fault_cases = ["csv-list: WHEN='2020-01-01, 2020-02-03,2021-12-31' for a multiple DateTime option gives the same datetimes as the whitespace-separated form; comma lists of datetimes that contain spaces and nargs=2 options are also split correctly", "json-list: WHEN='[\"2020-01-01\", \"2020-02-03 04:05:06\"]' is parsed as a JSON array of datetimes, and '[]' gives no values", "garbage: WHEN='2020-01-01,notadate' exits 2 naming --when and quoting 'notadate'; WHEN='[2020' and WHEN='[1, 2]' exit 2 naming --when, quoting the raw value and saying 'JSON list'"]
+generator_backend = "claude-code"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "shared"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 1200.0

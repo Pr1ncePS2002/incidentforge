@@ -1,0 +1,65 @@
+diff --git a/src/click/types.py b/src/click/types.py
+index b6e98a9..6350bc9 100644
+--- a/src/click/types.py
++++ b/src/click/types.py
+@@ -289,6 +289,60 @@ class FuncParamType(ParamType[_ValueT_co], t.Generic[_ValueT_contra, _ValueT_co]
+             self.fail(message, param, ctx)
+ 
+ 
++class Duration(ParamType):
++    """Convert a span of time to a :class:`datetime.timedelta`.
++
++    A plain number is a number of seconds. A number may also end with
++    one of the unit suffixes ``s`` (seconds), ``m`` (minutes), ``h``
++    (hours) or ``d`` (days), for example ``30s``, ``5m``, ``1.5h`` or
++    ``1d``. Suffixes are case-insensitive and surrounding whitespace is
++    ignored. Negative, infinite and unparseable values are rejected.
++
++    .. versionadded:: 8.3
++    """
++
++    name = "duration"
++
++    _units: t.ClassVar[dict[str, int]] = {"s": 1, "m": 60, "h": 3600, "d": 86400}
++
++    def convert(
++        self, value: t.Any, param: Parameter | None, ctx: Context | None
++    ) -> t.Any:
++        import datetime
++        import math
++
++        if isinstance(value, datetime.timedelta):
++            return value
++
++        if isinstance(value, (int, float)) and not isinstance(value, bool):
++            number: float = float(value)
++            factor = 1
++        else:
++            text = str(value).strip().lower()
++            factor = 1
++
++            if text[-1:] in self._units:
++                factor = self._units[text[-1]]
++                text = text[:-1]
++
++            try:
++                number = float(text)
++            except ValueError:
++                number = math.nan
++
++        seconds = number * factor
++
++        if math.isfinite(seconds) and seconds >= 0:
++            try:
++                return datetime.timedelta(seconds=seconds)
++            except OverflowError:
++                pass
++
++        self.fail(
++            _("{value!r} is not a valid duration.").format(value=value), param, ctx
++        )
++
++
+ class UnprocessedParamType(ParamType[t.Any]):
+     name = "text"
+ 

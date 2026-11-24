@@ -1,0 +1,53 @@
+diff --git a/src/click/core.py b/src/click/core.py
+index e4b6b57..de5d02d 100644
+--- a/src/click/core.py
++++ b/src/click/core.py
+@@ -3567,8 +3567,9 @@ class Option(Parameter):
+         if rv is not None:
+             return rv
+ 
+-        if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None and self.name:
+-            envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
++        envvar = self.get_auto_envvar_name(ctx)
++
++        if envvar is not None:
+             rv = os.environ.get(envvar)
+ 
+             if rv:
+@@ -3576,6 +3577,36 @@ class Option(Parameter):
+ 
+         return None
+ 
++    def get_auto_envvar_name(self, ctx: Context) -> str | None:
++        """Return the name of the environment variable this option reads
++        through :attr:`Context.auto_envvar_prefix`, or ``None`` if automatic
++        environment variables do not apply to it.
++
++        The name is built as ``{PREFIX}_{NAME}``. Any character of the prefix
++        or the option name that is not a letter, digit or underscore is
++        replaced with an underscore, so the result is always a valid
++        environment variable name.
++
++        :param ctx: The context whose prefix scopes the name.
++        :raises ValueError: If the prefix contains no letter or digit.
++        """
++        prefix = ctx.auto_envvar_prefix
++
++        if self.allow_from_autoenv and prefix is not None and self.name:
++            if not any(c.isalnum() for c in prefix):
++                raise ValueError(
++                    f"Invalid 'auto_envvar_prefix' {prefix!r} for option"
++                    f" {self.name!r}: the prefix must contain at least one"
++                    " letter or digit."
++                )
++
++            def normalize(value: str) -> str:
++                return "".join(c if c.isalnum() or c == "_" else "_" for c in value)
++
++            return f"{normalize(prefix)}_{normalize(self.name.upper())}"
++
++        return None
++
+     def value_from_envvar(self, ctx: Context) -> t.Any:
+         """For :class:`Option`, this method processes the raw environment variable
+         string the same way as :func:`Parameter.value_from_envvar` does.
