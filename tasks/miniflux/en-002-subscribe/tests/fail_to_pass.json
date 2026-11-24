@@ -1,0 +1,10 @@
+[
+  "internal/googlereader::TestFaultUnscopedKeySubscriptionName",
+  "internal/googlereader::TestFaultUnscopedKeyScopedName",
+  "internal/googlereader::TestFaultWrongEnvSourceFromSetting",
+  "internal/googlereader::TestFaultUnknownEnvRejected",
+  "internal/googlereader::TestFaultUnknownEnvFromEmptySetting",
+  "internal/googlereader::TestFaultSeparatorInjection",
+  "internal/googlereader::TestDefaultEnvironmentNameIsStable",
+  "internal/googlereader::TestScopedNameNeedsAtLeastOnePart"
+]

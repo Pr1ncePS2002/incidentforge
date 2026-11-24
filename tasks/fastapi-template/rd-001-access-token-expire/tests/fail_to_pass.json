@@ -1,0 +1,9 @@
+[
+  "tests/test_forge_token_lifetime.py::test_shipped_defaults_still_load",
+  "tests/test_forge_token_lifetime.py::test_fault_hardcoded_size_default_follows_ceiling",
+  "tests/test_forge_token_lifetime.py::test_fault_hardcoded_size_default_follows_ceiling_from_env",
+  "tests/test_forge_token_lifetime.py::test_fault_exceeds_limit_explicit_lifetime_over_ceiling",
+  "tests/test_forge_token_lifetime.py::test_fault_exceeds_limit_from_env",
+  "tests/test_forge_token_lifetime.py::test_fault_zero_or_negative_lifetime",
+  "tests/test_forge_token_lifetime.py::test_fault_zero_or_negative_ceiling"
+]

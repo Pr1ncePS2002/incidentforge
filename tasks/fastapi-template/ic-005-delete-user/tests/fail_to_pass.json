@@ -1,0 +1,7 @@
+[
+  "tests/test_forge_delete_user_idempotency.py::test_fault_duplicate_delivery",
+  "tests/test_forge_delete_user_idempotency.py::test_fault_duplicate_delivery_many_repeats",
+  "tests/test_forge_delete_user_idempotency.py::test_fault_retry_after_partial_write",
+  "tests/test_forge_delete_user_idempotency.py::test_fault_distinct_events",
+  "tests/test_forge_delete_user_idempotency.py::test_key_reused_for_other_user_is_rejected"
+]

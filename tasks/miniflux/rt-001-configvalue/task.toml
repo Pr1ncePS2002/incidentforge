@@ -7,7 +7,10 @@ difficulty = "easy"
 origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+repo_url = "https://github.com/miniflux/v2.git"
+licence = "Apache-2.0"
 fault_cases = ["dropped-field: comments, blank lines, unknown keys or untouched settings disappear when one key is set or unset", "default-overwrite: an explicit value equal to the default (LOG_LEVEL=info) or an explicit empty value (ADMIN_USERNAME=) is omitted or treated as unset", "partial-write: a rejected update (line-break injection, invalid key, untrimmable value, set+unset conflict) modifies the file or leaves temporary files behind"]
+generator_backend = "claude-code"
 map_node = "internal/config/options.go::configValue"
 blast_radius = 1
 fix_scope = "1 file"

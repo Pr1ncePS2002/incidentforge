@@ -1,0 +1,15 @@
+[
+  "tests/test_forge_database_auth_config.py::test_valid_config_still_loads",
+  "tests/test_forge_database_auth_config.py::test_ssl_with_root_cert_loads",
+  "tests/test_forge_database_auth_config.py::test_root_cert_not_checked_when_ssl_off",
+  "tests/test_forge_database_auth_config.py::test_ssl_flag_read_from_environment",
+  "tests/test_forge_database_auth_config.py::test_fault_missing_database_password",
+  "tests/test_forge_database_auth_config.py::test_fault_missing_database_user_and_password",
+  "tests/test_forge_database_auth_config.py::test_fault_empty_database_password",
+  "tests/test_forge_database_auth_config.py::test_fault_empty_whitespace_database_password",
+  "tests/test_forge_database_auth_config.py::test_fault_conditional_missing_root_cert",
+  "tests/test_forge_database_auth_config.py::test_fault_conditional_missing_root_cert_from_env",
+  "tests/test_forge_database_auth_config.py::test_fault_empty_root_cert",
+  "tests/test_forge_database_auth_config.py::test_fault_placeholder_root_cert",
+  "tests/test_forge_database_auth_config.py::test_fault_several_bad"
+]

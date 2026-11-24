@@ -1,0 +1,10 @@
+[
+  "internal/validator::TestFaultInvertedRangeCategoryTitleLimits",
+  "internal/validator::TestFaultInvertedRangeRejectedByCheckTitle",
+  "internal/validator::TestFaultNegativeOrZeroMinLength",
+  "internal/validator::TestFaultNegativeOrZeroMaxLength",
+  "internal/validator::TestFaultBoundaryEqualLimitsAllowed",
+  "internal/validator::TestDefaultCategoryTitleLimitsValidate",
+  "internal/validator::TestCategoryTitleLengthBounds",
+  "internal/validator::TestCategoryTitleLengthCountsCharacters"
+]

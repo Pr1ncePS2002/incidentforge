@@ -1,0 +1,14 @@
+[
+  "tests/test_forge_cors_origins.py::test_canonical_list_still_loads",
+  "tests/test_forge_cors_origins.py::test_default_is_empty_and_frontend_always_allowed",
+  "tests/test_forge_cors_origins.py::test_all_cors_origins_merges_without_duplicates",
+  "tests/test_forge_cors_origins.py::test_fault_csv_list",
+  "tests/test_forge_cors_origins.py::test_fault_csv_list_normalised",
+  "tests/test_forge_cors_origins.py::test_fault_csv_list_from_env",
+  "tests/test_forge_cors_origins.py::test_fault_json_list",
+  "tests/test_forge_cors_origins.py::test_fault_json_list_from_env",
+  "tests/test_forge_cors_origins.py::test_fault_empty_list",
+  "tests/test_forge_cors_origins.py::test_fault_empty_list_from_env",
+  "tests/test_forge_cors_origins.py::test_fault_garbage",
+  "tests/test_forge_cors_origins.py::test_fault_garbage_from_env"
+]

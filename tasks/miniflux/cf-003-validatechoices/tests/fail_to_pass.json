@@ -1,0 +1,7 @@
+[
+  "internal/config::TestFaultInvertedRangeEntryFrequency",
+  "internal/config::TestFaultInvertedRangeRoundRobin",
+  "internal/config::TestFaultBoundaryEqualAccepted",
+  "internal/config::TestIntervalDefaultsStillValidate",
+  "internal/config::TestIntervalOrderedRangesValidate"
+]

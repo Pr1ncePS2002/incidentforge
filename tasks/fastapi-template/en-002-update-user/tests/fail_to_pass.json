@@ -1,0 +1,13 @@
+[
+  "tests/test_forge_env_scoped_user_events.py::test_development_names_are_stable",
+  "tests/test_forge_env_scoped_user_events.py::test_shipped_default_environment_is_accepted",
+  "tests/test_forge_env_scoped_user_events.py::test_update_user_publishes_development_names",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_unscoped_key_differs_per_environment",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_unscoped_key_update_user",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_wrong_env_source",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_wrong_env_source_update_user",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_unknown_env",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_unknown_env_update_user_writes_nothing",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_separator_injection",
+  "tests/test_forge_env_scoped_user_events.py::test_fault_separator_injection_no_collision"
+]

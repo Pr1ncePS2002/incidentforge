@@ -1,0 +1,10 @@
+[
+  "tests/test_forge_scoped_names.py::test_development_names_are_stable",
+  "tests/test_forge_scoped_names.py::test_all_allowed_environments_accepted",
+  "tests/test_forge_scoped_names.py::test_create_user_still_works_with_valid_env",
+  "tests/test_forge_scoped_names.py::test_fault_unscoped_key_differs_per_environment",
+  "tests/test_forge_scoped_names.py::test_fault_wrong_env_source_reads_configured_env",
+  "tests/test_forge_scoped_names.py::test_fault_unknown_env_global",
+  "tests/test_forge_scoped_names.py::test_fault_unknown_env_blocks_create_user",
+  "tests/test_forge_scoped_names.py::test_fault_separator_injection"
+]

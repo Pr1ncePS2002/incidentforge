@@ -1,0 +1,9 @@
+[
+  "tests/test_forge_routing_config.py::test_fault_empty_frontend_host",
+  "tests/test_forge_routing_config.py::test_fault_empty_api_prefix",
+  "tests/test_forge_routing_config.py::test_fault_placeholder_frontend_host",
+  "tests/test_forge_routing_config.py::test_fault_placeholder_api_prefix",
+  "tests/test_forge_routing_config.py::test_malformed_api_prefix_rejected",
+  "tests/test_forge_routing_config.py::test_malformed_frontend_host_rejected",
+  "tests/test_forge_routing_config.py::test_fault_several_bad"
+]

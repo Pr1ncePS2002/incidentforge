@@ -1,0 +1,12 @@
+[
+  "tests/test_forge_token_check_idempotency.py::test_check_without_key_records_every_call",
+  "tests/test_forge_token_check_idempotency.py::test_first_keyed_check_reports_recorded_event",
+  "tests/test_forge_token_check_idempotency.py::test_fault_duplicate_delivery",
+  "tests/test_forge_token_check_idempotency.py::test_fault_duplicate_delivery_many_retries",
+  "tests/test_forge_token_check_idempotency.py::test_fault_back_to_back_duplicate",
+  "tests/test_forge_token_check_idempotency.py::test_fault_distinct_events_different_keys",
+  "tests/test_forge_token_check_idempotency.py::test_fault_distinct_events_same_key_different_users",
+  "tests/test_forge_token_check_idempotency.py::test_invalid_idempotency_key_is_rejected",
+  "tests/test_forge_token_check_idempotency.py::test_max_length_key_is_accepted",
+  "tests/test_forge_token_check_idempotency.py::test_reset_forgets_keys"
+]

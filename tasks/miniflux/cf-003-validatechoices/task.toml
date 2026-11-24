@@ -7,7 +7,10 @@ difficulty = "easy"
 origin = "llm"
 target = "miniflux"
 base_commit = "b31f7867f4a1ad9b4abfcebd376c94cecf5f1942"
+repo_url = "https://github.com/miniflux/v2.git"
+licence = "Apache-2.0"
 fault_cases = ["inverted-range: SCHEDULER_ENTRY_FREQUENCY_MIN_INTERVAL=120 is greater than SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL=60", "inverted-range: SCHEDULER_ROUND_ROBIN_MIN_INTERVAL=600 is greater than SCHEDULER_ROUND_ROBIN_MAX_INTERVAL=120", "boundary-equal: a minimum equal to its maximum (60/60, 120/120) is accepted, while a minimum one above (61/60) is rejected"]
+generator_backend = "claude-code"
 map_node = "internal/config/validators.go::validateChoices"
 blast_radius = 1
 fix_scope = "1 file"

@@ -1,0 +1,17 @@
+[
+  "internal/config::TestFaultDroppedFieldUnknownKeysAndComments",
+  "internal/config::TestFaultDroppedFieldUnsetKeepsOthers",
+  "internal/config::TestFaultDefaultOverwriteExplicitDefaultValue",
+  "internal/config::TestFaultDefaultOverwriteExplicitEmptyValue",
+  "internal/config::TestFaultDefaultOverwriteExplicitEmptyNewKey",
+  "internal/config::TestFaultPartialWriteLineBreakInjection",
+  "internal/config::TestFaultPartialWriteInvalidKeys",
+  "internal/config::TestFaultPartialWriteUnrepresentableValue",
+  "internal/config::TestFaultPartialWriteConflictingChange",
+  "internal/config::TestConfigFileNoChangeIsByteIdentical",
+  "internal/config::TestConfigFileChangeWithoutTrailingNewline",
+  "internal/config::TestConfigFileDuplicateKeysCollapse",
+  "internal/config::TestConfigFileNewKeysAppendedSorted",
+  "internal/config::TestConfigFileMissingFile",
+  "internal/config::TestConfigFilePermissionsPreserved"
+]

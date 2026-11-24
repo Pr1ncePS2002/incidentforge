@@ -25,7 +25,7 @@ def test_build_map_and_json(tmp_path: Path):
     assert s.tagged > 0 and s.clusters == 2 and set(s.timings) >= {"graph", "coverage", "total"}
     doc = json.loads(s.json_path.read_text())
     assert doc["schema"] == SCHEMA_VERSION and doc["target"] == "demo" and doc["graph_hash"] == s.graph_hash
-    assert doc["language"] == "python" and doc["commit"] == "0123456789abcdef0123"
+    assert doc["language"] == "python" and doc["commit"] == "0123456789abcdef0123456789abcdef01234567"
     assert all(set(n) == NODE_KEYS for n in doc["nodes"])
     assert not any(n["file"].startswith("tests/") for n in doc["nodes"])
     ids = {n["id"] for n in doc["nodes"]}
@@ -66,7 +66,15 @@ def test_cli_map_build(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr("incidentforge.generate.checkout", lambda t, root: repo)
     runner = CliRunner()
     args = ["map", "build", "--target", "demo", "--work", str(tmp_path / "w")]
-    unseen = [*args, "--repo-url", "https://example.invalid/x.git", "--commit", "abc", "--language", "python"]
+    unseen = [
+        *args,
+        "--repo-url",
+        "https://example.invalid/x.git",
+        "--commit",
+        "0123456789abcdef0123456789abcdef01234567",
+        "--language",
+        "python",
+    ]
     r = runner.invoke(cli.app, unseen)
     assert r.exit_code == 0, r.output
     assert "graph_hash " in r.output and "timings graph=" in r.output

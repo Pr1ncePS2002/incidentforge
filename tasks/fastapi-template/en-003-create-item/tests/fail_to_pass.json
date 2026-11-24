@@ -1,0 +1,10 @@
+[
+  "tests/test_forge_item_event_names.py::test_default_environment_name_is_stable",
+  "tests/test_forge_item_event_names.py::test_create_item_publishes_local_event",
+  "tests/test_forge_item_event_names.py::test_fault_unscoped_key",
+  "tests/test_forge_item_event_names.py::test_fault_wrong_env_source",
+  "tests/test_forge_item_event_names.py::test_fault_unknown_env_settings",
+  "tests/test_forge_item_event_names.py::test_fault_unknown_env_helper",
+  "tests/test_forge_item_event_names.py::test_fault_unknown_env_create_item_fails_before_write",
+  "tests/test_forge_item_event_names.py::test_fault_separator_injection"
+]

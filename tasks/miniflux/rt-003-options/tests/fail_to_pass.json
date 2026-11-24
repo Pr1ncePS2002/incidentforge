@@ -1,0 +1,15 @@
+[
+  "internal/http/client::TestFaultDroppedFieldUnknownKeys",
+  "internal/http/client::TestFaultDroppedFieldUnchangedKnownKey",
+  "internal/http/client::TestFaultDefaultOverwriteExplicitZeroKept",
+  "internal/http/client::TestFaultDefaultOverwriteZeroTimeoutKept",
+  "internal/http/client::TestFaultDefaultOverwriteAbsentStaysAbsent",
+  "internal/http/client::TestFaultTypeDriftDurationStaysString",
+  "internal/http/client::TestFaultTypeDriftChangedTimeoutWrittenAsString",
+  "internal/http/client::TestFaultPartialWriteMutateError",
+  "internal/http/client::TestFaultPartialWriteInvalidValue",
+  "internal/http/client::TestOptionsUpdateWithoutChangeLeavesFileIdentical",
+  "internal/http/client::TestOptionsUpdateRoundTripAndNoTempFiles",
+  "internal/http/client::TestReadOptionsFileDecodesValues",
+  "internal/http/client::TestReadOptionsFileRejectsMalformed"
+]

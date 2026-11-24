@@ -7,7 +7,10 @@ difficulty = "medium"
 origin = "llm"
 target = "fastapi-template"
 base_commit = "77e550a73bb49dd2967622c5ed11bf7a49603c93"
+repo_url = "https://github.com/fastapi/full-stack-fastapi-template.git"
+licence = "MIT"
 fault_cases = ["dropped-field: changing SMTP_HOST must keep comments, blank lines, order, the unknown CUSTOM_UNKNOWN_FLAG key, CRLF endings and the missing final newline byte-for-byte; a new key is appended without touching existing lines", "default-overwrite: explicit values equal to the defaults (SMTP_PORT=587, ACCESS_TOKEN_EXPIRE_MINUTES=11520), explicit empty values (EMAILS_FROM_NAME=\"\", SENTRY_DSN=) and zero/false values must be written and read back, not omitted", "type-drift: int/bool values must reload into Settings as int/bool, a string containing quotes, a backslash and # must round-trip exactly, and a list must be stored as JSON that loads back as the same list", "partial-write: an unserialisable value or an os.replace failure during save must leave the previous .env byte-identical with no leftover temp file"]
+generator_backend = "claude-code"
 map_node = "backend/app/core/config.py::Settings"
 blast_radius = 1
 fix_scope = "1 file"

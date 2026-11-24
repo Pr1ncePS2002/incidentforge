@@ -1,0 +1,10 @@
+[
+  "internal/ui/form::TestFaultInvertedRangeUsername",
+  "internal/ui/form::TestFaultInvertedRangePassword",
+  "internal/ui/form::TestFaultInvertedRangeRejectedForAnyForm",
+  "internal/ui/form::TestFaultNegativeOrZeroLimits",
+  "internal/ui/form::TestFaultBoundaryEqualAllowed",
+  "internal/ui/form::TestDefaultAuthPolicyValidates",
+  "internal/ui/form::TestPolicyRejectsEmptyAndOutOfRangeCredentials",
+  "internal/ui/form::TestPlainValidateUnchanged"
+]

@@ -1,0 +1,14 @@
+[
+  "tests/test_forge_db_pool.py::test_shipped_defaults_load",
+  "tests/test_forge_db_pool.py::test_module_engine_uses_pool_settings",
+  "tests/test_forge_db_pool.py::test_exact_fit_is_allowed",
+  "tests/test_forge_db_pool.py::test_zero_overflow_is_allowed",
+  "tests/test_forge_db_pool.py::test_fault_hardcoded_size",
+  "tests/test_forge_db_pool.py::test_fault_hardcoded_size_reaches_engine",
+  "tests/test_forge_db_pool.py::test_fault_unset_limit_uses_safe_default",
+  "tests/test_forge_db_pool.py::test_fault_unset_limit_keeps_explicit_overflow",
+  "tests/test_forge_db_pool.py::test_fault_exceeds_limit_pool_size",
+  "tests/test_forge_db_pool.py::test_fault_exceeds_limit_more_workers_than_connections",
+  "tests/test_forge_db_pool.py::test_fault_exceeds_limit_with_overflow",
+  "tests/test_forge_db_pool.py::test_fault_zero_or_negative"
+]

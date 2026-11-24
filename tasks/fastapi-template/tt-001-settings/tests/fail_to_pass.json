@@ -1,0 +1,5 @@
+[
+  "tests/test_forge_duration_settings.py::test_fault_duration_suffix_minutes",
+  "tests/test_forge_duration_settings.py::test_fault_duration_suffix_hours",
+  "tests/test_forge_duration_settings.py::test_fault_duration_suffix_from_env"
+]

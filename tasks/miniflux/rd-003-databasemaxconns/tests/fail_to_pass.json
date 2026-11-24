@@ -1,0 +1,13 @@
+[
+  "internal/config::TestFaultMinOverMaxConns",
+  "internal/config::TestFaultExceedsLimitWorkersOverMaxConns",
+  "internal/config::TestFaultExceedsLimitWorkersEqualMaxConns",
+  "internal/config::TestFaultExceedsLimitFromParsedOptions",
+  "internal/config::TestFaultZeroOrNegativeMaxConns",
+  "internal/config::TestFaultZeroOrNegativeWorkers",
+  "internal/config::TestFaultZeroOrNegativeMinConns",
+  "internal/config::TestFaultHardcodedSizeFollowsConfiguredLimits",
+  "internal/config::TestFaultHardcodedSizeFromParsedOptions",
+  "internal/config::TestPoolSizingDefaultsStillDerive",
+  "internal/config::TestPoolSizingBoundariesAccepted"
+]

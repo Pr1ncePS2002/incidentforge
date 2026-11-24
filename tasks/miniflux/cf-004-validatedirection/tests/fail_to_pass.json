@@ -1,0 +1,13 @@
+[
+  "internal/validator::TestFaultInvertedRangePublished",
+  "internal/validator::TestFaultInvertedRangeChanged",
+  "internal/validator::TestFaultInvertedRangeEntryID",
+  "internal/validator::TestFaultInvertedRangeLegacyAfterBefore",
+  "internal/validator::TestFaultBoundaryEqualPublished",
+  "internal/validator::TestFaultBoundaryEqualEntryID",
+  "internal/validator::TestFaultNegativeOrZeroEntryID",
+  "internal/validator::TestFaultNegativeOrZeroTimestamp",
+  "internal/validator::TestEntryQueryWindowDefaultsValidate",
+  "internal/validator::TestEntryQueryWindowValidRanges",
+  "internal/validator::TestValidateDirectionUnchanged"
+]

@@ -52,6 +52,7 @@ def target(tmp_path: Path) -> Target:
         name="fixture",
         repo_url=str(repo),
         commit=commit,
+        licence="MIT",
         language=Language.python,
         env_template=env,
         test_command="run_tests -q tests/",
@@ -134,6 +135,8 @@ def test_accepts_first_try(target: Target, tmp_path: Path) -> None:
     assert "STRICT" in (task / "solution" / "reference.patch").read_text()
     # one changed file and one fault is easy, whatever the model claimed
     assert 'difficulty = "easy"' in (task / "task.toml").read_text()
+    assert 'generator_backend = "fake"' in (task / "task.toml").read_text()
+    assert 'generator_model = "default"' in (task / "task.toml").read_text()
     prompt = backend.prompts[0]
     assert "backend/app/config.py::Settings (settings-class)" in prompt
     assert "{{" not in prompt

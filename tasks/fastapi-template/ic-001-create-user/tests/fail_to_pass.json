@@ -1,0 +1,8 @@
+[
+  "tests/test_forge_idempotent_create_user.py::test_fault_duplicate_delivery_same_session",
+  "tests/test_forge_idempotent_create_user.py::test_fault_duplicate_delivery_new_session",
+  "tests/test_forge_idempotent_create_user.py::test_fault_retry_after_partial",
+  "tests/test_forge_idempotent_create_user.py::test_fault_back_to_back_duplicate",
+  "tests/test_forge_idempotent_create_user.py::test_fault_distinct_events",
+  "tests/test_forge_idempotent_create_user.py::test_same_email_with_different_details_is_rejected"
+]

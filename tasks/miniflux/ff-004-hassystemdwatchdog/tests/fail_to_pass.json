@@ -1,0 +1,12 @@
+[
+  "internal/systemd::TestFaultConditionalMissingNotifySocket",
+  "internal/systemd::TestFaultEmptyNotifySocket",
+  "internal/systemd::TestFaultEmptyWatchdogInterval",
+  "internal/systemd::TestFaultPlaceholderWatchdogInterval",
+  "internal/systemd::TestFaultPlaceholderNotifySocket",
+  "internal/systemd::TestFaultSeveralBadWatchdogSettings",
+  "internal/systemd::TestWatchdogDisabledByDefault",
+  "internal/systemd::TestWatchdogEmptyIntervalMeansDisabled",
+  "internal/systemd::TestWatchdogValidSettingsLoad",
+  "internal/systemd::TestWatchdogAbstractSocketLoads"
+]

@@ -1,6 +1,7 @@
 name: fastapi-template
 repo_url: https://github.com/fastapi/full-stack-fastapi-template.git
 commit: 77e550a73bb49dd2967622c5ed11bf7a49603c93
+licence: MIT
 language: python
 env_template: env/fastapi-template
 test_command: run_tests -q tests/

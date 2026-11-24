@@ -1,0 +1,16 @@
+[
+  "tests/test_private_user_options.py::test_defaults_still_validate",
+  "tests/test_private_user_options.py::test_ordered_window_is_valid",
+  "tests/test_private_user_options.py::test_one_sided_window_is_valid",
+  "tests/test_private_user_options.py::test_naive_and_aware_ordered_window_is_valid",
+  "tests/test_private_user_options.py::test_each_flag_alone_is_valid",
+  "tests/test_private_user_options.py::test_fault_inverted_range_window",
+  "tests/test_private_user_options.py::test_fault_inverted_range_naive_vs_aware",
+  "tests/test_private_user_options.py::test_fault_boundary_equal_window_rejected",
+  "tests/test_private_user_options.py::test_fault_boundary_equal_across_timezones",
+  "tests/test_private_user_options.py::test_just_after_boundary_is_valid",
+  "tests/test_private_user_options.py::test_fault_mutually_exclusive_verified_and_send_email",
+  "tests/test_private_user_options.py::test_fault_inverted_range_and_mutually_exclusive_reported_together",
+  "tests/test_private_user_options.py::test_fault_inverted_range_endpoint_returns_422",
+  "tests/test_private_user_options.py::test_fault_mutually_exclusive_endpoint_returns_422"
+]

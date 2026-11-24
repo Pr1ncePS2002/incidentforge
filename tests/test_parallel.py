@@ -60,6 +60,7 @@ def target(tmp_path: Path) -> Target:
         name="fixture",
         repo_url=str(repo),
         commit=_git(repo, "rev-parse", "HEAD").strip(),
+        licence="MIT",
         language=Language.python,
         env_template=env,
         test_command="run_tests -q tests/",

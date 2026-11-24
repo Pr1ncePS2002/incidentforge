@@ -1,0 +1,12 @@
+[
+  "internal/config::TestFaultConditionalMissingAdminPassword",
+  "internal/config::TestFaultConditionalMissingAdminUsername",
+  "internal/config::TestFaultEmptyAdminUsername",
+  "internal/config::TestFaultPlaceholderAdminPassword",
+  "internal/config::TestFaultPlaceholderAdminPasswordUpperCase",
+  "internal/config::TestFaultPlaceholderAdminUsernameAngleBrackets",
+  "internal/config::TestFaultPlaceholderAdminPasswordFromFile",
+  "internal/config::TestFaultPlaceholderDatabaseURL",
+  "internal/config::TestFaultSeveralBadSettings",
+  "internal/config::TestFaultSeveralBadMissingCredentials"
+]

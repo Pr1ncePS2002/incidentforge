@@ -65,6 +65,10 @@ class TaskInfo:
     feature_tests: tuple[str, ...] = ()
 
 
+# files in tests/ that are harness, not feature tests
+NOT_FEATURE_FILES = {"test.sh", "fail_to_pass.json", "pass_to_pass.json"}
+
+
 def discover_tasks(tasks_root: Path) -> list[TaskInfo]:
     """every dir under tasks_root holding a task.toml, with its forge metadata."""
     out: list[TaskInfo] = []
@@ -77,7 +81,7 @@ def discover_tasks(tasks_root: Path) -> list[TaskInfo]:
             pass
         tests_dir = task_dir / "tests"
         feature = tuple(
-            sorted(p.name for p in tests_dir.iterdir() if p.is_file() and p.name != "test.sh")
+            sorted(p.name for p in tests_dir.iterdir() if p.is_file() and p.name not in NOT_FEATURE_FILES)
             if tests_dir.is_dir()
             else ()
         )
