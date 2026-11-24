@@ -146,7 +146,10 @@ def rerender(
 def eval_(
     tasks: str = typer.Option("tasks", help="tasks root"),
     model: list[str] = typer.Option(None, help="model ids, e.g. gemini/gemini-3.8-flash"),
-    agent: str = typer.Option("terminus-2", help="harbor agent"),
+    agent: str = typer.Option(
+        "terminus-2",
+        help="terminus-2 (gemini keys) or a login cli: claude-code, codex, gemini-cli, opencode, cursor-cli",
+    ),
     k: int = typer.Option(1, help="attempts per task"),
     subset: int = typer.Option(None, help="only a fixed seeded subset of this many tasks (>=1 per family)"),
     only: list[str] = typer.Option(
@@ -157,7 +160,7 @@ def eval_(
     from pathlib import Path
 
     from incidentforge.backends.gemini import load_env
-    from incidentforge.evaluate import discover_tasks, frozen_subset, run_eval, select_tasks
+    from incidentforge.evaluate import SUBSCRIPTION_AGENTS, discover_tasks, frozen_subset, run_eval, select_tasks
 
     root = Path(tasks)
     if subset and only:
@@ -167,7 +170,8 @@ def eval_(
         picked = select_tasks(discover_tasks(root), only)
         if not picked:
             raise typer.BadParameter(f"no task under {root} matches {only}")
-    models = model or ["gemini/gemini-3.8-flash"]
+    # a login agent with no --model runs its own default model
+    models = model or ([agent] if agent in SUBSCRIPTION_AGENTS else ["gemini/gemini-3.8-flash"])
     # keys come from .env unless already exported; harbor only ever sees the routed one
     env = {**load_env(".env"), **os.environ}
     new = run_eval(root, models, agent, k, picked, env=env, echo=typer.echo)

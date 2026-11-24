@@ -138,8 +138,17 @@ FORGE_GEN_COMMAND="claude -p --output-format text --tools ''" uv run forge run -
 Validation, the six gates and Harbor's nop/oracle matrix need no LLM at all. For your own repo,
 `FORGE_BACKEND=<backend> scripts/finale_dry_run.sh <repo_url> <commit> <python|go>` scaffolds the target,
 checks its test suite in Docker and generates tasks (see [Adding a new target repo](#adding-a-new-target-repo)).
-If a CLI is logged out, each rejected pair prints the CLI's error under it. `forge eval` runs Claude Code and
-Gemini models today; other Harbor CLI agents (codex, gemini-cli, opencode) are a follow-up.
+If a CLI is logged out, each rejected pair prints the CLI's error under it.
+
+`forge eval` also runs your tasks against Harbor's CLI agents on your own login. Each job sees only that
+agent's credentials, never the Gemini keys: `claude-code` (`CLAUDE_CODE_OAUTH_TOKEN`), `codex`
+(`~/.codex/auth.json` or `OPENAI_API_KEY`), `gemini-cli` (`~/.gemini/oauth_creds.json`), `opencode`
+(provider keys) and `cursor-cli` (`CURSOR_API_KEY`). The committed results cover Claude Code and Gemini only.
+
+```bash
+uv run forge eval --agent codex --only click/                  # the CLI's default model
+uv run forge eval --agent codex --model openai/gpt-5.5 --only click/tt-001-convert
+```
 
 ## Task package
 

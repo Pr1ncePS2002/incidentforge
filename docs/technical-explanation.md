@@ -120,7 +120,10 @@ implementations:
   has not been run against the real binary. None of them generated a committed task: the committed dataset
   is `claude-code` only.
 
-`forge eval` support for non-Claude Harbor CLI agents (codex, gemini-cli, opencode) is a follow-up.
+`forge eval --agent` also accepts Harbor's `codex`, `gemini-cli`, `opencode` and `cursor-cli` agents. They run
+on the user's own login, and each job's environment carries only that agent's credential variables
+(`evaluate.LOGIN_AGENT_VARS`), never the Gemini keys, so they never touch the spend cap. They are unit-tested
+only; no committed result uses them.
 
 **Evaluated models.** All evaluation runs go through Harbor (`forge eval`):
 
